@@ -141,4 +141,16 @@ public class IndexMaps implements Serializable {
             key = depRelationMap.get(labelId);
         return key;
     }
+
+    public int vocabSize(){
+        return wordMap.size();
+    }
+
+    public int posSize(){
+        return posMap.size();
+    }
+
+    public int relSize(){
+        return depRelationMap.size();
+    }
 }

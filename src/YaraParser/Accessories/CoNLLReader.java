@@ -66,12 +66,14 @@ public class CoNLLReader {
                     label = "~";
                 if (!stringMap.containsKey(label)) {
                     labelMap.put(wi, labelCount);
-                    depRelationMap.put(wi,labelCount+1);
+                    depRelationMap.put(wi,labelCount);
                     labelCount++;
                     stringMap.put(label, wi++);
                 }
             }
         }
+        depRelationMap.put(0,labelCount);
+
 
         int posCount = 2;// 0 for OOV, 1 for null!
         reader = new BufferedReader(new FileReader(filePath));

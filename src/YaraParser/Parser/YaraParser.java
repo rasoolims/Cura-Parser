@@ -14,6 +14,7 @@ import YaraParser.Structures.InfStruct;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
+import YaraParser.TransitionBasedSystem.Trainer.StaticNeuralTrainer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,13 +23,16 @@ public class YaraParser {
     public static void main(String[] args) throws Exception {
         Options options = Options.processArgs(args);
 
-        if(true){
+        if(args.length<2){
             options.train = true;
-            options.inputFile ="/Users/msr/Documents/phd_work/data_tools/universal_treebanks_v2.0/std/en/train.conll";
-            options.devPath ="/Users/msr/Documents/phd_work/data_tools/universal_treebanks_v2.0/std/en/dev.conll";
+            options.inputFile ="/Users/msr/Desktop/dev_smal.conll";
+            options.devPath ="/Users/msr/Desktop/dev_smal.conll";
             options.modelFile ="/tmp/model";
+        }
 
-            createTrainData(options,"/Users/msr/Desktop/train.instances","/Users/msr/Desktop/dev.instances");
+        if(true){
+
+            createTrainData(options,options.inputFile+".csv",options.devPath+".csv");
             System.exit(0);
         }
 
@@ -163,12 +167,13 @@ public class YaraParser {
 
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, dependencyLabels.size()),
                     options, dependencyLabels, featureLength, maps);
-            trainer.createStaticTrainingDataForNeuralNet(dataSet, trainOutputPath, 0.05);
-            if(devOutputPath!=null){
-                CoNLLReader devReader = new CoNLLReader(options.devPath);
-                ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
-                trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath,-1);
-            }
+//            trainer.createStaticTrainingDataForNeuralNet(dataSet, trainOutputPath, 0.05);
+//                CoNLLReader devReader = new CoNLLReader(options.devPath);
+//                ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+//                trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath,-1);
+            StaticNeuralTrainer staticNeuralTrainer = new StaticNeuralTrainer(trainOutputPath,maps.vocabSize()+2,
+                    maps.posSize()+2,maps.relSize()+1,
+                    64,32,32,100,labels.size()-1,30);
 
         }
     }

@@ -21,7 +21,6 @@ import YaraParser.TransitionBasedSystem.Parser.Actions;
 import YaraParser.TransitionBasedSystem.Parser.ArcEager;
 import YaraParser.TransitionBasedSystem.Parser.BeamScorerThread;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
-import net.didion.jwnl.data.Exc;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -106,14 +105,20 @@ public class ArcEagerBeamTrainer {
 
             int[] baseFeatures =  FeatureExtractor.extractBaseFeatures(bestScoringOracle,maps);
             int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size()-1);
+
+            if(action>=2)
+                action-=1;
+
             StringBuilder outputBuilder = new StringBuilder();
-            for(int i=0;i<baseFeatures.length;i++){
-              if(i<12 && randGen.nextDouble()<= dropoutProb && baseFeatures[i]!=1)       //todo
-                    baseFeatures[i] = 0;
-                outputBuilder.append(baseFeatures[i]);
-                outputBuilder.append("\t");
-            }
             outputBuilder.append(action);
+            for(int i=0;i<baseFeatures.length;i++){
+           //     if(i<=3 || (i>=12 && i<=15) || (i>=24 && i<=25)) {
+                    if (i < 12 && randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)       //todo
+                        baseFeatures[i] = 0;
+                    outputBuilder.append(",");
+                    outputBuilder.append(baseFeatures[i]);
+             //   }
+            }
             outputBuilder.append("\n");
             writer.write(outputBuilder.toString());
 

@@ -1578,7 +1578,7 @@ public class FeatureExtractor {
             if (1 < state.bufferSize()) {
                 b1Position = state.getBufferItem(1);
                 b1w = b1Position == 0 ? 2 : maps.getNeuralWordKey(words[b1Position - 1]);
-                b1p = b1Position == 0 ? 2 : tags[b1Position - 1];
+                b1p = b1Position == 0 ? 2 : maps.getNeuralPOSKey(tags[b1Position - 1]);
 
                 if (2 < state.bufferSize()) {
                     b2Position = state.getBufferItem(2);
@@ -1641,43 +1641,43 @@ public class FeatureExtractor {
                 }
             }
         }
-        int[] baseFeatureIds = new int[32];
+        int[] baseFeatureIds = new int[10];
 
         int index=0;
         baseFeatureIds[index++] = s0w;
         baseFeatureIds[index++] = b0w;
         baseFeatureIds[index++] = b1w;
         baseFeatureIds[index++] = b2w;
-        baseFeatureIds[index++] = b0l1w;
-        baseFeatureIds[index++] = b0l2w;
-        baseFeatureIds[index++] = s0l1w;
-        baseFeatureIds[index++] = s0l2w;
-        baseFeatureIds[index++] = sr1w;
-        baseFeatureIds[index++] = s0r2w;
-        baseFeatureIds[index++] = sh0w;
-        baseFeatureIds[index++] = sh1w;
+//        baseFeatureIds[index++] = b0l1w;
+//        baseFeatureIds[index++] = b0l2w;
+//        baseFeatureIds[index++] = s0l1w;
+//        baseFeatureIds[index++] = s0l2w;
+//        baseFeatureIds[index++] = sr1w;
+//        baseFeatureIds[index++] = s0r2w;
+//        baseFeatureIds[index++] = sh0w;
+//        baseFeatureIds[index++] = sh1w;
 
         baseFeatureIds[index++] = s0p;
         baseFeatureIds[index++] = b0p;
         baseFeatureIds[index++] = b1p;
         baseFeatureIds[index++] = b2p;
-        baseFeatureIds[index++] = b0l1p;
-        baseFeatureIds[index++] = b0l2p;
-        baseFeatureIds[index++] = s0l1p;
-        baseFeatureIds[index++] = s0l2p;
-        baseFeatureIds[index++] = sr1p;
-        baseFeatureIds[index++] = s0r2p;
-        baseFeatureIds[index++] = sh0p;
-        baseFeatureIds[index++] = sh1p;
+//        baseFeatureIds[index++] = b0l1p;
+//        baseFeatureIds[index++] = b0l2p;
+//        baseFeatureIds[index++] = s0l1p;
+//        baseFeatureIds[index++] = s0l2p;
+//        baseFeatureIds[index++] = sr1p;
+//        baseFeatureIds[index++] = s0r2p;
+//        baseFeatureIds[index++] = sh0p;
+//        baseFeatureIds[index++] = sh1p;
 
         baseFeatureIds[index++] = s0l;
         baseFeatureIds[index++] = sh0l;
-        baseFeatureIds[index++] = s0l1l;
-        baseFeatureIds[index++] = sr1l;
-        baseFeatureIds[index++] = s0l2l;
-        baseFeatureIds[index++] = s0r2l;
-        baseFeatureIds[index++] = b0l1l;
-        baseFeatureIds[index++] = b0l2l;
+//        baseFeatureIds[index++] = s0l1l;
+//        baseFeatureIds[index++] = sr1l;
+//        baseFeatureIds[index++] = s0l2l;
+//        baseFeatureIds[index++] = s0r2l;
+//        baseFeatureIds[index++] = b0l1l;
+//        baseFeatureIds[index++] = b0l2l;
 
         return  baseFeatureIds;
     }
