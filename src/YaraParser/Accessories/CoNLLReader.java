@@ -32,18 +32,23 @@ public class CoNLLReader {
     }
 
     public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased, String clusterFile) throws Exception {
-        HashMap<String, Integer> wordMap = new HashMap<String, Integer>();
-        HashMap<Integer, Integer> labels = new HashMap<Integer, Integer>();
+        HashMap<String, Integer> stringMap = new HashMap<String, Integer>();
+        HashMap<Integer, Integer> labelMap = new HashMap<Integer, Integer>();
         HashMap<String, Integer> clusterMap = new HashMap<String, Integer>();
         HashMap<Integer, Integer> cluster4Map = new HashMap<Integer, Integer>();
         HashMap<Integer, Integer> cluster6Map = new HashMap<Integer, Integer>();
+
+       HashMap<Integer, Integer> wordMap = new HashMap<Integer, Integer>();
+        HashMap<Integer, Integer> depRelationMap = new HashMap<Integer, Integer>();
+        HashMap<Integer, Integer> posMap = new HashMap<Integer, Integer>();
+
 
         int labelCount = 1;
         String rootString = "ROOT";
 
         int wi = 1;
-        wordMap.put("ROOT", 0);
-        labels.put(0, 0);
+        stringMap.put("ROOT", 0);
+        labelMap.put(0, 0);
 
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
         String line;
@@ -59,20 +64,24 @@ public class CoNLLReader {
                     label = "-";
                 if (!labeled)
                     label = "~";
-                if (!wordMap.containsKey(label)) {
-                    labels.put(wi, labelCount++);
-                    wordMap.put(label, wi++);
+                if (!stringMap.containsKey(label)) {
+                    labelMap.put(wi, labelCount);
+                    depRelationMap.put(wi,labelCount+1);
+                    labelCount++;
+                    stringMap.put(label, wi++);
                 }
             }
         }
 
+        int posCount = 2;// 0 for OOV, 1 for null!
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
                 String pos = spl[3];
-                if (!wordMap.containsKey(pos)) {
-                    wordMap.put(pos, wi++);
+                if (!stringMap.containsKey(pos)) {
+                    posMap.put(wi,posCount++);
+                    stringMap.put(pos, wi++);
                 }
             }
         }
@@ -88,26 +97,26 @@ public class CoNLLReader {
                     String prefix6 = cluster.substring(0, Math.min(6, cluster.length()));
                     int clusterNum = wi;
 
-                    if (!wordMap.containsKey(cluster)) {
+                    if (!stringMap.containsKey(cluster)) {
                         clusterMap.put(word, wi);
-                        wordMap.put(cluster, wi++);
+                        stringMap.put(cluster, wi++);
                     } else {
-                        clusterNum = wordMap.get(cluster);
+                        clusterNum = stringMap.get(cluster);
                         clusterMap.put(word, clusterNum);
                     }
 
                     int pref4Id = wi;
-                    if (!wordMap.containsKey(prefix4)) {
-                        wordMap.put(prefix4, wi++);
+                    if (!stringMap.containsKey(prefix4)) {
+                        stringMap.put(prefix4, wi++);
                     } else {
-                        pref4Id = wordMap.get(prefix4);
+                        pref4Id = stringMap.get(prefix4);
                     }
 
                     int pref6Id = wi;
-                    if (!wordMap.containsKey(prefix6)) {
-                        wordMap.put(prefix6, wi++);
+                    if (!stringMap.containsKey(prefix6)) {
+                        stringMap.put(prefix6, wi++);
                     } else {
-                        pref6Id = wordMap.get(prefix6);
+                        pref6Id = stringMap.get(prefix6);
                     }
 
                     cluster4Map.put(clusterNum, pref4Id);
@@ -117,19 +126,22 @@ public class CoNLLReader {
         }
 
         reader = new BufferedReader(new FileReader(filePath));
+        int wordCount = 2; // 0 for OOV, 1 for null!
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
                 String word = spl[1];
                 if (lowercased)
                     word = word.toLowerCase();
-                if (!wordMap.containsKey(word)) {
-                    wordMap.put(word, wi++);
+                if (!stringMap.containsKey(word)) {
+                    wordMap.put(wi,wordCount++);
+                    stringMap.put(word, wi++);
                 }
             }
         }
 
-        return new IndexMaps(wordMap, labels, rootString, cluster4Map, cluster6Map, clusterMap);
+        return new IndexMaps(stringMap, labelMap, rootString,
+                wordMap,posMap,depRelationMap,cluster4Map, cluster6Map, clusterMap);
     }
 
     /**
@@ -137,7 +149,7 @@ public class CoNLLReader {
      * @return
      */
     public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled, boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
-        HashMap<String, Integer> wordMap = maps.getWordMap();
+        HashMap<String, Integer> wordMap = maps.getStringMap();
         ArrayList<GoldConfiguration> configurationSet = new ArrayList<GoldConfiguration>();
 
         String line;

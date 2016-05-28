@@ -472,7 +472,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (head == bestParse.state.rootIndex)
                         head = 0;
 
-                    String label = head == 0 ? maps.rootString : maps.revWords[dep];
+                    String label = head == 0 ? maps.rootString : maps.revStrings[dep];
                     String output = head + "\t" + label + "\n";
                     finalOutput.append(output);
                 }
@@ -654,7 +654,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (head == bestParse.state.rootIndex)
                         head = 0;
 
-                    String label = head == 0 ? maps.rootString : maps.revWords[dep];
+                    String label = head == 0 ? maps.rootString : maps.revStrings[dep];
                     String output = head + "\t" + label + "\n";
                     finalOutput.append(output);
                 }

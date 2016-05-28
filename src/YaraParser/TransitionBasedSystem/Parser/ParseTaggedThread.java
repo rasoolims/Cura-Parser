@@ -40,7 +40,7 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
 
     @Override
     public Pair<String, Integer> call() throws Exception {
-        HashMap<String, Integer> wordMap = maps.getWordMap();
+        HashMap<String, Integer> wordMap = maps.getStringMap();
 
         line = line.trim();
         String[] wrds = line.split(" ");
@@ -110,7 +110,7 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
 
                 if (head == bestParse.state.rootIndex)
                     head = 0;
-                String label = head == 0 ? maps.rootString : maps.revWords[dep];
+                String label = head == 0 ? maps.rootString : maps.revStrings[dep];
 
                 String output = w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" + label + "\t_\t_\n";
                 finalOutput.append(output);

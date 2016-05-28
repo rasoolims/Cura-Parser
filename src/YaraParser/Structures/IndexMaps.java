@@ -11,25 +11,33 @@ import java.util.HashMap;
 
 public class IndexMaps implements Serializable {
     public final String rootString;
-    public String[] revWords;
-    private HashMap<String, Integer> wordMap;
-    private HashMap<Integer, Integer> labels;
+    public String[] revStrings;
+    private HashMap<String, Integer> stringMap;
+    private HashMap<Integer, Integer> labelMap;
     private HashMap<Integer, Integer> brown4Clusters;
     private HashMap<Integer, Integer> brown6Clusters;
     private HashMap<String, Integer> brownFullClusters;
 
-    public IndexMaps(HashMap<String, Integer> wordMap, HashMap<Integer, Integer> labels, String rootString,
+    // for neural net
+    private HashMap<Integer,Integer> wordMap;
+    private HashMap<Integer,Integer> posMap;
+    private HashMap<Integer,Integer> depRelationMap;
+
+    public IndexMaps(HashMap<String, Integer> stringMap, HashMap<Integer, Integer> labelMap, String rootString,
+                     HashMap<Integer,Integer> wordMap, HashMap<Integer,Integer> posMap, HashMap<Integer,Integer> depRelationMap,
                      HashMap<Integer, Integer> brown4Clusters, HashMap<Integer, Integer> brown6Clusters, HashMap<String, Integer> brownFullClusters) {
+        this.stringMap = stringMap;
         this.wordMap = wordMap;
-        this.labels = labels;
+        this.posMap = posMap;
+        this.depRelationMap = depRelationMap;
+        this.labelMap = labelMap;
 
-        revWords = new String[wordMap.size() + 1];
-        revWords[0] = "ROOT";
+        revStrings = new String[stringMap.size() + 1];
+        revStrings[0] = "ROOT";
 
-        for (String word : wordMap.keySet()) {
-            revWords[wordMap.get(word)] = word;
+        for (String word : stringMap.keySet()) {
+            revStrings[stringMap.get(word)] = word;
         }
-
         this.brown4Clusters = brown4Clusters;
         this.brown6Clusters = brown6Clusters;
         this.brownFullClusters = brownFullClusters;
@@ -59,12 +67,12 @@ public class IndexMaps implements Serializable {
             String pos = posTags[i];
 
             int wi = -1;
-            if (wordMap.containsKey(word))
-                wi = wordMap.get(word);
+            if (stringMap.containsKey(word))
+                wi = stringMap.get(word);
 
             int pi = -1;
-            if (wordMap.containsKey(pos))
-                pi = wordMap.get(pos);
+            if (stringMap.containsKey(pos))
+                pi = stringMap.get(pos);
 
             tokens.add(wi);
             tags.add(pi);
@@ -83,13 +91,13 @@ public class IndexMaps implements Serializable {
         return new Sentence(tokens, tags, bc4, bc6, bcf);
     }
 
-    public HashMap<String, Integer> getWordMap() {
-        return wordMap;
+    public HashMap<String, Integer> getStringMap() {
+        return stringMap;
     }
 
 
-    public HashMap<Integer, Integer> getLabels() {
-        return labels;
+    public HashMap<Integer, Integer> getLabelMap() {
+        return labelMap;
     }
 
     public int[] clusterId(String word) {
@@ -111,5 +119,26 @@ public class IndexMaps implements Serializable {
         if (brownFullClusters != null && brownFullClusters.size() > 0)
             return true;
         return false;
+    }
+
+    public int getNeuralWordKey(int wordId){
+        int key = 0;
+        if(wordMap.containsKey(wordId))
+            key = wordMap.get(wordId);
+        return key;
+    }
+
+    public int getNeuralPOSKey(int posId){
+        int key = 0;
+        if(posMap.containsKey(posId))
+            key = posMap.get(posId);
+        return key;
+    }
+
+    public int getNeuralDepRelationKey(int labelId){
+        int key = 0;
+        if(depRelationMap.containsKey(labelId))
+            key = depRelationMap.get(labelId);
+        return key;
     }
 }

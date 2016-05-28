@@ -87,7 +87,7 @@ public class YaraParser {
             System.out.println("CoNLL data reading done!");
 
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab : maps.getLabels().keySet())
+            for (int lab : maps.getLabelMap().keySet())
                 dependencyLabels.add(lab);
 
             int featureLength = options.useExtendedFeatures ? 72 : 26;
