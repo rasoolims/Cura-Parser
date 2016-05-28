@@ -66,7 +66,7 @@ public class ArcEagerBeamTrainer {
         String[] files = new String[11];
         BufferedWriter[] writer = new BufferedWriter[11];
         for(int i=0;i<10;i++) {
-            files[i]= trainData + ".feat" + i;
+            files[i]= outputPath + ".feat" + i;
             writer[i] = new BufferedWriter(new FileWriter(files[i]));
         }
 

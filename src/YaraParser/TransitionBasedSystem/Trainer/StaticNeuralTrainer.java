@@ -1,9 +1,11 @@
 package YaraParser.TransitionBasedSystem.Trainer;
 
+import YaraParser.Structures.IndexMaps;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderMultiDataSetIterator;
+import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -14,15 +16,26 @@ import org.deeplearning4j.nn.conf.layers.EmbeddingLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class StaticNeuralTrainer {
 
-    public StaticNeuralTrainer(String[] trainFeatPath,int vocab1Size,  int vocab2Size , int vocab3Size,
+    public StaticNeuralTrainer(String[] trainFeatPath, IndexMaps maps,
                                int wordDimension, int posDimension, int depDimension,
-                               int h1Dimension, int possibleOutputs, int nEpochs) throws Exception{
+                               int h1Dimension, int possibleOutputs, int nEpochs
+    ,String modelPath) throws Exception{
+        int vocab1Size = maps.vocabSize()+2;
+        int vocab2Size = maps.posSize()+2;
+        int vocab3Size =maps.relSize()+1;
         //  vocab1Size =13, vocab2Size=8,   vocab3Size=2
         // wordDimension = 64,   posDimension=32,  depDimension=32
         // h1Dimension =100, possibleOutputs=4,  nEpochs=30
@@ -95,12 +108,72 @@ public class StaticNeuralTrainer {
 
         ComputationGraph net = new ComputationGraph(confComplex);
         net.init();
-        net.setListeners(new ScoreIterationListener(1));
+        net.setListeners(new ScoreIterationListener(100));
 
         for ( int n = 0; n < nEpochs; n++) {
             net.fit( iterator );
         }
-        
-        
+
+
+
+         featuresReader = new RecordReader[10];
+        for(int i=0;i<featuresReader.length;i++) {
+            featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
+            featuresReader[i].initialize(new FileSplit(new File(trainFeatPath[i])));
+        }
+
+
+         labelsReader = new CSVRecordReader(numLinesToSkip,fileDelimiter);
+         labelsCsvPath =trainFeatPath[10];
+        labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
+
+        MultiDataSetIterator testIter = new RecordReaderMultiDataSetIterator.Builder(batchSize)
+                .addReader("s0w", featuresReader[0])
+                .addReader("b0w", featuresReader[1])
+                .addReader("b1w", featuresReader[2])
+                .addReader("b2w", featuresReader[3])
+                .addReader("s0p", featuresReader[4])
+                .addReader("b0p", featuresReader[5])
+                .addReader("b1p", featuresReader[6])
+                .addReader("b2p", featuresReader[7])
+                .addReader("s0l", featuresReader[8])
+                .addReader("sh0l", featuresReader[9])
+                .addReader("csvLabels", labelsReader)
+                .addInput("s0w") //Input: all columns from input reader
+                .addInput("b0w")
+                .addInput("b1w")
+                .addInput("b2w")
+                .addInput("s0p")
+                .addInput("b0p")
+                .addInput("b1p")
+                .addInput("b2p")
+                .addInput("s0l")
+                .addInput("sh0l")
+                .addOutputOneHot("csvLabels", 0, possibleOutputs)   //Output 2: column 4 -> convert to one-hot for classification
+                .build();
+
+        Evaluation eval = new Evaluation(possibleOutputs);
+        int cor = 0;
+        int all =0;
+        while(testIter.hasNext()) {
+            MultiDataSet t = testIter.next();
+            INDArray[] features = t.getFeatures();
+            INDArray[] labels = t.getLabels();
+            System.out.print("HI");
+            INDArray[] predicted = net.output(features);
+
+            for (int i = 0; i < predicted.length; i++) {
+                eval.eval(labels[i], predicted[i]);
+            }
+        }
+        System.out.println(eval.stats());
+
+        FileOutputStream fos = new FileOutputStream(modelPath);
+        GZIPOutputStream gz = new GZIPOutputStream(fos);
+
+        ObjectOutput writer = new ObjectOutputStream(gz);
+        writer.writeObject(maps);
+        writer.writeObject(net);
+        writer.close();
     }
 }
