@@ -152,22 +152,38 @@ public class StaticNeuralTrainer {
                 .addOutputOneHot("csvLabels", 0, possibleOutputs)   //Output 2: column 4 -> convert to one-hot for classification
                 .build();
 
-        Evaluation eval = new Evaluation(possibleOutputs);
         int cor = 0;
         int all =0;
         while(testIter.hasNext()) {
             MultiDataSet t = testIter.next();
             INDArray[] features = t.getFeatures();
-            INDArray[] labels = t.getLabels();
             System.out.print("HI");
             INDArray[] predicted = net.output(features);
 
-            for (int i = 0; i < predicted.length; i++) {
-                eval.eval(labels[i], predicted[i]);
-            }
-        }
-        System.out.println(eval.stats());
+            double max = Double.NEGATIVE_INFINITY;
+            int argmax = 0;
+            int gold = 0;
 
+
+            for (int i = 0; i < predicted[0].length(); i++) {
+              double val =  predicted[0].getDouble(i);
+                if(val>=max){
+                    argmax = i;
+                    max = val;
+                }
+                if(t.getLabels(0).getDouble(i)==1){
+                    gold =i;
+                }
+            }
+
+            if(argmax==gold)
+                cor++;
+            else
+                System.out.println("-->"+gold+"->"+argmax);
+            all++;
+        }
+
+        System.out.println((float) cor/all);
         FileOutputStream fos = new FileOutputStream(modelPath);
         GZIPOutputStream gz = new GZIPOutputStream(fos);
 
