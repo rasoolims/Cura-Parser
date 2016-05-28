@@ -21,7 +21,10 @@ import YaraParser.TransitionBasedSystem.Parser.Actions;
 import YaraParser.TransitionBasedSystem.Parser.ArcEager;
 import YaraParser.TransitionBasedSystem.Parser.BeamScorerThread;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
+import net.didion.jwnl.data.Exc;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.CompletionService;
@@ -59,6 +62,68 @@ public class ArcEagerBeamTrainer {
         randGen = new Random();
         this.maps = maps;
     }
+
+    public void createStaticTrainingDataForNeuralNet(ArrayList<GoldConfiguration> trainData, String outputPath, double dropOutProb) throws Exception {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath));
+        int dataCount = 0;
+
+        for (GoldConfiguration goldConfiguration : trainData) {
+            dataCount++;
+            if (dataCount % 1000 == 0)
+                System.out.print(dataCount + "...");
+            writeTrainigInstanceForSentence(goldConfiguration, writer,dropOutProb);
+        }
+
+    }
+
+    private void writeTrainigInstanceForSentence(GoldConfiguration goldConfiguration, BufferedWriter writer, double dropoutProb) throws Exception {
+        options.useDynamicOracle = false;
+
+        Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
+        Configuration firstOracle = initialConfiguration.clone();
+        ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
+        beam.add(initialConfiguration);
+
+        HashMap<Configuration, Float> oracles = new HashMap<Configuration, Float>();
+
+        oracles.put(firstOracle, 0.0f);
+
+        Configuration bestScoringOracle = null;
+
+        while (!ArcEager.isTerminal(beam) && beam.size() > 0) {
+            /**
+             *  generating new oracles
+             *  it keeps the oracles which are in the terminal state
+             */
+            HashMap<Configuration, Float> newOracles = new HashMap<Configuration, Float>();
+
+            if (options.useDynamicOracle) {
+                bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
+            } else {
+                bestScoringOracle = staticOracle(goldConfiguration, oracles, newOracles);
+            }
+            oracles = newOracles;
+
+            int[] baseFeatures =  FeatureExtractor.extractBaseFeatures(bestScoringOracle,maps);
+            int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size()-1);
+            StringBuilder outputBuilder = new StringBuilder();
+            for(int i=0;i<baseFeatures.length;i++){
+              if(i<12 && randGen.nextDouble()<= dropoutProb && baseFeatures[i]!=1)       //todo
+                    baseFeatures[i] = 0;
+                outputBuilder.append(baseFeatures[i]);
+                outputBuilder.append("\t");
+            }
+            outputBuilder.append(action);
+            outputBuilder.append("\n");
+            writer.write(outputBuilder.toString());
+
+            beam = new ArrayList<Configuration>(options.beamWidth);
+            beam.add(bestScoringOracle);
+        }
+       writer.flush();
+    }
+
+
 
     public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath, boolean lowerCased, HashSet<String> punctuations, int partialTreeIter) throws Exception {
         /**
@@ -306,9 +371,11 @@ public class ArcEagerBeamTrainer {
                     int dependency = goldDependencies.get(top).second;
                     float[] scores = classifier.leftArcScores(features, false);
                     float score = scores[dependency];
-                    ArcEager.leftArc(newConfig.state, dependency);
+                        ArcEager.leftArc(newConfig.state, dependency);
+
                     newConfig.addAction(3 + dependencyRelations.size() + dependency);
                     newConfig.addScore(score);
+
                 } else if (top >= 0 && state.hasHead(top)) {
 
                     if (reversedDependencies.containsKey(top)) {

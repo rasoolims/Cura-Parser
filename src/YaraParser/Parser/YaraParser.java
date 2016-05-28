@@ -22,6 +22,16 @@ public class YaraParser {
     public static void main(String[] args) throws Exception {
         Options options = Options.processArgs(args);
 
+        if(true){
+            options.train = true;
+            options.inputFile ="/Users/msr/Documents/phd_work/data_tools/universal_treebanks_v2.0/std/en/train.conll";
+            options.devPath ="/Users/msr/Documents/phd_work/data_tools/universal_treebanks_v2.0/std/en/dev.conll";
+            options.modelFile ="/tmp/model";
+
+            createTrainData(options,"/Users/msr/Desktop/train.instances","/Users/msr/Desktop/dev.instances");
+            System.exit(0);
+        }
+
         if (options.showHelp) {
             Options.showHelp();
         } else {
@@ -116,4 +126,51 @@ public class YaraParser {
             trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase, options.punctuations, options.partialTrainingStartingIteration);
         }
     }
+
+    public static void createTrainData(Options options, String trainOutputPath, String devOutputPath) throws Exception {
+        if (options.inputFile.equals("") || options.modelFile.equals("")) {
+            Options.showHelp();
+        } else {
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile);
+            CoNLLReader reader = new CoNLLReader(options.inputFile);
+            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+            System.out.println("CoNLL data reading done!");
+
+            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            for (int lab : maps.getLabelMap().keySet())
+                dependencyLabels.add(lab);
+
+            int featureLength = options.useExtendedFeatures ? 72 : 26;
+            if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
+                featureLength = 153;
+
+            System.out.println("size of training data (#sens): " + dataSet.size());
+
+            HashMap<String, Integer> labels = new HashMap<String, Integer>();
+            int labIndex = 0;
+            labels.put("sh", labIndex++);
+            labels.put("rd", labIndex++);
+            labels.put("us", labIndex++);
+            for (int label : dependencyLabels) {
+                if (options.labeled) {
+                    labels.put("ra_" + label, 3 + label);
+                    labels.put("la_" + label, 3 + dependencyLabels.size() + label);
+                } else {
+                    labels.put("ra_" + label, 3);
+                    labels.put("la_" + label, 4);
+                }
+            }
+
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, dependencyLabels.size()),
+                    options, dependencyLabels, featureLength, maps);
+            trainer.createStaticTrainingDataForNeuralNet(dataSet, trainOutputPath, 0.05);
+            if(devOutputPath!=null){
+                CoNLLReader devReader = new CoNLLReader(options.devPath);
+                ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+                trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath,-1);
+            }
+
+        }
+    }
+
 }

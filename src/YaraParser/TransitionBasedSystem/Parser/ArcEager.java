@@ -9,6 +9,7 @@ import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.State;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ArcEager extends TransitionBasedParser {
     public static void shift(State state) throws Exception {
@@ -83,5 +84,11 @@ public class ArcEager extends TransitionBasedParser {
         return true;
     }
 
+    public static boolean isTerminal(HashMap<Configuration,Float> oracles) {
+        for (Configuration configuration : oracles.keySet())
+            if (!configuration.state.isTerminalState())
+                return false;
+        return true;
+    }
 
 }
