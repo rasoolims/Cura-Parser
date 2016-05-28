@@ -20,7 +20,7 @@ import java.io.File;
 
 public class StaticNeuralTrainer {
 
-    public StaticNeuralTrainer(String trainPath,int vocab1Size,  int vocab2Size , int vocab3Size,
+    public StaticNeuralTrainer(String[] trainFeatPath,int vocab1Size,  int vocab2Size , int vocab3Size,
                                int wordDimension, int posDimension, int depDimension,
                                int h1Dimension, int possibleOutputs, int nEpochs) throws Exception{
         //  vocab1Size =13, vocab2Size=8,   vocab3Size=2
@@ -29,7 +29,7 @@ public class StaticNeuralTrainer {
 
         double learningRate = 0.01;
         Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
-        int batchSize = 10;
+        int batchSize = 1;
 
         ComputationGraphConfiguration confComplex = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
@@ -57,31 +57,40 @@ public class StaticNeuralTrainer {
 
         int numLinesToSkip = 0;
         String fileDelimiter = ",";
-        RecordReader rr = new CSVRecordReader(numLinesToSkip,fileDelimiter);
-        rr.initialize(new FileSplit(new File(trainPath)));
-        MultiDataSetIterator trainIterator = new RecordReaderMultiDataSetIterator.Builder(batchSize)
-                .addReader("s0w",rr)
-                .addReader("b0w",rr)
-                .addReader("b1w",rr)
-                .addReader("b2w",rr)
-                .addReader("s0p",rr)
-                .addReader("b0p",rr)
-                .addReader("b1p",rr)
-                .addReader("b2p",rr)
-                .addReader("s0l",rr)
-                .addReader("sh0l",rr)
-                .addInput("s0w",1,1)
-                .addInput("b0w",2,2)
-                .addInput("b1w",3,3)
-                .addInput("b2w",4,4)
-                .addInput("s0p",5,5)
-                .addInput("b0p",6,6)
-                .addInput("b1p",7,7)
-                .addInput("b2p",8,8)
-                .addInput("s0l",9,9)
-                .addInput("sh0l",10,10)
-                .addReader("out",rr)
-                .addOutput("out",0,0)
+        RecordReader[] featuresReader = new RecordReader[10];
+        for(int i=0;i<featuresReader.length;i++) {
+           featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
+            featuresReader[i].initialize(new FileSplit(new File(trainFeatPath[i])));
+        }
+
+
+        RecordReader labelsReader = new CSVRecordReader(numLinesToSkip,fileDelimiter);
+        String labelsCsvPath =trainFeatPath[10];
+        labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
+
+        MultiDataSetIterator iterator = new RecordReaderMultiDataSetIterator.Builder(batchSize)
+                .addReader("s0w", featuresReader[0])
+                .addReader("b0w", featuresReader[1])
+                .addReader("b1w", featuresReader[2])
+                .addReader("b2w", featuresReader[3])
+                .addReader("s0p", featuresReader[4])
+                .addReader("b0p", featuresReader[5])
+                .addReader("b1p", featuresReader[6])
+                .addReader("b2p", featuresReader[7])
+                .addReader("s0l", featuresReader[8])
+                .addReader("sh0l", featuresReader[9])
+                .addReader("csvLabels", labelsReader)
+                .addInput("s0w") //Input: all columns from input reader
+                .addInput("b0w")
+                .addInput("b1w")
+                .addInput("b2w")
+                .addInput("s0p")
+                .addInput("b0p")
+                .addInput("b1p")
+                .addInput("b2p")
+                .addInput("s0l")
+                .addInput("sh0l")
+                .addOutputOneHot("csvLabels", 0, possibleOutputs)   //Output 2: column 4 -> convert to one-hot for classification
                 .build();
 
         ComputationGraph net = new ComputationGraph(confComplex);
@@ -89,7 +98,9 @@ public class StaticNeuralTrainer {
         net.setListeners(new ScoreIterationListener(1));
 
         for ( int n = 0; n < nEpochs; n++) {
-            net.fit( trainIterator );
+            net.fit( iterator );
         }
+        
+        
     }
 }

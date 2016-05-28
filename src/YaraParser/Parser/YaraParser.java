@@ -167,11 +167,11 @@ public class YaraParser {
 
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, dependencyLabels.size()),
                     options, dependencyLabels, featureLength, maps);
-//            trainer.createStaticTrainingDataForNeuralNet(dataSet, trainOutputPath, 0.05);
-//                CoNLLReader devReader = new CoNLLReader(options.devPath);
-//                ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
-//                trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath,-1);
-            StaticNeuralTrainer staticNeuralTrainer = new StaticNeuralTrainer(trainOutputPath,maps.vocabSize()+2,
+            trainer.createStaticTrainingDataForNeuralNet(dataSet, trainOutputPath, 0.05);
+               CoNLLReader devReader = new CoNLLReader(options.devPath);
+               ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+             String[] files=   trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath,-1);
+            StaticNeuralTrainer staticNeuralTrainer = new StaticNeuralTrainer(files,maps.vocabSize()+2,
                     maps.posSize()+2,maps.relSize()+1,
                     64,32,32,100,labels.size()-1,30);
 

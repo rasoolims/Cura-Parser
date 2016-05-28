@@ -62,8 +62,16 @@ public class ArcEagerBeamTrainer {
         this.maps = maps;
     }
 
-    public void createStaticTrainingDataForNeuralNet(ArrayList<GoldConfiguration> trainData, String outputPath, double dropOutProb) throws Exception {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath));
+    public String[] createStaticTrainingDataForNeuralNet(ArrayList<GoldConfiguration> trainData, String outputPath, double dropOutProb) throws Exception {
+        String[] files = new String[11];
+        BufferedWriter[] writer = new BufferedWriter[11];
+        for(int i=0;i<10;i++) {
+            files[i]= trainData + ".feat" + i;
+            writer[i] = new BufferedWriter(new FileWriter(files[i]));
+        }
+
+        files[10] =                                            outputPath+".lab";
+        writer[10] = new BufferedWriter(new FileWriter(files[10]));
         int dataCount = 0;
 
         for (GoldConfiguration goldConfiguration : trainData) {
@@ -72,10 +80,11 @@ public class ArcEagerBeamTrainer {
                 System.out.print(dataCount + "...");
             writeTrainigInstanceForSentence(goldConfiguration, writer,dropOutProb);
         }
-
+        for(int i=0;i<11;i++)writer[i].close();
+        return files;
     }
 
-    private void writeTrainigInstanceForSentence(GoldConfiguration goldConfiguration, BufferedWriter writer, double dropoutProb) throws Exception {
+    private void writeTrainigInstanceForSentence(GoldConfiguration goldConfiguration,   BufferedWriter[] writer, double dropoutProb) throws Exception {
         options.useDynamicOracle = false;
 
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
@@ -110,22 +119,27 @@ public class ArcEagerBeamTrainer {
                 action-=1;
 
             StringBuilder outputBuilder = new StringBuilder();
-            outputBuilder.append(action);
+        //    outputBuilder.append(action);
             for(int i=0;i<baseFeatures.length;i++){
            //     if(i<=3 || (i>=12 && i<=15) || (i>=24 && i<=25)) {
                     if (i < 12 && randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)       //todo
                         baseFeatures[i] = 0;
-                    outputBuilder.append(",");
-                    outputBuilder.append(baseFeatures[i]);
-             //   }
+                writer[i].write(baseFeatures[i]+"\n");
+               //     outputBuilder.append(baseFeatures[i]);
+//                if(i<baseFeatures.length-1)
+//                    outputBuilder.append(",");
+                //   }
             }
             outputBuilder.append("\n");
-            writer.write(outputBuilder.toString());
+            writer[10].write(action+"\n");
+         //   writer1.write(outputBuilder.toString());
+            //writer2.write(action+"\n");
 
             beam = new ArrayList<Configuration>(options.beamWidth);
             beam.add(bestScoringOracle);
         }
-       writer.flush();
+       //writer1.flush();
+       // writer2.flush();
     }
 
 
