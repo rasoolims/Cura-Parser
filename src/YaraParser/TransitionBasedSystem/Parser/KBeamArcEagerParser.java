@@ -16,6 +16,10 @@ import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
+import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.api.MultiDataSet;
+import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -720,4 +724,136 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             isTerminated = executor.isTerminated();
         }
     }
+
+
+    public static Configuration parseNeural(ComputationGraph nn,Sentence sentence, boolean rootFirst, IndexMaps maps,ArrayList<Integer> dependencyRelations, int beamWidth) throws Exception {
+        Configuration initialConfiguration = new Configuration(sentence, rootFirst);
+
+        ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
+        beam.add(initialConfiguration);
+
+        while (!ArcEager.isTerminal(beam)) {
+            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+
+            parseNeuralWithOneThread(nn,beam, beamPreserver, beamWidth,maps,dependencyRelations);
+
+            ArrayList<Configuration> repBeam = new ArrayList<Configuration>(beamWidth);
+            for (BeamElement beamElement : beamPreserver.descendingSet()) {
+                if (repBeam.size() >= beamWidth)
+                    break;
+                int b = beamElement.number;
+                int action = beamElement.action;
+                int label = beamElement.label;
+                float score = beamElement.score;
+
+                Configuration newConfig = beam.get(b).clone();
+
+                if (action == 0) {
+                    ArcEager.shift(newConfig.state);
+                    newConfig.addAction(0);
+                } else if (action == 1) {
+                    ArcEager.reduce(newConfig.state);
+                    newConfig.addAction(1);
+                } else if (action == 2) {
+                    ArcEager.rightArc(newConfig.state, label);
+                    newConfig.addAction(3 + label);
+                } else if (action == 3) {
+                    ArcEager.leftArc(newConfig.state, label);
+                    newConfig.addAction(3 + maps.getLabelMap().size() + label);
+                } else if (action == 4) {
+                    ArcEager.unShift(newConfig.state);
+                    newConfig.addAction(2);
+                }
+                newConfig.setScore(score);
+                repBeam.add(newConfig);
+            }
+            beam = repBeam;
+        }
+
+        Configuration bestConfiguration = null;
+        float bestScore = Float.NEGATIVE_INFINITY;
+        for (Configuration configuration : beam) {
+            if (configuration.getScore(true) > bestScore) {
+                bestScore = configuration.getScore(true);
+                bestConfiguration = configuration;
+            }
+        }
+        return bestConfiguration;
+    }
+
+    private static void parseNeuralWithOneThread(ComputationGraph nn, ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, int beamWidth, IndexMaps maps,ArrayList<Integer> dependencyRelations) throws Exception {
+        for (int b = 0; b < beam.size(); b++) {
+            Configuration configuration = beam.get(b);
+            int[] baseFeatures =  FeatureExtractor.extractBaseFeatures(configuration,maps);
+
+            INDArray[] features = new INDArray[baseFeatures.length];
+            for(int i=0;i<baseFeatures.length;i++){
+                INDArray inEmbedding =  Nd4j.create(1);
+               inEmbedding.putScalar(0, baseFeatures[i]) ;
+
+                features[i] = inEmbedding;
+            }
+            MultiDataSet t = new org.nd4j.linalg.dataset.MultiDataSet(features, null);
+
+
+            INDArray[] predicted =  nn.output(t.getFeatures());
+            State currentState = configuration.state;
+            float prevScore = configuration.score;
+            boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
+            boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
+            boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
+            boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
+            if (!canShift
+                    && !canReduce
+                    && !canRightArc
+                    && !canLeftArc) {
+                float addedScore = prevScore;
+                beamPreserver.add(new BeamElement(addedScore, b, 4, -1));
+
+                if (beamPreserver.size() > beamWidth)
+                    beamPreserver.pollFirst();
+            }
+
+            if (canShift) {
+                float score = -(float)Math.log(predicted[0].getFloat(0));// classifier.shiftScore(features, true);
+                float addedScore = score + prevScore;
+                beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
+
+                if (beamPreserver.size() > beamWidth)
+                    beamPreserver.pollFirst();
+            }
+
+            if (canReduce) {
+                float score =  -(float)Math.log(predicted[0].getFloat(1)); //classifier.reduceScore(features, true);
+                float addedScore = score + prevScore;
+                beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
+
+                if (beamPreserver.size() > beamWidth)
+                    beamPreserver.pollFirst();
+            }
+
+            if (canRightArc) {
+                for (int dependency : dependencyRelations) {
+                    float score =  -(float)Math.log(predicted[0].getFloat(dependency+2)); //rightArcScores[dependency];
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+            }
+
+            if (canLeftArc) {
+                for (int dependency : dependencyRelations) {
+                    float score =  -(float)Math.log(predicted[0].getFloat(dependency+2+dependencyRelations.size())); //leftArcScores[dependency];
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+            }
+        }
+    }
+
 }

@@ -30,24 +30,11 @@ public class EmbeddingLayerTest {
     @Test
     public void testEmbeddingLayerConfig() {
 
-        int vocabSize = 1000;
-        int posSize = 40;
-        ComputationGraphConfiguration confComplex = new NeuralNetConfiguration.Builder()
-                .learningRate(0.01)
-                .graphBuilder()
-                .addInputs("word1", "word2")
-                .addLayer("L1", new EmbeddingLayer.Builder().nIn(vocabSize).nOut(4).build(), "word1")
-                .addLayer("L2", new EmbeddingLayer.Builder().nIn(vocabSize).nOut(4).build(), "word2")
-                .addVertex("merge", new MergeVertex(), "L1", "L2")
-                .addLayer("middle", new DenseLayer.Builder().nIn(4 + 4).nOut(10).build(), "merge")
-                .addLayer("out", new OutputLayer.Builder().nIn(10).nOut(5).activation("softmax").build(), "middle")
-                .setOutputs("out")
-                .build();
-        
+        int s = 15;
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .activation("tanh")
                 .list()
-                .layer(0, new EmbeddingLayer.Builder().nIn(10).nOut(5).build())
+                .layer(0, new EmbeddingLayer.Builder().nIn(s).nOut(5).build())
                 .layer(1, new OutputLayer.Builder().nIn(5).nOut(4).build())
                 .pretrain(false).backprop(true)
                 .build();
@@ -58,12 +45,12 @@ public class EmbeddingLayerTest {
         Layer l0 = net.getLayer(0);
 
         assertEquals(org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer.class, l0.getClass());
-        assertEquals(10, ((FeedForwardLayer) l0.conf().getLayer()).getNIn());
+        assertEquals(s, ((FeedForwardLayer) l0.conf().getLayer()).getNIn());
         assertEquals(5, ((FeedForwardLayer) l0.conf().getLayer()).getNOut());
 
         INDArray weights = l0.getParam(DefaultParamInitializer.WEIGHT_KEY);
         INDArray bias = l0.getParam(DefaultParamInitializer.BIAS_KEY);
-        assertArrayEquals(new int[]{10, 5}, weights.shape());
+        assertArrayEquals(new int[]{s, 5}, weights.shape());
         assertArrayEquals(new int[]{1, 5}, bias.shape());
     }
 

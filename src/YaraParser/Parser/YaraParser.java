@@ -28,6 +28,7 @@ public class YaraParser {
             options.inputFile ="/Users/msr/Desktop/dev_smal.conll";
             options.devPath ="/Users/msr/Desktop/dev_smal.conll";
             options.modelFile ="/tmp/model";
+            options.labeled = false;
         }
 
         if(true){
@@ -172,7 +173,7 @@ public class YaraParser {
                ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
              String[] files=   trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath,-1);
             StaticNeuralTrainer staticNeuralTrainer = new StaticNeuralTrainer(files,maps,
-                    64,32,32,100,labels.size()-1,10,options.modelFile);
+                    64,32,32,100,labels.size()-1,10,options.modelFile, options.inputFile,dependencyLabels);
 
         }
     }

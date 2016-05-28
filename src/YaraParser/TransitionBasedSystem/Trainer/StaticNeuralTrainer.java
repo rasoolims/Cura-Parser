@@ -1,13 +1,19 @@
 package YaraParser.TransitionBasedSystem.Trainer;
 
+import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Structures.IndexMaps;
+import YaraParser.TransitionBasedSystem.Configuration.Configuration;
+import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
+import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderMultiDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
+import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
+import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.conf.graph.MergeVertex;
@@ -15,16 +21,21 @@ import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.EmbeddingLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.nn.params.DefaultParamInitializer;
+import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.lossfunctions.LossFunctions;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.zip.GZIPOutputStream;
 
 public class StaticNeuralTrainer {
@@ -32,7 +43,7 @@ public class StaticNeuralTrainer {
     public StaticNeuralTrainer(String[] trainFeatPath, IndexMaps maps,
                                int wordDimension, int posDimension, int depDimension,
                                int h1Dimension, int possibleOutputs, int nEpochs
-    ,String modelPath) throws Exception{
+    ,String modelPath, String conllPath,ArrayList<Integer> dependencyRelations) throws Exception{
         int vocab1Size = maps.vocabSize()+2;
         int vocab2Size = maps.posSize()+2;
         int vocab3Size =maps.relSize()+1;
@@ -44,22 +55,25 @@ public class StaticNeuralTrainer {
         Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
         int batchSize = 1;
 
+        EmbeddingLayer wordLayer = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
+        EmbeddingLayer wordLayer2 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
+
         ComputationGraphConfiguration confComplex = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .learningRate(learningRate)
                 .updater(Updater.SGD).momentum(0.9).regularization(true).l2(0.0001)
                 .graphBuilder()
                 .addInputs("s0w", "b0w", "b1w", "b2w", "s0p","b0p","b1p","b2p","s0l","sh0l")
-                .addLayer("L1", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).build(), "s0w")
-                .addLayer("L2", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).build(), "b0w")
-                .addLayer("L3", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).build(), "b1w")
-                .addLayer("L4", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).build(), "b2w")
-                .addLayer("L5", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).build(), "s0p")
-                .addLayer("L6", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).build(), "b0p")
-                .addLayer("L7", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).build(), "b1p")
-                .addLayer("L8", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).build(), "b2p")
-                .addLayer("L9", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).build(), "s0l")
-                .addLayer("L10", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).build(), "sh0l")
+                .addLayer("L1", wordLayer, "s0w")
+                .addLayer("L2", wordLayer2, "b0w")
+                .addLayer("L3", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b1w")
+                .addLayer("L4", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b2w")
+                .addLayer("L5", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0p")
+                .addLayer("L6", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b0p")
+                .addLayer("L7", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b1p")
+                .addLayer("L8", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b2p")
+                .addLayer("L9", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0l")
+                .addLayer("L10", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "sh0l")
                 .addVertex("concat", new MergeVertex(), "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10")
                 .addLayer("h1", new DenseLayer.Builder().nIn(4*(wordDimension+posDimension)+2*depDimension)
                         .nOut(h1Dimension).activation("relu").build(), "concat")
@@ -110,6 +124,7 @@ public class StaticNeuralTrainer {
         net.init();
         net.setListeners(new ScoreIterationListener(100));
 
+
         for ( int n = 0; n < nEpochs; n++) {
             net.fit( iterator );
         }
@@ -123,8 +138,8 @@ public class StaticNeuralTrainer {
         }
 
 
-         labelsReader = new CSVRecordReader(numLinesToSkip,fileDelimiter);
-         labelsCsvPath =trainFeatPath[10];
+        labelsReader = new CSVRecordReader(numLinesToSkip,fileDelimiter);
+        labelsCsvPath =trainFeatPath[10];
         labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
 
         MultiDataSetIterator testIter = new RecordReaderMultiDataSetIterator.Builder(batchSize)
@@ -157,7 +172,6 @@ public class StaticNeuralTrainer {
         while(testIter.hasNext()) {
             MultiDataSet t = testIter.next();
             INDArray[] features = t.getFeatures();
-            System.out.print("HI");
             INDArray[] predicted = net.output(features);
 
             double max = Double.NEGATIVE_INFINITY;
@@ -182,6 +196,14 @@ public class StaticNeuralTrainer {
                 System.out.println("-->"+gold+"->"+argmax);
             all++;
         }
+
+        CoNLLReader reader = new CoNLLReader(conllPath);
+        ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(10000,true,false,false, false,maps);
+        for(GoldConfiguration configuration:goldConfigurations){
+            Configuration finalParse =  KBeamArcEagerParser.parseNeural(net,configuration.getSentence(),false,maps,dependencyRelations,1);
+            System.out.print(finalParse.score);
+        }
+
 
         System.out.println((float) cor/all);
         FileOutputStream fos = new FileOutputStream(modelPath);
