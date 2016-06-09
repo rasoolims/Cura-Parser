@@ -23,17 +23,17 @@ public class YaraParser {
     public static void main(String[] args) throws Exception {
         Options options = Options.processArgs(args);
 
-        if(args.length<2){
+        if (args.length < 2) {
             options.train = true;
-            options.inputFile ="/Users/msr/Desktop/dev_smal.conll";
-            options.devPath ="/Users/msr/Desktop/dev_smal.conll";
-            options.modelFile ="/tmp/model";
+            options.inputFile = "/Users/msr/Desktop/dev_smal.conll";
+            options.devPath = "/Users/msr/Desktop/dev_smal.conll";
+            options.modelFile = "/tmp/model";
             options.labeled = true;
         }
 
-        if(true){
+        if (true) {
             System.out.println(options);
-            createTrainData(options,options.inputFile+".csv",options.devPath+".csv");
+            createTrainData(options, options.inputFile + ".csv", options.devPath + ".csv");
             System.exit(0);
         }
 
@@ -169,12 +169,12 @@ public class YaraParser {
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, dependencyLabels.size()),
                     options, dependencyLabels, featureLength, maps);
             trainer.createStaticTrainingDataForNeuralNet(dataSet, trainOutputPath, 0.05);
-               CoNLLReader devReader = new CoNLLReader(options.devPath);
+            CoNLLReader devReader = new CoNLLReader(options.devPath);
             ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
-             String[] devFiles=   trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath,-1);
-            String[] trainFiles=  trainer.createStaticTrainingDataForNeuralNet(dataSet, devOutputPath,-1);
-            StaticNeuralTrainer.trainStaticNeural(trainFiles, devFiles, maps,64,32,32,100,
-                    labels.size()-1,100,options.modelFile, options.inputFile, dependencyLabels);
+            String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath, -1);
+            String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(dataSet, devOutputPath, -1);
+            StaticNeuralTrainer.trainStaticNeural(trainFiles, devFiles, maps, 64, 32, 32, 100,
+                    labels.size() - 1, 100, options.modelFile, options.inputFile, dependencyLabels);
         }
     }
 

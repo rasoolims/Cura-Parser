@@ -42,7 +42,7 @@ public class ArcEagerBeamTrainer {
      */
     private String updateMode;
     private AveragedPerceptron classifier;
-   
+
     private ArrayList<Integer> dependencyRelations;
     private int featureLength;
 
@@ -65,12 +65,12 @@ public class ArcEagerBeamTrainer {
     public String[] createStaticTrainingDataForNeuralNet(ArrayList<GoldConfiguration> trainData, String outputPath, double dropOutProb) throws Exception {
         String[] files = new String[11];
         BufferedWriter[] writer = new BufferedWriter[11];
-        for(int i=0;i<10;i++) {
-            files[i]= outputPath + ".feat" + i;
+        for (int i = 0; i < 10; i++) {
+            files[i] = outputPath + ".feat" + i;
             writer[i] = new BufferedWriter(new FileWriter(files[i]));
         }
 
-        files[10] =                                            outputPath+".lab";
+        files[10] = outputPath + ".lab";
         writer[10] = new BufferedWriter(new FileWriter(files[10]));
         int dataCount = 0;
 
@@ -78,13 +78,13 @@ public class ArcEagerBeamTrainer {
             dataCount++;
             if (dataCount % 1000 == 0)
                 System.out.print(dataCount + "...");
-            writeTrainigInstanceForSentence(goldConfiguration, writer,dropOutProb);
+            writeTrainigInstanceForSentence(goldConfiguration, writer, dropOutProb);
         }
-        for(int i=0;i<11;i++)writer[i].close();
+        for (int i = 0; i < 11; i++) writer[i].close();
         return files;
     }
 
-    private void writeTrainigInstanceForSentence(GoldConfiguration goldConfiguration,   BufferedWriter[] writer, double dropoutProb) throws Exception {
+    private void writeTrainigInstanceForSentence(GoldConfiguration goldConfiguration, BufferedWriter[] writer, double dropoutProb) throws Exception {
         options.useDynamicOracle = false;
 
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
@@ -112,36 +112,35 @@ public class ArcEagerBeamTrainer {
             }
             oracles = newOracles;
 
-            int[] baseFeatures =  FeatureExtractor.extractBaseFeatures(bestScoringOracle,maps);
-            int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size()-1);
+            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(bestScoringOracle, maps);
+            int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size() - 1);
 
-            if(action>=2)
-                action-=1;
+            if (action >= 2)
+                action -= 1;
 
             StringBuilder outputBuilder = new StringBuilder();
-        //    outputBuilder.append(action);
-            for(int i=0;i<baseFeatures.length;i++){
-           //     if(i<=3 || (i>=12 && i<=15) || (i>=24 && i<=25)) {
-                    if (i < 12 && randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)       //todo
-                        baseFeatures[i] = 0;
-                writer[i].write(baseFeatures[i]+"\n");
-               //     outputBuilder.append(baseFeatures[i]);
+            //    outputBuilder.append(action);
+            for (int i = 0; i < baseFeatures.length; i++) {
+                //     if(i<=3 || (i>=12 && i<=15) || (i>=24 && i<=25)) {
+                if (i < 12 && randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)       //todo
+                    baseFeatures[i] = 0;
+                writer[i].write(baseFeatures[i] + "\n");
+                //     outputBuilder.append(baseFeatures[i]);
 //                if(i<baseFeatures.length-1)
 //                    outputBuilder.append(",");
                 //   }
             }
             outputBuilder.append("\n");
-            writer[10].write(action+"\n");
-         //   writer1.write(outputBuilder.toString());
+            writer[10].write(action + "\n");
+            //   writer1.write(outputBuilder.toString());
             //writer2.write(action+"\n");
 
             beam = new ArrayList<Configuration>(options.beamWidth);
             beam.add(bestScoringOracle);
         }
-       //writer1.flush();
-       // writer2.flush();
+        //writer1.flush();
+        // writer2.flush();
     }
-
 
 
     public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath, boolean lowerCased, HashSet<String> punctuations, int partialTreeIter) throws Exception {
@@ -168,12 +167,12 @@ public class ArcEagerBeamTrainer {
             System.out.print("\n");
             long end = System.currentTimeMillis();
             long timeSec = (end - start) / 1000;
-            System.out.println("iteration "+i+" took " + timeSec + " seconds\n");
+            System.out.println("iteration " + i + " took " + timeSec + " seconds\n");
 
             System.out.print("saving the model...");
             InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, options);
-           if(i==maxIteration-1)
-            infStruct.saveModel(modelPath);
+            if (i == maxIteration - 1)
+                infStruct.saveModel(modelPath);
 
             System.out.println("done\n");
 
@@ -390,7 +389,7 @@ public class ArcEagerBeamTrainer {
                     int dependency = goldDependencies.get(top).second;
                     float[] scores = classifier.leftArcScores(features, false);
                     float score = scores[dependency];
-                        ArcEager.leftArc(newConfig.state, dependency);
+                    ArcEager.leftArc(newConfig.state, dependency);
 
                     newConfig.addAction(3 + dependencyRelations.size() + dependency);
                     newConfig.addScore(score);

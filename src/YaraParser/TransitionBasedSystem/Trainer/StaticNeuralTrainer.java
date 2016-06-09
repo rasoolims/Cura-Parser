@@ -41,23 +41,23 @@ import java.util.zip.GZIPOutputStream;
 
 public class StaticNeuralTrainer {
 
-    public static void trainStaticNeural(String[] trainFeatPath, String[] devFeatPath,IndexMaps maps,
-                               int wordDimension, int posDimension, int depDimension,
-                               int h1Dimension, int possibleOutputs, int nEpochs
-    ,String modelPath, String conllPath,ArrayList<Integer> dependencyRelations) throws Exception{
-        int vocab1Size = maps.vocabSize()+2;
-        int vocab2Size = maps.posSize()+2;
-        int vocab3Size =maps.relSize()+1;
+    public static void trainStaticNeural(String[] trainFeatPath, String[] devFeatPath, IndexMaps maps,
+                                         int wordDimension, int posDimension, int depDimension,
+                                         int h1Dimension, int possibleOutputs, int nEpochs
+            , String modelPath, String conllPath, ArrayList<Integer> dependencyRelations) throws Exception {
+        int vocab1Size = maps.vocabSize() + 2;
+        int vocab2Size = maps.posSize() + 2;
+        int vocab3Size = maps.relSize() + 1;
         //  vocab1Size =13, vocab2Size=8,   vocab3Size=2
         // wordDimension = 64,   posDimension=32,  depDimension=32
         // h1Dimension =100, possibleOutputs=4,  nEpochs=30
 
         double learningRate = 0.01;
-       Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
+        Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
         int batchSize = 1;
 
-        MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFeatPath,batchSize,possibleOutputs);
-        MultiDataSetIterator devIter = readMultiDataSetIterator(devFeatPath,batchSize,possibleOutputs);
+        MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFeatPath, batchSize, possibleOutputs);
+        MultiDataSetIterator devIter = readMultiDataSetIterator(devFeatPath, batchSize, possibleOutputs);
 
 
         EmbeddingLayer wordLayer = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
@@ -68,7 +68,7 @@ public class StaticNeuralTrainer {
                 .learningRate(learningRate)
                 .updater(Updater.SGD).momentum(0.9).regularization(true).l2(0.0001)
                 .graphBuilder()
-                .addInputs("s0w", "b0w", "b1w", "b2w", "s0p","b0p","b1p","b2p","s0l","sh0l")
+                .addInputs("s0w", "b0w", "b1w", "b2w", "s0p", "b0p", "b1p", "b2p", "s0l", "sh0l")
                 .addLayer("L1", wordLayer, "s0w")
                 .addLayer("L2", wordLayer2, "b0w")
                 .addLayer("L3", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b1w")
@@ -80,7 +80,7 @@ public class StaticNeuralTrainer {
                 .addLayer("L9", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0l")
                 .addLayer("L10", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "sh0l")
                 .addVertex("concat", new MergeVertex(), "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10")
-                .addLayer("h1", new DenseLayer.Builder().nIn(4*(wordDimension+posDimension)+2*depDimension)
+                .addLayer("h1", new DenseLayer.Builder().nIn(4 * (wordDimension + posDimension) + 2 * depDimension)
                         .nOut(h1Dimension).activation("relu").build(), "concat")
                 .addLayer("out", new OutputLayer.Builder().nIn(h1Dimension).nOut(possibleOutputs).activation("softmax").build(), "h1")
                 .setOutputs("out")
@@ -101,14 +101,14 @@ public class StaticNeuralTrainer {
                 .build();
 
 
-        IEarlyStoppingTrainer trainer = new EarlyStoppingGraphTrainer(esConf,net,trainIter,new  LoggingEarlyStoppingListener());
+        IEarlyStoppingTrainer trainer = new EarlyStoppingGraphTrainer(esConf, net, trainIter, new LoggingEarlyStoppingListener());
         EarlyStoppingResult result = trainer.fit();
 
-       System.out.println(result.getTerminationDetails());
+        System.out.println(result.getTerminationDetails());
 
         int cor = 0;
-        int all =0;
-        while(devIter.hasNext()) {
+        int all = 0;
+        while (devIter.hasNext()) {
             MultiDataSet t = devIter.next();
             INDArray[] features = t.getFeatures();
             INDArray[] predicted = net.output(features);
@@ -119,21 +119,21 @@ public class StaticNeuralTrainer {
 
 
             for (int i = 0; i < predicted[0].length(); i++) {
-              double val =  predicted[0].getDouble(i);
-                if(val>=max){
+                double val = predicted[0].getDouble(i);
+                if (val >= max) {
                     argmax = i;
                     max = val;
                 }
-                if(t.getLabels(0).getDouble(i)==1){
-                    gold =i;
+                if (t.getLabels(0).getDouble(i) == 1) {
+                    gold = i;
                 }
             }
 
-            if(argmax==gold)
+            if (argmax == gold)
                 cor++;
             all++;
         }
-        System.out.println((float) cor/all);
+        System.out.println((float) cor / all);
 //
 //        CoNLLReader reader = new CoNLLReader(conllPath);
 //        ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(10000,true,false,false, false,maps);
@@ -155,14 +155,14 @@ public class StaticNeuralTrainer {
         int numLinesToSkip = 0;
         String fileDelimiter = ",";
         RecordReader[] featuresReader = new RecordReader[10];
-        for(int i=0;i<featuresReader.length;i++) {
+        for (int i = 0; i < featuresReader.length; i++) {
             featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
             featuresReader[i].initialize(new FileSplit(new File(path[i])));
         }
 
 
-        RecordReader labelsReader = new CSVRecordReader(numLinesToSkip,fileDelimiter);
-        String labelsCsvPath =path[10];
+        RecordReader labelsReader = new CSVRecordReader(numLinesToSkip, fileDelimiter);
+        String labelsCsvPath = path[10];
         labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
 
         MultiDataSetIterator iterator = new RecordReaderMultiDataSetIterator.Builder(batchSize)
@@ -208,13 +208,13 @@ public class StaticNeuralTrainer {
 
         @Override
         public void onEpoch(int epochNum, double score, EarlyStoppingConfiguration esConfig, ComputationGraph net) {
-            log.info("EarlyStopping: onEpoch called (epochNum={}, score={}}",epochNum,score);
+            log.info("EarlyStopping: onEpoch called (epochNum={}, score={}}", epochNum, score);
             onEpochCallCount++;
         }
 
         @Override
         public void onCompletion(EarlyStoppingResult esResult) {
-            log.info("EarlyStopping: onCompletion called (result: {})",esResult);
+            log.info("EarlyStopping: onCompletion called (result: {})", esResult);
             onCompletionCallCount++;
         }
     }

@@ -1,15 +1,14 @@
 package Deep4J.Test;
 
 
-import java.io.File;
-
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.datasets.iterator.DataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
-import org.deeplearning4j.models.word2vec.Word2Vec;
+import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
+import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -23,8 +22,8 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
-import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
-import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
+
+import java.io.File;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -42,9 +41,9 @@ public class Test {
     public static void main(String[] args) throws Exception {
         System.out.println("hello world!");
 
-        WordVectors wordVectors =  WordVectorSerializer.loadTxtVectors(new File(WORD_VECTORS_PATH));
-        WordVectors wordVectors2 =  WordVectorSerializer.loadTxtVectors(new File(WORD_VECTORS_PATH2));
-        WordVectors wordVectors3 =  WordVectorSerializer.loadTxtVectors(new File(WORD_VECTORS_PATH3));
+        WordVectors wordVectors = WordVectorSerializer.loadTxtVectors(new File(WORD_VECTORS_PATH));
+        WordVectors wordVectors2 = WordVectorSerializer.loadTxtVectors(new File(WORD_VECTORS_PATH2));
+        WordVectors wordVectors3 = WordVectorSerializer.loadTxtVectors(new File(WORD_VECTORS_PATH3));
 
         Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
         int batchSize = 50;
@@ -61,12 +60,12 @@ public class Test {
         //Load the training data:
         RecordReader rr = new CSVRecordReader();
         rr.initialize(new FileSplit(new File("src/saturn.csv")));
-        DataSetIterator trainIter = new RecordReaderDataSetIterator(rr,batchSize,0,2);
+        DataSetIterator trainIter = new RecordReaderDataSetIterator(rr, batchSize, 0, 2);
 
         //Load the test/evaluation data:
         RecordReader rrTest = new CSVRecordReader();
         rrTest.initialize(new FileSplit(new File("src/saturn.csv")));
-        DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize,0,2);
+        DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest, batchSize, 0, 2);
 
         //log.info("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
@@ -95,18 +94,18 @@ public class Test {
         model.init();
         model.setListeners(new ScoreIterationListener(1));
 
-        for ( int n = 0; n < nEpochs; n++) {
-            model.fit( trainIter );
+        for (int n = 0; n < nEpochs; n++) {
+            model.fit(trainIter);
         }
 
 
         System.out.println("Evaluate model....");
         Evaluation eval = new Evaluation(numOutputs);
-        while(testIter.hasNext()){
+        while (testIter.hasNext()) {
             DataSet t = testIter.next();
             INDArray features = t.getFeatureMatrix();
             INDArray lables = t.getLabels();
-            INDArray predicted = model.output(features,false);
+            INDArray predicted = model.output(features, false);
 
             eval.eval(lables, predicted);
 
@@ -125,12 +124,12 @@ public class Test {
 
         //Let's evaluate the predictions at every point in the x/y input space, and plot this in the background
         int nPointsPerAxis = 100;
-        double[][] evalPoints = new double[nPointsPerAxis*nPointsPerAxis][2];
+        double[][] evalPoints = new double[nPointsPerAxis * nPointsPerAxis][2];
         int count = 0;
-        for( int i=0; i<nPointsPerAxis; i++ ){
-            for( int j=0; j<nPointsPerAxis; j++ ){
-                double x = i * (xMax-xMin)/(nPointsPerAxis-1) + xMin;
-                double y = j * (yMax-yMin)/(nPointsPerAxis-1) + yMin;
+        for (int i = 0; i < nPointsPerAxis; i++) {
+            for (int j = 0; j < nPointsPerAxis; j++) {
+                double x = i * (xMax - xMin) / (nPointsPerAxis - 1) + xMin;
+                double y = j * (yMax - yMin) / (nPointsPerAxis - 1) + yMin;
 
                 evalPoints[count][0] = x;
                 evalPoints[count][1] = y;

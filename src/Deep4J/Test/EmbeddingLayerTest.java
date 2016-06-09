@@ -2,13 +2,10 @@ package Deep4J.Test;
 
 import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
-import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
-import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.layers.*;
-import org.deeplearning4j.nn.conf.layers.EmbeddingLayer;
 import org.deeplearning4j.nn.conf.preprocessor.FeedForwardToRnnPreProcessor;
 import org.deeplearning4j.nn.conf.preprocessor.RnnToFeedForwardPreProcessor;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
@@ -23,7 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public class EmbeddingLayerTest {
 
@@ -166,7 +164,7 @@ public class EmbeddingLayerTest {
         for (String s : gradient.keySet()) {
             assertEquals(gradient2.get(s), gradient.get(s));
         }
-        
+
         net.fit();
     }
 
@@ -248,7 +246,7 @@ public class EmbeddingLayerTest {
         //Idea: have masking on the input with an embedding and dense layers on input
         //Ensure that the parameter gradients for the inputs don't depend on the inputs when inputs are masked
 
-        int[] miniBatchSizes = {1,2,5};
+        int[] miniBatchSizes = {1, 2, 5};
         int nIn = 2;
         Random r = new Random(12345);
 
@@ -297,32 +295,32 @@ public class EmbeddingLayerTest {
             INDArray inEmbedding = Nd4j.zeros(nExamples, 1, timeSeriesLength);
             INDArray inDense = Nd4j.zeros(nExamples, numInputClasses, timeSeriesLength);
 
-            INDArray labels = Nd4j.zeros(nExamples,4,timeSeriesLength);
+            INDArray labels = Nd4j.zeros(nExamples, 4, timeSeriesLength);
 
-            for( int i=0; i<nExamples; i++ ){
-                for( int j=0; j<timeSeriesLength; j++ ){
+            for (int i = 0; i < nExamples; i++) {
+                for (int j = 0; j < timeSeriesLength; j++) {
                     int inIdx = r.nextInt(numInputClasses);
-                    inEmbedding.putScalar(new int[]{i,0,j},inIdx);
-                    inDense.putScalar(new int[]{i,inIdx,j},1.0);
+                    inEmbedding.putScalar(new int[]{i, 0, j}, inIdx);
+                    inDense.putScalar(new int[]{i, inIdx, j}, 1.0);
 
                     int outIdx = r.nextInt(4);
-                    labels.putScalar(new int[]{i,outIdx,j},1.0);
+                    labels.putScalar(new int[]{i, outIdx, j}, 1.0);
                 }
             }
 
-            INDArray inputMask = Nd4j.zeros(nExamples,timeSeriesLength);
-            for( int i=0; i<nExamples; i++ ){
-                for( int j=0; j<timeSeriesLength; j++ ){
-                    inputMask.putScalar(new int[]{i,j},(r.nextBoolean() ? 1.0 : 0.0));
+            INDArray inputMask = Nd4j.zeros(nExamples, timeSeriesLength);
+            for (int i = 0; i < nExamples; i++) {
+                for (int j = 0; j < timeSeriesLength; j++) {
+                    inputMask.putScalar(new int[]{i, j}, (r.nextBoolean() ? 1.0 : 0.0));
                 }
             }
 
-            net.setLayerMaskArrays(inputMask,null);
-            net2.setLayerMaskArrays(inputMask,null);
-            List<INDArray> actEmbedding = net.feedForward(inEmbedding,false);
+            net.setLayerMaskArrays(inputMask, null);
+            net2.setLayerMaskArrays(inputMask, null);
+            List<INDArray> actEmbedding = net.feedForward(inEmbedding, false);
             List<INDArray> actDense = net2.feedForward(inDense, false);
-            for( int i=1; i<actEmbedding.size(); i++ ){
-                assertEquals(actDense.get(i),actEmbedding.get(i));
+            for (int i = 1; i < actEmbedding.size(); i++) {
+                assertEquals(actDense.get(i), actEmbedding.get(i));
             }
 
             net.setLabels(labels);
@@ -331,13 +329,13 @@ public class EmbeddingLayerTest {
             net2.computeGradientAndScore();
 
             System.out.println(net.score() + "\t" + net2.score());
-            assertEquals(net2.score(),net.score(),1e-5);
+            assertEquals(net2.score(), net.score(), 1e-5);
 
-            Map<String,INDArray> gradients = net.gradient().gradientForVariable();
-            Map<String,INDArray> gradients2 = net2.gradient().gradientForVariable();
-            assertEquals(gradients.keySet(),gradients2.keySet());
-            for(String s : gradients.keySet()){
-                assertEquals(gradients2.get(s),gradients.get(s));
+            Map<String, INDArray> gradients = net.gradient().gradientForVariable();
+            Map<String, INDArray> gradients2 = net2.gradient().gradientForVariable();
+            assertEquals(gradients.keySet(), gradients2.keySet());
+            for (String s : gradients.keySet()) {
+                assertEquals(gradients2.get(s), gradients.get(s));
             }
         }
     }

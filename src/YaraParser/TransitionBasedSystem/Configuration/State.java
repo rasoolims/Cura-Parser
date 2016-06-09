@@ -86,26 +86,26 @@ public class State implements Cloneable {
     public void addArc(int dependent, int head, int dependency) {
         arcs[dependent] = new Pair<Integer, Integer>(head, dependency);
         long value = 1L << (dependency);
-        
-        assert dependency<64;
+
+        assert dependency < 64;
 
         if (dependent > head) { //right dep
-            if (rightMostArcs[head] == 0 )
+            if (rightMostArcs[head] == 0)
                 rightMostArcs[head] = dependent;
-            else if(dependent > rightMostArcs[head]){
+            else if (dependent > rightMostArcs[head]) {
                 secondRightMostArcs[head] = rightMostArcs[head];
                 rightMostArcs[head] = dependent;
-            } else if(dependent > secondRightMostArcs[head])
+            } else if (dependent > secondRightMostArcs[head])
                 secondRightMostArcs[head] = dependent;
             rightValency[head] += 1;
             rightDepLabels[head] = rightDepLabels[head] | value;
         } else { //left dependency
-            if (leftMostArcs[head] == 0 )
+            if (leftMostArcs[head] == 0)
                 leftMostArcs[head] = dependent;
-            else if(dependent < leftMostArcs[head]){
+            else if (dependent < leftMostArcs[head]) {
                 secondLeftMostArcs[head] = leftMostArcs[head];
                 leftMostArcs[head] = dependent;
-            } else if(dependent<secondLeftMostArcs[head])
+            } else if (dependent < secondLeftMostArcs[head])
                 secondLeftMostArcs[head] = dependent;
             leftDepLabels[head] = leftDepLabels[head] | value;
             leftValency[head] += 1;
@@ -175,7 +175,7 @@ public class State implements Cloneable {
     public int secondRightMostModifier(int index) {
         return (secondRightMostArcs[index] == 0 ? -1 : secondRightMostArcs[index]);
     }
-    
+
     public int leftMostModifier(int index) {
         return (leftMostArcs[index] == 0 ? -1 : leftMostArcs[index]);
     }

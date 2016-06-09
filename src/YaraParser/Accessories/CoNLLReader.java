@@ -38,7 +38,7 @@ public class CoNLLReader {
         HashMap<Integer, Integer> cluster4Map = new HashMap<Integer, Integer>();
         HashMap<Integer, Integer> cluster6Map = new HashMap<Integer, Integer>();
 
-       HashMap<Integer, Integer> wordMap = new HashMap<Integer, Integer>();
+        HashMap<Integer, Integer> wordMap = new HashMap<Integer, Integer>();
         HashMap<Integer, Integer> depRelationMap = new HashMap<Integer, Integer>();
         HashMap<Integer, Integer> posMap = new HashMap<Integer, Integer>();
 
@@ -66,13 +66,13 @@ public class CoNLLReader {
                     label = "~";
                 if (!stringMap.containsKey(label)) {
                     labelMap.put(wi, labelCount);
-                    depRelationMap.put(wi,labelCount);
+                    depRelationMap.put(wi, labelCount);
                     labelCount++;
                     stringMap.put(label, wi++);
                 }
             }
         }
-        depRelationMap.put(0,labelCount);
+        depRelationMap.put(0, labelCount);
 
 
         int posCount = 2;// 0 for OOV, 1 for null!
@@ -82,7 +82,7 @@ public class CoNLLReader {
             if (spl.length > 7) {
                 String pos = spl[3];
                 if (!stringMap.containsKey(pos)) {
-                    posMap.put(wi,posCount++);
+                    posMap.put(wi, posCount++);
                     stringMap.put(pos, wi++);
                 }
             }
@@ -136,14 +136,14 @@ public class CoNLLReader {
                 if (lowercased)
                     word = word.toLowerCase();
                 if (!stringMap.containsKey(word)) {
-                    wordMap.put(wi,wordCount++);
+                    wordMap.put(wi, wordCount++);
                     stringMap.put(word, wi++);
                 }
             }
         }
 
         return new IndexMaps(stringMap, labelMap, rootString,
-                wordMap,posMap,depRelationMap,cluster4Map, cluster6Map, clusterMap);
+                wordMap, posMap, depRelationMap, cluster4Map, cluster6Map, clusterMap);
     }
 
     /**

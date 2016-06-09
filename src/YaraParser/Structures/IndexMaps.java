@@ -19,12 +19,12 @@ public class IndexMaps implements Serializable {
     private HashMap<String, Integer> brownFullClusters;
 
     // for neural net
-    private HashMap<Integer,Integer> wordMap;
-    private HashMap<Integer,Integer> posMap;
-    private HashMap<Integer,Integer> depRelationMap;
+    private HashMap<Integer, Integer> wordMap;
+    private HashMap<Integer, Integer> posMap;
+    private HashMap<Integer, Integer> depRelationMap;
 
     public IndexMaps(HashMap<String, Integer> stringMap, HashMap<Integer, Integer> labelMap, String rootString,
-                     HashMap<Integer,Integer> wordMap, HashMap<Integer,Integer> posMap, HashMap<Integer,Integer> depRelationMap,
+                     HashMap<Integer, Integer> wordMap, HashMap<Integer, Integer> posMap, HashMap<Integer, Integer> depRelationMap,
                      HashMap<Integer, Integer> brown4Clusters, HashMap<Integer, Integer> brown6Clusters, HashMap<String, Integer> brownFullClusters) {
         this.stringMap = stringMap;
         this.wordMap = wordMap;
@@ -121,36 +121,36 @@ public class IndexMaps implements Serializable {
         return false;
     }
 
-    public int getNeuralWordKey(int wordId){
+    public int getNeuralWordKey(int wordId) {
         int key = 0;
-        if(wordMap.containsKey(wordId))
+        if (wordMap.containsKey(wordId))
             key = wordMap.get(wordId);
         return key;
     }
 
-    public int getNeuralPOSKey(int posId){
+    public int getNeuralPOSKey(int posId) {
         int key = 0;
-        if(posMap.containsKey(posId))
+        if (posMap.containsKey(posId))
             key = posMap.get(posId);
         return key;
     }
 
-    public int getNeuralDepRelationKey(int labelId){
+    public int getNeuralDepRelationKey(int labelId) {
         int key = 0;
-        if(depRelationMap.containsKey(labelId))
+        if (depRelationMap.containsKey(labelId))
             key = depRelationMap.get(labelId);
         return key;
     }
 
-    public int vocabSize(){
+    public int vocabSize() {
         return wordMap.size();
     }
 
-    public int posSize(){
+    public int posSize() {
         return posMap.size();
     }
 
-    public int relSize(){
+    public int relSize() {
         return depRelationMap.size();
     }
 }
