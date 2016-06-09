@@ -1,19 +1,24 @@
 package YaraParser.TransitionBasedSystem.Trainer;
 
-import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Structures.IndexMaps;
-import YaraParser.TransitionBasedSystem.Configuration.Configuration;
-import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
-import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderMultiDataSetIterator;
-import org.deeplearning4j.eval.Evaluation;
-import org.deeplearning4j.nn.api.Layer;
+import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
+import org.deeplearning4j.earlystopping.EarlyStoppingModelSaver;
+import org.deeplearning4j.earlystopping.EarlyStoppingResult;
+import org.deeplearning4j.earlystopping.listener.EarlyStoppingListener;
+import org.deeplearning4j.earlystopping.saver.InMemoryModelSaver;
+import org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculatorCG;
+import org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition;
+import org.deeplearning4j.earlystopping.termination.MaxScoreIterationTerminationCondition;
+import org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationCondition;
+import org.deeplearning4j.earlystopping.termination.ScoreImprovementEpochTerminationCondition;
+import org.deeplearning4j.earlystopping.trainer.EarlyStoppingGraphTrainer;
+import org.deeplearning4j.earlystopping.trainer.IEarlyStoppingTrainer;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
-import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.conf.graph.MergeVertex;
@@ -21,26 +26,22 @@ import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.EmbeddingLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.params.DefaultParamInitializer;
-import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.lossfunctions.LossFunctions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 public class StaticNeuralTrainer {
 
-    public StaticNeuralTrainer(String[] trainFeatPath, IndexMaps maps,
+    public static void trainStaticNeural(String[] trainFeatPath, String[] devFeatPath,IndexMaps maps,
                                int wordDimension, int posDimension, int depDimension,
                                int h1Dimension, int possibleOutputs, int nEpochs
     ,String modelPath, String conllPath,ArrayList<Integer> dependencyRelations) throws Exception{
@@ -52,8 +53,12 @@ public class StaticNeuralTrainer {
         // h1Dimension =100, possibleOutputs=4,  nEpochs=30
 
         double learningRate = 0.01;
-        Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
+       Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
         int batchSize = 1;
+
+        MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFeatPath,batchSize,possibleOutputs);
+        MultiDataSetIterator devIter = readMultiDataSetIterator(devFeatPath,batchSize,possibleOutputs);
+
 
         EmbeddingLayer wordLayer = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
         EmbeddingLayer wordLayer2 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
@@ -81,18 +86,83 @@ public class StaticNeuralTrainer {
                 .setOutputs("out")
                 .build();
 
+        ComputationGraph net = new ComputationGraph(confComplex);
+        net.setListeners(new ScoreIterationListener(100));
 
+
+        EarlyStoppingModelSaver<ComputationGraph> saver = new InMemoryModelSaver<>();
+        EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
+                .epochTerminationConditions(new MaxEpochsTerminationCondition(nEpochs),
+                        new ScoreImprovementEpochTerminationCondition(5))
+                .iterationTerminationConditions(new MaxTimeIterationTerminationCondition(7, TimeUnit.DAYS),
+                        new MaxScoreIterationTerminationCondition(7.5))  //Initial score is ~2.5
+                .scoreCalculator(new DataSetLossCalculatorCG(devIter, true))
+                .modelSaver(saver)
+                .build();
+
+
+        IEarlyStoppingTrainer trainer = new EarlyStoppingGraphTrainer(esConf,net,trainIter,new  LoggingEarlyStoppingListener());
+        EarlyStoppingResult result = trainer.fit();
+
+       System.out.println(result.getTerminationDetails());
+
+        int cor = 0;
+        int all =0;
+        while(devIter.hasNext()) {
+            MultiDataSet t = devIter.next();
+            INDArray[] features = t.getFeatures();
+            INDArray[] predicted = net.output(features);
+
+            double max = Double.NEGATIVE_INFINITY;
+            int argmax = 0;
+            int gold = 0;
+
+
+            for (int i = 0; i < predicted[0].length(); i++) {
+              double val =  predicted[0].getDouble(i);
+                if(val>=max){
+                    argmax = i;
+                    max = val;
+                }
+                if(t.getLabels(0).getDouble(i)==1){
+                    gold =i;
+                }
+            }
+
+            if(argmax==gold)
+                cor++;
+            all++;
+        }
+        System.out.println((float) cor/all);
+//
+//        CoNLLReader reader = new CoNLLReader(conllPath);
+//        ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(10000,true,false,false, false,maps);
+//        for(GoldConfiguration configuration:goldConfigurations){
+//            Configuration finalParse =  KBeamArcEagerParser.parseNeural(net,configuration.getSentence(),false,maps,dependencyRelations,1);
+//            System.out.println(finalParse.score);
+//        }
+
+        FileOutputStream fos = new FileOutputStream(modelPath);
+        GZIPOutputStream gz = new GZIPOutputStream(fos);
+
+        ObjectOutput writer = new ObjectOutputStream(gz);
+        writer.writeObject(maps);
+        writer.writeObject(net);
+        writer.close();
+    }
+
+    public static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs) throws IOException, InterruptedException {
         int numLinesToSkip = 0;
         String fileDelimiter = ",";
         RecordReader[] featuresReader = new RecordReader[10];
         for(int i=0;i<featuresReader.length;i++) {
-           featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
-            featuresReader[i].initialize(new FileSplit(new File(trainFeatPath[i])));
+            featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
+            featuresReader[i].initialize(new FileSplit(new File(path[i])));
         }
 
 
         RecordReader labelsReader = new CSVRecordReader(numLinesToSkip,fileDelimiter);
-        String labelsCsvPath =trainFeatPath[10];
+        String labelsCsvPath =path[10];
         labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
 
         MultiDataSetIterator iterator = new RecordReaderMultiDataSetIterator.Builder(batchSize)
@@ -119,99 +189,34 @@ public class StaticNeuralTrainer {
                 .addInput("sh0l")
                 .addOutputOneHot("csvLabels", 0, possibleOutputs)   //Output 2: column 4 -> convert to one-hot for classification
                 .build();
+        return iterator;
 
-        ComputationGraph net = new ComputationGraph(confComplex);
-        net.init();
-        net.setListeners(new ScoreIterationListener(100));
-
-
-        for ( int n = 0; n < nEpochs; n++) {
-            net.fit( iterator );
-        }
-
-
-
-         featuresReader = new RecordReader[10];
-        for(int i=0;i<featuresReader.length;i++) {
-            featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
-            featuresReader[i].initialize(new FileSplit(new File(trainFeatPath[i])));
-        }
-
-
-        labelsReader = new CSVRecordReader(numLinesToSkip,fileDelimiter);
-        labelsCsvPath =trainFeatPath[10];
-        labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
-
-        MultiDataSetIterator testIter = new RecordReaderMultiDataSetIterator.Builder(batchSize)
-                .addReader("s0w", featuresReader[0])
-                .addReader("b0w", featuresReader[1])
-                .addReader("b1w", featuresReader[2])
-                .addReader("b2w", featuresReader[3])
-                .addReader("s0p", featuresReader[4])
-                .addReader("b0p", featuresReader[5])
-                .addReader("b1p", featuresReader[6])
-                .addReader("b2p", featuresReader[7])
-                .addReader("s0l", featuresReader[8])
-                .addReader("sh0l", featuresReader[9])
-                .addReader("csvLabels", labelsReader)
-                .addInput("s0w") //Input: all columns from input reader
-                .addInput("b0w")
-                .addInput("b1w")
-                .addInput("b2w")
-                .addInput("s0p")
-                .addInput("b0p")
-                .addInput("b1p")
-                .addInput("b2p")
-                .addInput("s0l")
-                .addInput("sh0l")
-                .addOutputOneHot("csvLabels", 0, possibleOutputs)   //Output 2: column 4 -> convert to one-hot for classification
-                .build();
-
-        int cor = 0;
-        int all =0;
-        while(testIter.hasNext()) {
-            MultiDataSet t = testIter.next();
-            INDArray[] features = t.getFeatures();
-            INDArray[] predicted = net.output(features);
-
-            double max = Double.NEGATIVE_INFINITY;
-            int argmax = 0;
-            int gold = 0;
-
-
-            for (int i = 0; i < predicted[0].length(); i++) {
-              double val =  predicted[0].getDouble(i);
-                if(val>=max){
-                    argmax = i;
-                    max = val;
-                }
-                if(t.getLabels(0).getDouble(i)==1){
-                    gold =i;
-                }
-            }
-
-            if(argmax==gold)
-                cor++;
-            else
-                System.out.println("-->"+gold+"->"+argmax);
-            all++;
-        }
-
-        CoNLLReader reader = new CoNLLReader(conllPath);
-        ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(10000,true,false,false, false,maps);
-        for(GoldConfiguration configuration:goldConfigurations){
-            Configuration finalParse =  KBeamArcEagerParser.parseNeural(net,configuration.getSentence(),false,maps,dependencyRelations,1);
-            System.out.print(finalParse.score);
-        }
-
-
-        System.out.println((float) cor/all);
-        FileOutputStream fos = new FileOutputStream(modelPath);
-        GZIPOutputStream gz = new GZIPOutputStream(fos);
-
-        ObjectOutput writer = new ObjectOutputStream(gz);
-        writer.writeObject(maps);
-        writer.writeObject(net);
-        writer.close();
     }
+
+    private static class LoggingEarlyStoppingListener implements EarlyStoppingListener<ComputationGraph> {
+
+        private static Logger log = LoggerFactory.getLogger(LoggingEarlyStoppingListener.class);
+        private int onStartCallCount = 0;
+        private int onEpochCallCount = 0;
+        private int onCompletionCallCount = 0;
+
+        @Override
+        public void onStart(EarlyStoppingConfiguration esConfig, ComputationGraph net) {
+            log.info("EarlyStopping: onStart called");
+            onStartCallCount++;
+        }
+
+        @Override
+        public void onEpoch(int epochNum, double score, EarlyStoppingConfiguration esConfig, ComputationGraph net) {
+            log.info("EarlyStopping: onEpoch called (epochNum={}, score={}}",epochNum,score);
+            onEpochCallCount++;
+        }
+
+        @Override
+        public void onCompletion(EarlyStoppingResult esResult) {
+            log.info("EarlyStopping: onCompletion called (result: {})",esResult);
+            onCompletionCallCount++;
+        }
+    }
+
 }

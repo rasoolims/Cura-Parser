@@ -48,7 +48,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     ExecutorService executor;
     CompletionService<ArrayList<BeamElement>> pool;
 
-    public static KBeamArcEagerParser createParser(String modelPath,int numOfThreads) throws Exception{
+    public static KBeamArcEagerParser createParser(String modelPath, int numOfThreads) throws Exception {
         InfStruct infStruct = new InfStruct(modelPath);
 
         ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
@@ -57,9 +57,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
         int featureSize = averagedPerceptron.featureSize();
         return new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, numOfThreads);
-        
+
     }
-    
+
     public KBeamArcEagerParser(AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations,
                                int featureLength, IndexMaps maps, int numOfThreads) {
         this.classifier = classifier;
@@ -726,7 +726,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     }
 
 
-    public static Configuration parseNeural(ComputationGraph nn,Sentence sentence, boolean rootFirst, IndexMaps maps,ArrayList<Integer> dependencyRelations, int beamWidth) throws Exception {
+    public static Configuration parseNeural(ComputationGraph nn, Sentence sentence, boolean rootFirst, IndexMaps maps, ArrayList<Integer> dependencyRelations, int beamWidth) throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
 
         ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
@@ -735,7 +735,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         while (!ArcEager.isTerminal(beam)) {
             TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
-            parseNeuralWithOneThread(nn,beam, beamPreserver, beamWidth,maps,dependencyRelations);
+            parseNeuralWithOneThread(nn, beam, beamPreserver, beamWidth, maps, dependencyRelations);
 
             ArrayList<Configuration> repBeam = new ArrayList<Configuration>(beamWidth);
             for (BeamElement beamElement : beamPreserver.descendingSet()) {
@@ -781,22 +781,22 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         return bestConfiguration;
     }
 
-    private static void parseNeuralWithOneThread(ComputationGraph nn, ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, int beamWidth, IndexMaps maps,ArrayList<Integer> dependencyRelations) throws Exception {
+    private static void parseNeuralWithOneThread(ComputationGraph nn, ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, int beamWidth, IndexMaps maps, ArrayList<Integer> dependencyRelations) throws Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
-            int[] baseFeatures =  FeatureExtractor.extractBaseFeatures(configuration,maps);
+            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
 
             INDArray[] features = new INDArray[baseFeatures.length];
-            for(int i=0;i<baseFeatures.length;i++){
-                INDArray inEmbedding =  Nd4j.create(1);
-               inEmbedding.putScalar(0, baseFeatures[i]) ;
+            for (int i = 0; i < baseFeatures.length; i++) {
+                INDArray inEmbedding = Nd4j.create(1);
+                inEmbedding.putScalar(0, baseFeatures[i]);
 
                 features[i] = inEmbedding;
             }
             MultiDataSet t = new org.nd4j.linalg.dataset.MultiDataSet(features, null);
 
 
-            INDArray[] predicted =  nn.output(t.getFeatures());
+            INDArray[] predicted = nn.output(t.getFeatures());
             State currentState = configuration.state;
             float prevScore = configuration.score;
             boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
@@ -815,7 +815,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canShift) {
-                float score = -(float)Math.log(predicted[0].getFloat(0));// classifier.shiftScore(features, true);
+                float score = (float) Math.log(predicted[0].getFloat(0));// classifier.shiftScore(features, true);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -824,7 +824,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canReduce) {
-                float score =  -(float)Math.log(predicted[0].getFloat(1)); //classifier.reduceScore(features, true);
+                float score = (float) Math.log(predicted[0].getFloat(1)); //classifier.reduceScore(features, true);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -834,7 +834,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             if (canRightArc) {
                 for (int dependency : dependencyRelations) {
-                    float score =  -(float)Math.log(predicted[0].getFloat(dependency+2)); //rightArcScores[dependency];
+                    float score = (float) Math.log(predicted[0].getFloat(dependency + 2)); //rightArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -845,7 +845,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             if (canLeftArc) {
                 for (int dependency : dependencyRelations) {
-                    float score =  -(float)Math.log(predicted[0].getFloat(dependency+2+dependencyRelations.size())); //leftArcScores[dependency];
+                    float score = (float) Math.log(predicted[0].getFloat(dependency + 2 + dependencyRelations.size())); //leftArcScores[dependency];
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
@@ -855,5 +855,4 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
         }
     }
-
 }

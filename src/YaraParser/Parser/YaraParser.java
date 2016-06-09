@@ -28,11 +28,11 @@ public class YaraParser {
             options.inputFile ="/Users/msr/Desktop/dev_smal.conll";
             options.devPath ="/Users/msr/Desktop/dev_smal.conll";
             options.modelFile ="/tmp/model";
-            options.labeled = false;
+            options.labeled = true;
         }
 
         if(true){
-
+            System.out.println(options);
             createTrainData(options,options.inputFile+".csv",options.devPath+".csv");
             System.exit(0);
         }
@@ -170,11 +170,11 @@ public class YaraParser {
                     options, dependencyLabels, featureLength, maps);
             trainer.createStaticTrainingDataForNeuralNet(dataSet, trainOutputPath, 0.05);
                CoNLLReader devReader = new CoNLLReader(options.devPath);
-               ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
-             String[] files=   trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath,-1);
-            StaticNeuralTrainer staticNeuralTrainer = new StaticNeuralTrainer(files,maps,
-                    64,32,32,100,labels.size()-1,10,options.modelFile, options.inputFile,dependencyLabels);
-
+            ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+             String[] devFiles=   trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath,-1);
+            String[] trainFiles=  trainer.createStaticTrainingDataForNeuralNet(dataSet, devOutputPath,-1);
+            StaticNeuralTrainer.trainStaticNeural(trainFiles, devFiles, maps,64,32,32,100,
+                    labels.size()-1,100,options.modelFile, options.inputFile, dependencyLabels);
         }
     }
 
