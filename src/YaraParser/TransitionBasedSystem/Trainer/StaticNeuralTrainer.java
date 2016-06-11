@@ -1,6 +1,10 @@
 package YaraParser.TransitionBasedSystem.Trainer;
 
+import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Structures.IndexMaps;
+import YaraParser.TransitionBasedSystem.Configuration.Configuration;
+import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
+import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
@@ -26,6 +30,9 @@ import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.EmbeddingLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.nn.params.DefaultParamInitializer;
+import org.deeplearning4j.nn.weights.WeightInit;
+import org.deeplearning4j.nn.api.*;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
@@ -40,6 +47,26 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 public class StaticNeuralTrainer {
+
+
+    private  static void initializeWordEmbeddingLayers(IndexMaps maps,
+                                                org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer layer) {
+        int filled = 0;
+        INDArray weights = layer.getParam(DefaultParamInitializer.WEIGHT_KEY);
+        INDArray rows = Nd4j.createUninitialized(new int[]{maps.vocabSize() + 2, weights.size(1)}, 'c');
+        for (int i = 0; i < maps.vocabSize() + 2; i++) {
+            double[] embeddings = maps.embeddings(i);
+            if (embeddings != null) {
+                INDArray newArray = Nd4j.create(embeddings);
+                rows.putRow(i, newArray);
+                filled++;
+            } else {
+                rows.putRow(i, weights.getRow(i));
+            }
+        }
+        layer.setParam("W", rows);
+        System.out.println("filled "+filled+" out of "+maps.vocabSize()+" vectors manually!");
+    }
 
     public static void trainStaticNeural(String[] trainFeatPath, String[] devFeatPath, IndexMaps maps,
                                          int wordDimension, int posDimension, int depDimension,
@@ -60,8 +87,10 @@ public class StaticNeuralTrainer {
         MultiDataSetIterator devIter = readMultiDataSetIterator(devFeatPath, batchSize, possibleOutputs);
 
 
-        EmbeddingLayer wordLayer = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
+        EmbeddingLayer wordLayer1 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
         EmbeddingLayer wordLayer2 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
+        EmbeddingLayer wordLayer3 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
+        EmbeddingLayer wordLayer4 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
 
         ComputationGraphConfiguration confComplex = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
@@ -69,10 +98,10 @@ public class StaticNeuralTrainer {
                 .updater(Updater.SGD).momentum(0.9).regularization(true).l2(0.0001)
                 .graphBuilder()
                 .addInputs("s0w", "b0w", "b1w", "b2w", "s0p", "b0p", "b1p", "b2p", "s0l", "sh0l")
-                .addLayer("L1", wordLayer, "s0w")
+                .addLayer("L1", wordLayer1, "s0w")
                 .addLayer("L2", wordLayer2, "b0w")
-                .addLayer("L3", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b1w")
-                .addLayer("L4", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b2w")
+                .addLayer("L3", wordLayer3, "b1w")
+                .addLayer("L4", wordLayer4, "b2w")
                 .addLayer("L5", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0p")
                 .addLayer("L6", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b0p")
                 .addLayer("L7", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b1p")
@@ -90,6 +119,15 @@ public class StaticNeuralTrainer {
         net.setListeners(new ScoreIterationListener(100));
 
 
+        if(maps.hasEmbeddings()) {
+            for (int i = 0; i < 4; i++) {
+                System.out.println("Initializing with pre-trained word vectors");
+                org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer layer =
+                        (org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer) net.getLayer(i);
+                initializeWordEmbeddingLayers(maps, layer);
+
+            }
+        }
         EarlyStoppingModelSaver<ComputationGraph> saver = new InMemoryModelSaver<>();
         EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
                 .epochTerminationConditions(new MaxEpochsTerminationCondition(nEpochs),
@@ -134,17 +172,28 @@ public class StaticNeuralTrainer {
             all++;
         }
         System.out.println((float) cor / all);
-//
-//        CoNLLReader reader = new CoNLLReader(conllPath);
-//        ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(10000,true,false,false, false,maps);
-//        for(GoldConfiguration configuration:goldConfigurations){
-//            Configuration finalParse =  KBeamArcEagerParser.parseNeural(net,configuration.getSentence(),false,maps,dependencyRelations,1);
-//            System.out.println(finalParse.score);
-//        }
+
+       CoNLLReader reader = new CoNLLReader(conllPath);
+       ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(10000,true,false,false, false,maps);
+        int uas = 0;
+        int las = 0;
+        int a = 0;
+        for(GoldConfiguration configuration:goldConfigurations){
+            Configuration finalParse =  KBeamArcEagerParser.parseNeural(net,configuration.getSentence(),false,maps,dependencyRelations,1);
+            System.out.println(finalParse.score);
+
+            for(int i=1;i<finalParse.sentence.size();i++){
+                a++;
+                if(finalParse.state.getHead(i)==configuration.head(i)){
+                    uas++;
+                }
+            }
+        }
+
+        System.out.println(uas+" "+a);
 
         FileOutputStream fos = new FileOutputStream(modelPath);
         GZIPOutputStream gz = new GZIPOutputStream(fos);
-
         ObjectOutput writer = new ObjectOutputStream(gz);
         writer.writeObject(maps);
         writer.writeObject(net);

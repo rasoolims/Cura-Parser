@@ -27,6 +27,7 @@ public class YaraParser {
             options.train = true;
             options.inputFile = "/Users/msr/Desktop/dev_smal.conll";
             options.devPath = "/Users/msr/Desktop/dev_smal.conll";
+            options.wordEmbeddingFile = "/Users/msr/Desktop/word.embed";
             options.modelFile = "/tmp/model";
             options.labeled = true;
         }
@@ -137,6 +138,9 @@ public class YaraParser {
             Options.showHelp();
         } else {
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile);
+            if(options.wordEmbeddingFile.length()>0)
+                maps.readEmbeddings(options.wordEmbeddingFile);
+
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             System.out.println("CoNLL data reading done!");
@@ -168,12 +172,11 @@ public class YaraParser {
 
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, dependencyLabels.size()),
                     options, dependencyLabels, featureLength, maps);
-            trainer.createStaticTrainingDataForNeuralNet(dataSet, trainOutputPath, 0.05);
             CoNLLReader devReader = new CoNLLReader(options.devPath);
             ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath, -1);
             String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(dataSet, devOutputPath, -1);
-            StaticNeuralTrainer.trainStaticNeural(trainFiles, devFiles, maps, 64, 32, 32, 100,
+            StaticNeuralTrainer.trainStaticNeural(trainFiles, devFiles, maps, 64, 32, 32, options.hiddenLayer1Size,
                     labels.size() - 1, 100, options.modelFile, options.inputFile, dependencyLabels);
         }
     }

@@ -27,6 +27,7 @@ public class Options implements Serializable {
     public boolean parsePartialConll;
     public String scorePath;
     public String clusterFile;
+    public String wordEmbeddingFile;
 
     public String modelFile;
     public boolean lowercase;
@@ -45,12 +46,17 @@ public class Options implements Serializable {
 
     public int partialTrainingStartingIteration;
 
+    public int hiddenLayer1Size;
+    public int hiddenLayer2Size;
+
     public Options() {
         showHelp = false;
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
         beamWidth = 64;
+        hiddenLayer1Size = 200;
+        hiddenLayer2Size = 200;
         rootFirst = false;
         modelFile = "";
         outputFile = "";
@@ -59,6 +65,7 @@ public class Options implements Serializable {
         scorePath = "";
         separator = "_";
         clusterFile = "";
+        wordEmbeddingFile = "";
         labeled = true;
         lowercase = false;
         useExtendedFeatures = true;
@@ -123,6 +130,9 @@ public class Options implements Serializable {
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
         output.append("\t** Other options\n");
         output.append("\t \t -cluster [cluster-file] Brown cluster file: at most 4096 clusters are supported by the parser (default: empty)\n\t\t\t the format should be the same as https://github.com/percyliang/brown-cluster/blob/master/output.txt \n");
+        output.append("\t \t -e [embedding-file] \n");
+        output.append("\t \t -h1 [hidden-layer-size-1] \n");
+        output.append("\t \t -h2 [hidden-layer-size-2] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:20)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
@@ -186,6 +196,12 @@ public class Options implements Serializable {
                 options.goldFile = args[i + 1];
             else if (args[i].startsWith("-parse"))
                 options.predFile = args[i + 1];
+            else if (args[i].startsWith("-e"))
+                options.wordEmbeddingFile = args[i + 1];
+            else if (args[i].startsWith("-h1"))
+                options.hiddenLayer1Size =Integer.parseInt(args[i + 1]);
+            else if (args[i].startsWith("-h2"))
+                options.hiddenLayer2Size =Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-cluster")) {
                 options.clusterFile = args[i + 1];
                 options.useExtendedWithBrownClusterFeatures = true;
@@ -357,6 +373,8 @@ public class Options implements Serializable {
             builder.append("training-iterations: " + trainingIter + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
+            builder.append("h1-size: " + hiddenLayer1Size + "\n");
+            builder.append("h2-size: " + hiddenLayer2Size + "\n");
             return builder.toString();
         } else if (parseConllFile) {
             StringBuilder builder = new StringBuilder();

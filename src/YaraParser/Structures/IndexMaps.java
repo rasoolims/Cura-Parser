@@ -5,6 +5,10 @@
 
 package YaraParser.Structures;
 
+import net.didion.jwnl.data.Exc;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +26,7 @@ public class IndexMaps implements Serializable {
     private HashMap<Integer, Integer> wordMap;
     private HashMap<Integer, Integer> posMap;
     private HashMap<Integer, Integer> depRelationMap;
+    private HashMap<Integer,double[]> embeddingsDictionary;
 
     public IndexMaps(HashMap<String, Integer> stringMap, HashMap<Integer, Integer> labelMap, String rootString,
                      HashMap<Integer, Integer> wordMap, HashMap<Integer, Integer> posMap, HashMap<Integer, Integer> depRelationMap,
@@ -152,5 +157,32 @@ public class IndexMaps implements Serializable {
 
     public int relSize() {
         return depRelationMap.size();
+    }
+
+    public void readEmbeddings(String path) throws Exception{
+        embeddingsDictionary = new HashMap<>();
+
+        BufferedReader reader = new BufferedReader(new FileReader(path));
+        String line;
+        while((line=reader.readLine())!=null){
+            String[] spl = line.trim().split(" ");
+            if(stringMap.containsKey(spl[0])) {
+                double[] e = new double[spl.length - 1];
+                int wordIndex = stringMap.get(spl[0]);
+                for (int i = 0; i < e.length; i++) {
+                    e[i] = Double.parseDouble(spl[i + 1]);
+                }
+                // adding 2 for unknown and null
+                embeddingsDictionary.put(wordIndex+2, e);
+            }
+        }
+    }
+
+    public double[] embeddings(int wordIndex) {
+        return embeddingsDictionary.get(wordIndex);
+    }
+
+    public boolean hasEmbeddings(){
+        return embeddingsDictionary!=null && embeddingsDictionary.size()>0;
     }
 }
