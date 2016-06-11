@@ -30,7 +30,7 @@ public class YaraParser {
             options.wordEmbeddingFile = "/Users/msr/Desktop/word.embed";
             options.modelFile = "/tmp/model";
             options.labeled = false;
-            options.hiddenLayer1Size = 50;
+            options.hiddenLayer1Size = 200;
             options.trainingIter = 1000;
         }
 
@@ -179,6 +179,7 @@ public class YaraParser {
             String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath, -1);
             String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(dataSet, devOutputPath, -1);
             StaticNeuralTrainer.trainStaticNeural(trainFiles, devFiles, maps, 64, 32, 32, options.hiddenLayer1Size,
+                    options.hiddenLayer2Size,
                     labels.size() - 1, options.trainingIter, options.modelFile, options.inputFile, dependencyLabels);
         }
     }

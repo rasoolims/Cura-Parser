@@ -105,14 +105,22 @@ public class ArcEagerBeamTrainer {
              */
             HashMap<Configuration, Float> newOracles = new HashMap<Configuration, Float>();
 
+            Configuration currentConfig = null;
+            for(Configuration conf:oracles.keySet()){
+                currentConfig = conf;
+                break;
+            }
+
+            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, maps);
+
             if (options.useDynamicOracle) {
                 bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
             } else {
                 bestScoringOracle = staticOracle(goldConfiguration, oracles, newOracles);
             }
+
             oracles = newOracles;
 
-            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(bestScoringOracle, maps);
             int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size() - 1);
 
             if (action >= 2)
