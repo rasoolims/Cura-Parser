@@ -43,12 +43,18 @@ public class CoNLLReader {
         HashMap<Integer, Integer> posMap = new HashMap<Integer, Integer>();
 
 
-        int labelCount = 1;
         String rootString = "ROOT";
-
         int wi = 1;
-        stringMap.put("ROOT", 0);
-        labelMap.put(0, 0);
+        int labelCount = 3;
+        if(labeled) {
+             wi = 1;
+            stringMap.put("ROOT", 0);
+             labelMap.put(0, 0);
+             depRelationMap.put(0, 2);
+         }else{
+             wi = 0;
+            labelCount = 2;
+        }
 
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
         String line;
@@ -72,21 +78,33 @@ public class CoNLLReader {
                 }
             }
         }
-        depRelationMap.put(0, labelCount);
 
 
-        int posCount = 2;// 0 for OOV, 1 for null!
+
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
                 String pos = spl[3];
                 if (!stringMap.containsKey(pos)) {
-                    posMap.put(wi, posCount++);
                     stringMap.put(pos, wi++);
                 }
             }
         }
+
+        posMap.put(0,2);
+        int posCount = 3;// 0 for OOV, 1 for null, 2 for root!
+        reader = new BufferedReader(new FileReader(filePath));
+        while ((line = reader.readLine()) != null) {
+            String[] spl = line.trim().split("\t");
+            if (spl.length > 7) {
+                String pos = spl[3];
+                if (!posMap.containsKey(stringMap.get(pos))) {
+                    posMap.put(stringMap.get(pos), posCount++);
+                }
+            }
+        }
+
 
         if (clusterFile.length() > 0) {
             reader = new BufferedReader(new FileReader(clusterFile));
@@ -127,8 +145,8 @@ public class CoNLLReader {
             }
         }
 
+        // todo indexing may be false
         reader = new BufferedReader(new FileReader(filePath));
-        int wordCount = 2; // 0 for OOV, 1 for null!
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
@@ -136,8 +154,22 @@ public class CoNLLReader {
                 if (lowercased)
                     word = word.toLowerCase();
                 if (!stringMap.containsKey(word)) {
-                    wordMap.put(wi, wordCount++);
                     stringMap.put(word, wi++);
+                }
+            }
+        }
+
+        reader = new BufferedReader(new FileReader(filePath));
+        wordMap.put(0,2);
+        int wordCount = 3; // 0 for OOV, 1 for null, 2 for ROOT!
+        while ((line = reader.readLine()) != null) {
+            String[] spl = line.trim().split("\t");
+            if (spl.length > 7) {
+                String word = spl[1];
+                if (lowercased)
+                    word = word.toLowerCase();
+                if (!wordMap.containsKey(stringMap.get(word))) {
+                    wordMap.put(stringMap.get(word), wordCount++);
                 }
             }
         }
@@ -226,11 +258,12 @@ public class CoNLLReader {
                 String relation = splitLine[7];
                 if (relation.equals("_"))
                     relation = "-";
-                if (!labeled)
-                    relation = "~";
+
 
                 if (headIndex == 0)
                     relation = "ROOT";
+                if (!labeled)
+                    relation = "~";
 
                 int ri = -1;
                 if (wordMap.containsKey(relation))

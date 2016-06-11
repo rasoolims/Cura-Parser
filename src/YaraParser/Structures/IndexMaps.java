@@ -144,6 +144,8 @@ public class IndexMaps implements Serializable {
         int key = 0;
         if (depRelationMap.containsKey(labelId))
             key = depRelationMap.get(labelId);
+        if(labelId == -1)
+            key = 1; // null
         return key;
     }
 

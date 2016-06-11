@@ -122,8 +122,8 @@ public class ArcEagerBeamTrainer {
             //    outputBuilder.append(action);
             for (int i = 0; i < baseFeatures.length; i++) {
                 //     if(i<=3 || (i>=12 && i<=15) || (i>=24 && i<=25)) {
-                if (i < 12 && randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)       //todo
-                    baseFeatures[i] = 0;
+            //    if (i < 12 && randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)       //todo
+              //      baseFeatures[i] = 0;
                 writer[i].write(baseFeatures[i] + "\n");
                 //     outputBuilder.append(baseFeatures[i]);
 //                if(i<baseFeatures.length-1)

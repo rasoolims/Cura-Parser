@@ -56,7 +56,7 @@ public class StaticNeuralTrainer {
         INDArray rows = Nd4j.createUninitialized(new int[]{maps.vocabSize() + 2, weights.size(1)}, 'c');
         for (int i = 0; i < maps.vocabSize() + 2; i++) {
             double[] embeddings = maps.embeddings(i);
-            if (embeddings != null) {
+            if (embeddings != null & i>2) {
                 INDArray newArray = Nd4j.create(embeddings);
                 rows.putRow(i, newArray);
                 filled++;
@@ -74,18 +74,17 @@ public class StaticNeuralTrainer {
             , String modelPath, String conllPath, ArrayList<Integer> dependencyRelations) throws Exception {
         int vocab1Size = maps.vocabSize() + 2;
         int vocab2Size = maps.posSize() + 2;
-        int vocab3Size = maps.relSize() + 1;
+        int vocab3Size = maps.relSize() + 2;
         //  vocab1Size =13, vocab2Size=8,   vocab3Size=2
         // wordDimension = 64,   posDimension=32,  depDimension=32
         // h1Dimension =100, possibleOutputs=4,  nEpochs=30
 
         double learningRate = 0.01;
         Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
-        int batchSize = 1;
+        int batchSize = 1000;
 
         MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFeatPath, batchSize, possibleOutputs);
-        MultiDataSetIterator devIter = readMultiDataSetIterator(devFeatPath, batchSize, possibleOutputs);
-
+        MultiDataSetIterator devIter = readMultiDataSetIterator(devFeatPath, 1, possibleOutputs);
 
         EmbeddingLayer wordLayer1 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
         EmbeddingLayer wordLayer2 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
@@ -113,9 +112,10 @@ public class StaticNeuralTrainer {
                         .nOut(h1Dimension).activation("relu").build(), "concat")
                 .addLayer("out", new OutputLayer.Builder().nIn(h1Dimension).nOut(possibleOutputs).activation("softmax").build(), "h1")
                 .setOutputs("out")
-                .build();
+                .backprop(true).build();
 
         ComputationGraph net = new ComputationGraph(confComplex);
+        net.init();
         net.setListeners(new ScoreIterationListener(100));
 
 
@@ -125,14 +125,74 @@ public class StaticNeuralTrainer {
                 org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer layer =
                         (org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer) net.getLayer(i);
                 initializeWordEmbeddingLayers(maps, layer);
-
             }
         }
+
+        for(int iter=0;iter<nEpochs;iter++) {
+            System.out.println(iter+"th iteration");
+            while (trainIter.hasNext())
+                 net.fit(trainIter.next());
+            trainIter.reset();
+
+            devIter.reset();
+            int cor = 0;
+            int all = 0;
+            while (devIter.hasNext()) {
+                MultiDataSet t = devIter.next();
+                INDArray[] features = t.getFeatures();
+                INDArray[] predicted = net.output(features);
+
+                double max = Double.NEGATIVE_INFINITY;
+                int argmax = 0;
+                int gold = 0;
+
+
+                for (int i = 0; i < predicted[0].length(); i++) {
+                    double val = predicted[0].getDouble(i);
+                    if (val >= max) {
+                        argmax = i;
+                        max = val;
+                    }
+                    if (t.getLabels(0).getDouble(i) == 1) {
+                        gold = i;
+                    }
+                }
+
+                if (argmax == gold) {
+                    cor++;
+                    all++;
+                }else {
+                    all++;
+                }
+            }
+            System.out.println("acc: "+ (float) cor / all);
+
+            CoNLLReader reader = new CoNLLReader(conllPath);
+            ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(10000,true,false,false, false,maps);
+            double uas = 0;
+            int las = 0;
+            int a = 0;
+            for(GoldConfiguration configuration:goldConfigurations){
+                Configuration finalParse =  KBeamArcEagerParser.parseNeural(net,configuration.getSentence(),false,maps,dependencyRelations,1);
+                // System.out.println(finalParse.score);
+
+                for(int i=1;i<finalParse.sentence.size();i++){
+                    a++;
+                    if(finalParse.state.getHead(i)==configuration.head(i)){
+                        uas++;
+                    }
+                }
+            }
+
+            uas =  uas / a;
+            System.out.println("UAS: "+uas);
+        }
+          /*
         EarlyStoppingModelSaver<ComputationGraph> saver = new InMemoryModelSaver<>();
         EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
                 .epochTerminationConditions(new MaxEpochsTerminationCondition(nEpochs),
                         new ScoreImprovementEpochTerminationCondition(5))
-                .iterationTerminationConditions(new MaxTimeIterationTerminationCondition(7, TimeUnit.DAYS),
+                .iterationTerminationConditions(new MaxTimeIterationTerminationCondition(7, TimeUnit.MINUTES),
                         new MaxScoreIterationTerminationCondition(7.5))  //Initial score is ~2.5
                 .scoreCalculator(new DataSetLossCalculatorCG(devIter, true))
                 .modelSaver(saver)
@@ -143,54 +203,10 @@ public class StaticNeuralTrainer {
         EarlyStoppingResult result = trainer.fit();
 
         System.out.println(result.getTerminationDetails());
-
-        int cor = 0;
-        int all = 0;
-        while (devIter.hasNext()) {
-            MultiDataSet t = devIter.next();
-            INDArray[] features = t.getFeatures();
-            INDArray[] predicted = net.output(features);
-
-            double max = Double.NEGATIVE_INFINITY;
-            int argmax = 0;
-            int gold = 0;
+                 */
 
 
-            for (int i = 0; i < predicted[0].length(); i++) {
-                double val = predicted[0].getDouble(i);
-                if (val >= max) {
-                    argmax = i;
-                    max = val;
-                }
-                if (t.getLabels(0).getDouble(i) == 1) {
-                    gold = i;
-                }
-            }
 
-            if (argmax == gold)
-                cor++;
-            all++;
-        }
-        System.out.println((float) cor / all);
-
-       CoNLLReader reader = new CoNLLReader(conllPath);
-       ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(10000,true,false,false, false,maps);
-        int uas = 0;
-        int las = 0;
-        int a = 0;
-        for(GoldConfiguration configuration:goldConfigurations){
-            Configuration finalParse =  KBeamArcEagerParser.parseNeural(net,configuration.getSentence(),false,maps,dependencyRelations,1);
-            System.out.println(finalParse.score);
-
-            for(int i=1;i<finalParse.sentence.size();i++){
-                a++;
-                if(finalParse.state.getHead(i)==configuration.head(i)){
-                    uas++;
-                }
-            }
-        }
-
-        System.out.println(uas+" "+a);
 
         FileOutputStream fos = new FileOutputStream(modelPath);
         GZIPOutputStream gz = new GZIPOutputStream(fos);
