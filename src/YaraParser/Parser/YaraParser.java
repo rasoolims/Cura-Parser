@@ -177,10 +177,10 @@ public class YaraParser {
             CoNLLReader devReader = new CoNLLReader(options.devPath);
             ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath, -1);
-            String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(dataSet, devOutputPath, -1);
+            String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(dataSet, trainOutputPath, -1);
             StaticNeuralTrainer.trainStaticNeural(trainFiles, devFiles, maps, 64, 32, 32, options.hiddenLayer1Size,
                     options.hiddenLayer2Size,
-                    labels.size() - 1, options.trainingIter, options.modelFile, options.inputFile, dependencyLabels);
+                    labels.size() - 1, options.trainingIter, options.modelFile, options.devPath, dependencyLabels);
         }
     }
 

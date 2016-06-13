@@ -5,6 +5,7 @@ import YaraParser.Structures.IndexMaps;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
+import org.apache.commons.collections.map.HashedMap;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
@@ -42,7 +43,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
@@ -91,11 +94,21 @@ public class StaticNeuralTrainer {
         EmbeddingLayer wordLayer3 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
         EmbeddingLayer wordLayer4 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
 
-        ComputationGraphConfiguration confComplex = new NeuralNetConfiguration.Builder()
+        Map<Integer, Double> momentumSchedule = new HashedMap();
+        double m = .96;
+        for(int i=1;i<100000;i++){
+           momentumSchedule.put(i,m);
+            m*=0.96;
+        }
+
+
+        NeuralNetConfiguration.Builder confBuilder =  new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .learningRate(learningRate)
-                .momentum(0.9).regularization(true).l2(0.0001)
-                .graphBuilder()
+                .momentum(0.96).regularization(true).l2(0.0001) ;
+        confBuilder.setMomentumSchedule(momentumSchedule);
+
+        ComputationGraphConfiguration confComplex = confBuilder.graphBuilder()
                 .addInputs("s0w", "b0w", "b1w", "b2w", "s0p", "b0p", "b1p", "b2p", "s0l", "sh0l")
                 .addLayer("L1", wordLayer1, "s0w")
                 .addLayer("L2", wordLayer2, "b0w")
@@ -116,6 +129,7 @@ public class StaticNeuralTrainer {
                 .setOutputs("out")
                 .backprop(true).build();
 
+
         ComputationGraph net = new ComputationGraph(confComplex);
         net.init();
         net.setListeners(new ScoreIterationListener(100));
@@ -129,9 +143,12 @@ public class StaticNeuralTrainer {
                 initializeWordEmbeddingLayers(maps, layer);
             }
         }
+        DecimalFormat format = new DecimalFormat("##.00");
 
         /*
+        double bestAcc = 0;
         for(int iter=0;iter<nEpochs;iter++) {
+
             System.out.println(iter+"th iteration");
             while (trainIter.hasNext())
                  net.fit(trainIter.next());
@@ -167,11 +184,11 @@ public class StaticNeuralTrainer {
                     all++;
                 }
             }
-            System.out.println("acc: "+ (float) cor / all);
-
+            double acc = (double) cor / all;
+            System.out.println("acc: "+ format.format(acc));
 
             CoNLLReader reader = new CoNLLReader(conllPath);
-            ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(10000,true,false,false, false,maps);
+            ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(Integer.MAX_VALUE,true,false,false, false,maps);
             double uas = 0;
             int las = 0;
             int a = 0;
@@ -188,9 +205,20 @@ public class StaticNeuralTrainer {
             }
 
             uas =  uas / a;
-            System.out.println("UAS: "+uas);
+            System.out.println("UAS: "+format.format(uas));
+
+            if(acc>bestAcc){
+                bestAcc = acc;
+                System.out.println("Saving the new model for iteration "+iter);
+                FileOutputStream fos = new FileOutputStream(modelPath);
+                GZIPOutputStream gz = new GZIPOutputStream(fos);
+                ObjectOutput writer = new ObjectOutputStream(gz);
+                writer.writeObject(maps);
+                writer.writeObject(net);
+                writer.close();
+            }
         }
-        */
+      */
 
         EarlyStoppingModelSaver<ComputationGraph> saver = new InMemoryModelSaver<>();
         EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
@@ -240,7 +268,7 @@ public class StaticNeuralTrainer {
                 all++;
             }
         }
-        System.out.println("acc: "+ (float) cor / all);
+        System.out.println("acc: "+ format.format((float) cor / all));
 
 
         CoNLLReader reader = new CoNLLReader(conllPath);
@@ -261,15 +289,8 @@ public class StaticNeuralTrainer {
         }
 
         uas =  uas / a;
-        System.out.println("UAS: "+uas);
+        System.out.println("UAS: "+ format.format(uas));
 
-
-        FileOutputStream fos = new FileOutputStream(modelPath);
-        GZIPOutputStream gz = new GZIPOutputStream(fos);
-        ObjectOutput writer = new ObjectOutputStream(gz);
-        writer.writeObject(maps);
-        writer.writeObject(net);
-        writer.close();
     }
 
     public static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs) throws IOException, InterruptedException {
