@@ -76,25 +76,26 @@ public class StaticNeuralTrainer {
         System.out.println("filled "+filled+" out of "+maps.vocabSize()+" vectors manually!");
     }
 
-    public static void trainStaticNeural(String[] trainFeatPath, String[] devFeatPath, IndexMaps maps,
+    public static void trainStaticNeural( ArcEagerBeamTrainer trainer, IndexMaps maps,
                                          int wordDimension, int posDimension, int depDimension,
-                                         int h1Dimension, int h2Dimension, int possibleOutputs, int nEpochs
-            , String modelPath, String conllPath, ArrayList<Integer> dependencyRelations, Options options) throws Exception {
+                                         int possibleOutputs,  ArrayList<Integer> dependencyRelations, Options options) throws Exception {
         int vocab1Size = maps.vocabSize() + 2;
         int vocab2Size = maps.posSize() + 2;
         int vocab3Size = maps.relSize() + 2;
-        //  vocab1Size =13, vocab2Size=8,   vocab3Size=2
-        // wordDimension = 64,   posDimension=32,  depDimension=32
-        // h1Dimension =100, possibleOutputs=4,  nEpochs=30
 
         double learningRate = 0.01;
         Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
         int batchSize = 1000;
 
-        MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFeatPath, batchSize, possibleOutputs);
-        MultiDataSetIterator devIter = readMultiDataSetIterator(devFeatPath, 1, possibleOutputs);
+        CoNLLReader reader = new CoNLLReader(options.inputFile);
+        ArrayList<GoldConfiguration> trainDataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+        String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile+ ".csv", 0.05);
+        MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
 
-
+        CoNLLReader devReader = new CoNLLReader(options.devPath);
+        ArrayList<GoldConfiguration> devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+        String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, options.devPath+ ".csv", -1);
+        MultiDataSetIterator devIter = readMultiDataSetIterator(devFiles, 1, possibleOutputs);
 
         Map<Integer, Double> momentumSchedule = new HashedMap();
         double m = .96;
@@ -102,7 +103,6 @@ public class StaticNeuralTrainer {
            momentumSchedule.put(i,m);
             m*=0.96;
         }
-
 
         NeuralNetConfiguration.Builder confBuilder =  new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
@@ -150,10 +150,10 @@ public class StaticNeuralTrainer {
                         "L11", "L12", "L13", "L14", "L15", "L16", "L17", "L18", "L19", "L20",
                         "L21", "L22", "L23", "L24", "L25", "L26", "L27", "L28", "L29", "L30","L31","L32")
                 .addLayer("h1", new DenseLayer.Builder().nIn(12 * (wordDimension + posDimension) + 8 * depDimension)
-                        .nOut(h1Dimension).activation("relu").updater(Updater.NESTEROVS).build(), "concat")
-                .addLayer("h2", new DenseLayer.Builder().nIn(h1Dimension)
-                        .nOut(h2Dimension).activation("relu").updater(Updater.NESTEROVS).build(), "h1")
-                .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD).nIn(h2Dimension).nOut(possibleOutputs).activation("softmax").updater(Updater.NESTEROVS).build(), "h2")
+                        .nOut(options.hiddenLayer1Size).activation("relu").updater(Updater.NESTEROVS).build(), "concat")
+                .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
+                        .nOut(options.hiddenLayer2Size).activation("relu").updater(Updater.NESTEROVS).build(), "h1")
+                .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD).nIn(options.hiddenLayer2Size).nOut(possibleOutputs).activation("softmax").updater(Updater.NESTEROVS).build(), "h2")
                 .setOutputs("out")
                 .backprop(true).build();
 
@@ -173,17 +173,19 @@ public class StaticNeuralTrainer {
         }
         DecimalFormat format = new DecimalFormat("##.00");
         double bestAcc = 0;
-        for(int iter=0;iter<nEpochs;iter++) {
-
+        for(int iter=0;iter<options.trainingIter;iter++) {
             System.out.println(iter+"th iteration");
             while (trainIter.hasNext())
                  net.fit(trainIter.next());
-            trainIter.reset();
+            System.out.print("reading train again...");
+            trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile+ ".csv", 0.05);
+            trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
+            System.out.print("done!\n");
 
             try {
                 devIter.reset();
             }catch (Exception ex){
-                devIter = readMultiDataSetIterator(devFeatPath, 1, possibleOutputs);
+                devIter = readMultiDataSetIterator(devFiles, 1, possibleOutputs);
             }
                 int cor = 0;
             int all = 0;
@@ -217,14 +219,11 @@ public class StaticNeuralTrainer {
             double acc = (double) cor / all;
             System.out.println("acc: "+ format.format(100.*acc));
 
-            CoNLLReader reader = new CoNLLReader(conllPath);
-            ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(Integer.MAX_VALUE,true,false,false, false,maps);
             double uas = 0;
             int las = 0;
             int a = 0;
-            for(GoldConfiguration configuration:goldConfigurations){
+            for(GoldConfiguration configuration:devDataSet){
                 Configuration finalParse =  KBeamArcEagerParser.parseNeural(net,configuration.getSentence(),false,maps,dependencyRelations,1);
-                // System.out.println(finalParse.score);
 
                 for(int i=1;i<finalParse.sentence.size();i++){
                     a++;
@@ -240,7 +239,7 @@ public class StaticNeuralTrainer {
             if(acc>bestAcc){
                 bestAcc = acc;
                 System.out.println("Saving the new model for iteration "+iter);
-                FileOutputStream fos = new FileOutputStream(modelPath);
+                FileOutputStream fos = new FileOutputStream(options.modelFile);
                 GZIPOutputStream gz = new GZIPOutputStream(fos);
                 ObjectOutput writer = new ObjectOutputStream(gz);
                 writer.writeObject(new NNInfStruct(net,dependencyRelations.size(),maps,dependencyRelations,options));
