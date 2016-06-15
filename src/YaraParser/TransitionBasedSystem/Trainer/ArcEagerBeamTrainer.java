@@ -63,15 +63,15 @@ public class ArcEagerBeamTrainer {
     }
 
     public String[] createStaticTrainingDataForNeuralNet(ArrayList<GoldConfiguration> trainData, String outputPath, double dropOutProb) throws Exception {
-        String[] files = new String[11];
-        BufferedWriter[] writer = new BufferedWriter[11];
-        for (int i = 0; i < 10; i++) {
+        String[] files = new String[33];
+        BufferedWriter[] writer = new BufferedWriter[33];
+        for (int i = 0; i < 32; i++) {
             files[i] = outputPath + ".feat" + i;
             writer[i] = new BufferedWriter(new FileWriter(files[i]));
         }
 
-        files[10] = outputPath + ".lab";
-        writer[10] = new BufferedWriter(new FileWriter(files[10]));
+        files[32] = outputPath + ".lab";
+        writer[32] = new BufferedWriter(new FileWriter(files[32]));
         int dataCount = 0;
 
         for (GoldConfiguration goldConfiguration : trainData) {
@@ -80,7 +80,7 @@ public class ArcEagerBeamTrainer {
                 System.out.print(dataCount + "...");
             writeTrainigInstanceForSentence(goldConfiguration, writer, dropOutProb);
         }
-        for (int i = 0; i < 11; i++) writer[i].close();
+        for (int i = 0; i < 33; i++) writer[i].close();
         return files;
     }
 
@@ -139,7 +139,7 @@ public class ArcEagerBeamTrainer {
                 //   }
             }
             outputBuilder.append("\n");
-            writer[10].write(action + "\n");
+            writer[32].write(action + "\n");
             //   writer1.write(outputBuilder.toString());
             //writer2.write(action+"\n");
 

@@ -94,10 +94,7 @@ public class StaticNeuralTrainer {
         MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFeatPath, batchSize, possibleOutputs);
         MultiDataSetIterator devIter = readMultiDataSetIterator(devFeatPath, 1, possibleOutputs);
 
-        EmbeddingLayer wordLayer1 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build();
-        EmbeddingLayer wordLayer2 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build();
-        EmbeddingLayer wordLayer3 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build();
-        EmbeddingLayer wordLayer4 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build();
+
 
         Map<Integer, Double> momentumSchedule = new HashedMap();
         double m = .96;
@@ -114,23 +111,49 @@ public class StaticNeuralTrainer {
         confBuilder.setMomentumSchedule(momentumSchedule);
 
         ComputationGraphConfiguration confComplex = confBuilder.graphBuilder()
-                .addInputs("s0w", "b0w", "b1w", "b2w", "s0p", "b0p", "b1p", "b2p", "s0l", "sh0l")
-                .addLayer("L1", wordLayer1, "s0w")
-                .addLayer("L2", wordLayer2, "b0w")
-                .addLayer("L3", wordLayer3, "b1w")
-                .addLayer("L4", wordLayer4, "b2w")
-                .addLayer("L5", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0p")
-                .addLayer("L6", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0p")
-                .addLayer("L7", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b1p")
-                .addLayer("L8", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b2p")
-                .addLayer("L9", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l")
-                .addLayer("L10", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh0l")
-                .addVertex("concat", new MergeVertex(), "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10")
-                .addLayer("h1", new DenseLayer.Builder().nIn(4 * (wordDimension + posDimension) + 2 * depDimension)
+                .addInputs("s0w", "b0w", "b1w", "b2w", "b0l1w", "b0l2w","s0l1w","s0l2w","sr1w","s0r2w","sh0w","sh1w",
+                        "s0p", "b0p", "b1p", "b2p","b0l1p", "b0l2p", "s0l1p", "s0l2p", "sr1p","s0r2p", "sh0p", "sh1p",
+                        "s0l", "sh0l","s0l1l","sr1l","s0l2l","s0r2l","b0l1l","b0l2l")
+                .addLayer("L1", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0w")
+                .addLayer("L2", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0w")
+                .addLayer("L3", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b1w")
+                .addLayer("L4", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b2w")
+                .addLayer("L5", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l1w")
+                .addLayer("L6", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l2w")
+                .addLayer("L7", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l1w")
+                .addLayer("L8", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l2w")
+                .addLayer("L9", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sr1w")
+                .addLayer("L10", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0r2w")
+                .addLayer("L11", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh0w")
+                .addLayer("L12", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh1w")
+                .addLayer("L13", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0p")
+                .addLayer("L14", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0p")
+                .addLayer("L15", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b1p")
+                .addLayer("L16", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b2p")
+                .addLayer("L17", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l1p")
+                .addLayer("L18", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l2p")
+                .addLayer("L19", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l1p")
+                .addLayer("L20", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l2p")
+                .addLayer("L21", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sr1p")
+                .addLayer("L22", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0r2p")
+                .addLayer("L23", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh0p")
+                .addLayer("L24", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh1p")
+                .addLayer("L25", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l")
+                .addLayer("L26", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh0l")
+                .addLayer("L27", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l1l")
+                .addLayer("L28", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sr1l")
+                .addLayer("L29", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l2l")
+                .addLayer("L30", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0r2l")
+                .addLayer("L31", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l1l")
+                .addLayer("L32", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l2l")
+                .addVertex("concat", new MergeVertex(), "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10",
+                        "L11", "L12", "L13", "L14", "L15", "L16", "L17", "L18", "L19", "L20",
+                        "L21", "L22", "L23", "L24", "L25", "L26", "L27", "L28", "L29", "L30","L31","L32")
+                .addLayer("h1", new DenseLayer.Builder().nIn(12 * (wordDimension + posDimension) + 8 * depDimension)
                         .nOut(h1Dimension).activation("relu").updater(Updater.NESTEROVS).build(), "concat")
-                //.addLayer("h2", new DenseLayer.Builder().nIn(h1Dimension)
-                //        .nOut(h2Dimension).activation("relu").build(), "h1")
-                .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD).nIn(h1Dimension).nOut(possibleOutputs).activation("softmax").updater(Updater.NESTEROVS).build(), "h1")
+                .addLayer("h2", new DenseLayer.Builder().nIn(h1Dimension)
+                        .nOut(h2Dimension).activation("relu").updater(Updater.NESTEROVS).build(), "h1")
+                .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD).nIn(h2Dimension).nOut(possibleOutputs).activation("softmax").updater(Updater.NESTEROVS).build(), "h2")
                 .setOutputs("out")
                 .backprop(true).build();
 
@@ -141,7 +164,7 @@ public class StaticNeuralTrainer {
 
 
         if(maps.hasEmbeddings()) {
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 12; i++) {
                 System.out.println("Initializing with pre-trained word vectors");
                 org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer layer =
                         (org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer) net.getLayer(i);
@@ -303,7 +326,7 @@ public class StaticNeuralTrainer {
     public static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs) throws IOException, InterruptedException {
         int numLinesToSkip = 0;
         String fileDelimiter = ",";
-        RecordReader[] featuresReader = new RecordReader[10];
+        RecordReader[] featuresReader = new RecordReader[32];
         for (int i = 0; i < featuresReader.length; i++) {
             featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
             featuresReader[i].initialize(new FileSplit(new File(path[i])));
@@ -311,7 +334,7 @@ public class StaticNeuralTrainer {
 
 
         RecordReader labelsReader = new CSVRecordReader(numLinesToSkip, fileDelimiter);
-        String labelsCsvPath = path[10];
+        String labelsCsvPath = path[32];
         labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
 
         MultiDataSetIterator iterator = new RecordReaderMultiDataSetIterator.Builder(batchSize)
@@ -319,27 +342,70 @@ public class StaticNeuralTrainer {
                 .addReader("b0w", featuresReader[1])
                 .addReader("b1w", featuresReader[2])
                 .addReader("b2w", featuresReader[3])
-                .addReader("s0p", featuresReader[4])
-                .addReader("b0p", featuresReader[5])
-                .addReader("b1p", featuresReader[6])
-                .addReader("b2p", featuresReader[7])
-                .addReader("s0l", featuresReader[8])
-                .addReader("sh0l", featuresReader[9])
+                .addReader("b0l1w", featuresReader[4])
+                .addReader("b0l2w", featuresReader[5])
+                .addReader("s0l1w", featuresReader[6])
+                .addReader("s0l2w", featuresReader[7])
+                .addReader("sr1w", featuresReader[8])
+                .addReader("s0r2w", featuresReader[9])
+                .addReader("sh0w", featuresReader[10])
+                .addReader("sh1w", featuresReader[11])
+                .addReader("s0p", featuresReader[12])
+                .addReader("b0p", featuresReader[13])
+                .addReader("b1p", featuresReader[14])
+                .addReader("b2p", featuresReader[15])
+                .addReader("b0l1p", featuresReader[16])
+                .addReader("b0l2p", featuresReader[17])
+                .addReader("s0l1p", featuresReader[18])
+                .addReader("s0l2p", featuresReader[19])
+                .addReader("sr1p", featuresReader[20])
+                .addReader("s0r2p", featuresReader[21])
+                .addReader("sh0p", featuresReader[22])
+                .addReader("sh1p", featuresReader[23])
+                .addReader("s0l", featuresReader[24])
+                .addReader("sh0l", featuresReader[25])
+                .addReader("s0l1l", featuresReader[26])
+                .addReader("sr1l", featuresReader[27])
+                .addReader("s0l2l", featuresReader[28])
+                .addReader("s0r2l", featuresReader[29])
+                .addReader("b0l1l", featuresReader[30])
+                .addReader("b0l2l", featuresReader[31])
                 .addReader("csvLabels", labelsReader)
-                .addInput("s0w") //Input: all columns from input reader
+                .addInput("s0w")
                 .addInput("b0w")
                 .addInput("b1w")
                 .addInput("b2w")
+                .addInput("b0l1w")
+                .addInput("b0l2w")
+                .addInput("s0l1w")
+                .addInput("s0l2w")
+                .addInput("sr1w")
+                .addInput("s0r2w")
+                .addInput("sh0w")
+                .addInput("sh1w")
                 .addInput("s0p")
                 .addInput("b0p")
                 .addInput("b1p")
                 .addInput("b2p")
+                .addInput("b0l1p")
+                .addInput("b0l2p")
+                .addInput("s0l1p")
+                .addInput("s0l2p")
+                .addInput("sr1p")
+                .addInput("s0r2p")
+                .addInput("sh0p")
+                .addInput("sh1p")
                 .addInput("s0l")
                 .addInput("sh0l")
-                .addOutputOneHot("csvLabels", 0, possibleOutputs)   //Output 2: column 4 -> convert to one-hot for classification
+                .addInput("sr1l")
+                .addInput("s0l1l")
+                .addInput("s0l2l")
+                .addInput("s0r2l")
+                .addInput("b0l1l")
+                .addInput("b0l2l")
+                .addOutputOneHot("csvLabels", 0, possibleOutputs)
                 .build();
         return iterator;
-
     }
 
     private static class LoggingEarlyStoppingListener implements EarlyStoppingListener<ComputationGraph> {
