@@ -1,7 +1,9 @@
 package YaraParser.TransitionBasedSystem.Trainer;
 
 import YaraParser.Accessories.CoNLLReader;
+import YaraParser.Accessories.Options;
 import YaraParser.Structures.IndexMaps;
+import YaraParser.Structures.NNInfStruct;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
@@ -77,7 +79,7 @@ public class StaticNeuralTrainer {
     public static void trainStaticNeural(String[] trainFeatPath, String[] devFeatPath, IndexMaps maps,
                                          int wordDimension, int posDimension, int depDimension,
                                          int h1Dimension, int h2Dimension, int possibleOutputs, int nEpochs
-            , String modelPath, String conllPath, ArrayList<Integer> dependencyRelations) throws Exception {
+            , String modelPath, String conllPath, ArrayList<Integer> dependencyRelations, Options options) throws Exception {
         int vocab1Size = maps.vocabSize() + 2;
         int vocab2Size = maps.posSize() + 2;
         int vocab3Size = maps.relSize() + 2;
@@ -147,7 +149,6 @@ public class StaticNeuralTrainer {
             }
         }
         DecimalFormat format = new DecimalFormat("##.00");
-        /*
         double bestAcc = 0;
         for(int iter=0;iter<nEpochs;iter++) {
 
@@ -212,18 +213,20 @@ public class StaticNeuralTrainer {
 
             uas =  uas / a;
             System.out.println("UAS: "+format.format(100.*uas));
+
             if(acc>bestAcc){
                 bestAcc = acc;
                 System.out.println("Saving the new model for iteration "+iter);
                 FileOutputStream fos = new FileOutputStream(modelPath);
                 GZIPOutputStream gz = new GZIPOutputStream(fos);
                 ObjectOutput writer = new ObjectOutputStream(gz);
-                writer.writeObject(maps);
+                writer.writeObject(new NNInfStruct(net,dependencyRelations.size(),maps,dependencyRelations,options));
                 writer.writeObject(net);
                 writer.close();
             }
         }
-                    */
+
+        /*
         EarlyStoppingModelSaver<ComputationGraph> saver = new InMemoryModelSaver<>();
         EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
                 .epochTerminationConditions(new MaxEpochsTerminationCondition(nEpochs),
@@ -294,6 +297,7 @@ public class StaticNeuralTrainer {
 
         uas =  uas / a;
         System.out.println("UAS: "+ format.format(100.*uas));
+        */
     }
 
     public static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs) throws IOException, InterruptedException {

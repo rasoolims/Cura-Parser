@@ -11,13 +11,18 @@ import YaraParser.Accessories.Options;
 import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
+import YaraParser.Structures.NNInfStruct;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
 import YaraParser.TransitionBasedSystem.Trainer.StaticNeuralTrainer;
+import org.deeplearning4j.nn.graph.ComputationGraph;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class YaraParser {
     public static void main(String[] args) throws Exception {
@@ -31,13 +36,7 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.trainingIter = 1000;
-        }
-
-        if (true) {
-            System.out.println(options);
-            createTrainData(options, options.inputFile + ".csv", options.devPath + ".csv");
-            System.exit(0);
+            options.trainingIter = 10;
         }
 
         if (options.showHelp) {
@@ -45,9 +44,11 @@ public class YaraParser {
         } else {
             System.out.println(options);
             if (options.train) {
-                train(options);
+               // train(options);
+                createTrainData(options, options.inputFile + ".csv", options.devPath + ".csv");
             } else if (options.parseTaggedFile || options.parseConllFile || options.parsePartialConll) {
-                parse(options);
+                   parseNN(options);
+               // parse(options);
             } else if (options.evaluate) {
                 evaluate(options);
             } else {
@@ -93,6 +94,15 @@ public class YaraParser {
                         options.outputFile, inf_options.rootFirst, inf_options.beamWidth, options.labeled, inf_options.lowercase, options.numOfThreads, true, options.scorePath);
             parser.shutDownLiveThreads();
         }
+    }
+
+    private static void parseNN(Options options) throws  Exception {
+        FileInputStream fos = new FileInputStream(options.modelFile);
+        GZIPInputStream gz = new GZIPInputStream(fos);
+        ObjectInput reader = new ObjectInputStream(gz);
+        NNInfStruct nnInfStruct = (NNInfStruct) reader.readObject();
+        KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.inputFile, options.outputFile,
+                options.beamWidth, 1, false, "");
     }
 
     public static void train(Options options) throws Exception {
@@ -179,8 +189,7 @@ public class YaraParser {
             String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, devOutputPath, -1);
             String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(dataSet, trainOutputPath, -1);
             StaticNeuralTrainer.trainStaticNeural(trainFiles, devFiles, maps, 64, 32, 32, options.hiddenLayer1Size,
-                    options.hiddenLayer2Size,
-                    labels.size() - 1, options.trainingIter, options.modelFile, options.devPath, dependencyLabels);
+                    options.hiddenLayer2Size, labels.size() - 1, options.trainingIter, options.modelFile, options.devPath, dependencyLabels, options);
         }
     }
 

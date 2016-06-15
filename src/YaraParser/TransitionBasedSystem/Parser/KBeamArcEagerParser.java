@@ -6,10 +6,12 @@
 package YaraParser.TransitionBasedSystem.Parser;
 
 import YaraParser.Accessories.CoNLLReader;
+import YaraParser.Accessories.Options;
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
+import YaraParser.Structures.NNInfStruct;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -17,14 +19,12 @@ import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.jcodec.codecs.mjpeg.MCU;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -847,6 +847,115 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
     }
 
+
+    public static void parseNNConllFileNoParallel(NNInfStruct nnInfStruct, String inputFile, String outputFile, int beamWidth, int numOfThreads, boolean partial, String scorePath) throws Exception {
+        Options options = nnInfStruct.options;
+        CoNLLReader reader = new CoNLLReader(inputFile);
+        boolean addScore = false;
+        if (scorePath.trim().length() > 0)
+            addScore = true;
+        ArrayList<Float> scoreList = new ArrayList<Float>();
+
+        long start = System.currentTimeMillis();
+        int allArcs = 0;
+        int size = 0;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile + ".tmp"));
+        int dataCount = 0;
+
+        while (true) {
+            ArrayList<GoldConfiguration> data = reader.readData(15000, true, options.labeled, options.rootFirst, options.lowercase, nnInfStruct.maps);
+            size += data.size();
+            if (data.size() == 0)
+                break;
+
+            for (GoldConfiguration goldConfiguration : data) {
+                dataCount++;
+                if (dataCount % 100 == 0)
+                    System.err.print(dataCount + " ... ");
+                Configuration bestParse;
+               // if (partial) //todo
+                //    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst, beamWidth, numOfThreads);
+              //  else
+                bestParse = parseNeural(nnInfStruct.net,goldConfiguration.getSentence(), options.rootFirst,nnInfStruct.maps,nnInfStruct.dependencyLabels, beamWidth);
+
+                int[] words = goldConfiguration.getSentence().getWords();
+                allArcs += words.length - 1;
+                if (addScore)
+                    scoreList.add(bestParse.score / bestParse.sentence.size());
+
+                StringBuilder finalOutput = new StringBuilder();
+                for (int i = 0; i < words.length; i++) {
+                    int w = i + 1;
+                    int head = bestParse.state.getHead(w);
+                    int dep = bestParse.state.getDependency(w);
+
+                    if (w == bestParse.state.rootIndex && !options.rootFirst)
+                        continue;
+
+                    if (head == bestParse.state.rootIndex)
+                        head = 0;
+
+                    String label = head == 0 ? nnInfStruct.maps.rootString : nnInfStruct.maps.revStrings[dep];
+                    String output = head + "\t" + label + "\n";
+                    finalOutput.append(output);
+                }
+                finalOutput.append("\n");
+                writer.write(finalOutput.toString());
+            }
+        }
+
+        System.err.print("\n");
+        long end = System.currentTimeMillis();
+        float each = (1.0f * (end - start)) / size;
+        float eacharc = (1.0f * (end - start)) / allArcs;
+
+        writer.flush();
+        writer.close();
+
+        DecimalFormat format = new DecimalFormat("##.00");
+
+        System.err.print(format.format(eacharc) + " ms for each arc!\n");
+        System.err.print(format.format(each) + " ms for each sentence!\n\n");
+
+        BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
+        BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
+        BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));
+
+        String line;
+
+        while ((line = pReader.readLine()) != null) {
+            String gLine = gReader.readLine();
+            if (line.trim().length() > 0) {
+                while (gLine.trim().length() == 0)
+                    gLine = gReader.readLine();
+                String[] ps = line.split("\t");
+                String[] gs = gLine.split("\t");
+                gs[6] = ps[0];
+                gs[7] = ps[1];
+                StringBuilder output = new StringBuilder();
+                for (int i = 0; i < gs.length; i++) {
+                    output.append(gs[i]).append("\t");
+                }
+                pwriter.write(output.toString().trim() + "\n");
+            } else {
+                pwriter.write("\n");
+            }
+        }
+        pwriter.flush();
+        pwriter.close();
+
+        if (addScore) {
+            BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
+
+            for (int i = 0; i < scoreList.size(); i++)
+                scoreWriter.write(scoreList.get(i) + "\n");
+            scoreWriter.flush();
+            scoreWriter.close();
+        }
+
+    }
+
+
     public void shutDownLiveThreads() {
         boolean isTerminated = executor.isTerminated();
         while (!isTerminated) {
@@ -854,4 +963,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             isTerminated = executor.isTerminated();
         }
     }
+
+
 }
