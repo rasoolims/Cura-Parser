@@ -25,7 +25,7 @@ public class YaraParser {
 
         if (args.length < 2) {
             options.train = true;
-            options.inputFile = "/Users/msr/Desktop/dev_smal.conll";
+            options.inputFile = "/Users/msr/Desktop/train_smal.conll";
             options.devPath = "/Users/msr/Desktop/dev_smal.conll";
             options.wordEmbeddingFile = "/Users/msr/Desktop/word.embed";
             options.modelFile = "/tmp/model";

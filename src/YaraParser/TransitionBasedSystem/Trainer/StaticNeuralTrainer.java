@@ -5,6 +5,7 @@ import YaraParser.Structures.IndexMaps;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
+import net.didion.jwnl.data.Exc;
 import org.apache.commons.collections.map.HashedMap;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
@@ -36,9 +37,11 @@ import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.nn.api.*;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,10 +92,10 @@ public class StaticNeuralTrainer {
         MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFeatPath, batchSize, possibleOutputs);
         MultiDataSetIterator devIter = readMultiDataSetIterator(devFeatPath, 1, possibleOutputs);
 
-        EmbeddingLayer wordLayer1 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
-        EmbeddingLayer wordLayer2 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
-        EmbeddingLayer wordLayer3 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
-        EmbeddingLayer wordLayer4 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build();
+        EmbeddingLayer wordLayer1 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build();
+        EmbeddingLayer wordLayer2 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build();
+        EmbeddingLayer wordLayer3 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build();
+        EmbeddingLayer wordLayer4 = new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build();
 
         Map<Integer, Double> momentumSchedule = new HashedMap();
         double m = .96;
@@ -105,7 +108,7 @@ public class StaticNeuralTrainer {
         NeuralNetConfiguration.Builder confBuilder =  new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .learningRate(learningRate)
-                .momentum(0.96).regularization(true).l2(0.0001) ;
+                .momentum(0.96).regularization(true).l2(0.0001);//.dropOut(0.5) ;
         confBuilder.setMomentumSchedule(momentumSchedule);
 
         ComputationGraphConfiguration confComplex = confBuilder.graphBuilder()
@@ -114,18 +117,18 @@ public class StaticNeuralTrainer {
                 .addLayer("L2", wordLayer2, "b0w")
                 .addLayer("L3", wordLayer3, "b1w")
                 .addLayer("L4", wordLayer4, "b2w")
-                .addLayer("L5", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0p")
-                .addLayer("L6", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b0p")
-                .addLayer("L7", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b1p")
-                .addLayer("L8", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b2p")
-                .addLayer("L9", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0l")
-                .addLayer("L10", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "sh0l")
+                .addLayer("L5", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0p")
+                .addLayer("L6", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0p")
+                .addLayer("L7", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b1p")
+                .addLayer("L8", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b2p")
+                .addLayer("L9", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l")
+                .addLayer("L10", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh0l")
                 .addVertex("concat", new MergeVertex(), "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10")
                 .addLayer("h1", new DenseLayer.Builder().nIn(4 * (wordDimension + posDimension) + 2 * depDimension)
-                        .nOut(h1Dimension).activation("relu").build(), "concat")
+                        .nOut(h1Dimension).activation("relu").updater(Updater.NESTEROVS).build(), "concat")
                 //.addLayer("h2", new DenseLayer.Builder().nIn(h1Dimension)
                 //        .nOut(h2Dimension).activation("relu").build(), "h1")
-                .addLayer("out", new OutputLayer.Builder().nIn(h1Dimension).nOut(possibleOutputs).activation("softmax").build(), "h1")
+                .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD).nIn(h1Dimension).nOut(possibleOutputs).activation("softmax").updater(Updater.NESTEROVS).build(), "h1")
                 .setOutputs("out")
                 .backprop(true).build();
 
@@ -144,7 +147,6 @@ public class StaticNeuralTrainer {
             }
         }
         DecimalFormat format = new DecimalFormat("##.00");
-
         /*
         double bestAcc = 0;
         for(int iter=0;iter<nEpochs;iter++) {
@@ -154,8 +156,12 @@ public class StaticNeuralTrainer {
                  net.fit(trainIter.next());
             trainIter.reset();
 
-            devIter.reset();
-            int cor = 0;
+            try {
+                devIter.reset();
+            }catch (Exception ex){
+                devIter = readMultiDataSetIterator(devFeatPath, 1, possibleOutputs);
+            }
+                int cor = 0;
             int all = 0;
             while (devIter.hasNext()) {
                 MultiDataSet t = devIter.next();
@@ -185,7 +191,7 @@ public class StaticNeuralTrainer {
                 }
             }
             double acc = (double) cor / all;
-            System.out.println("acc: "+ format.format(acc));
+            System.out.println("acc: "+ format.format(100.*acc));
 
             CoNLLReader reader = new CoNLLReader(conllPath);
             ArrayList<GoldConfiguration> goldConfigurations =  reader.readData(Integer.MAX_VALUE,true,false,false, false,maps);
@@ -205,8 +211,7 @@ public class StaticNeuralTrainer {
             }
 
             uas =  uas / a;
-            System.out.println("UAS: "+format.format(uas));
-
+            System.out.println("UAS: "+format.format(100.*uas));
             if(acc>bestAcc){
                 bestAcc = acc;
                 System.out.println("Saving the new model for iteration "+iter);
@@ -218,8 +223,7 @@ public class StaticNeuralTrainer {
                 writer.close();
             }
         }
-      */
-
+                    */
         EarlyStoppingModelSaver<ComputationGraph> saver = new InMemoryModelSaver<>();
         EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
                 .epochTerminationConditions(new MaxEpochsTerminationCondition(nEpochs),
@@ -268,7 +272,7 @@ public class StaticNeuralTrainer {
                 all++;
             }
         }
-        System.out.println("acc: "+ format.format((float) cor / all));
+        System.out.println("acc: "+ format.format(100.*(float) cor / all));
 
 
         CoNLLReader reader = new CoNLLReader(conllPath);
@@ -289,8 +293,7 @@ public class StaticNeuralTrainer {
         }
 
         uas =  uas / a;
-        System.out.println("UAS: "+ format.format(uas));
-
+        System.out.println("UAS: "+ format.format(100.*uas));
     }
 
     public static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs) throws IOException, InterruptedException {
