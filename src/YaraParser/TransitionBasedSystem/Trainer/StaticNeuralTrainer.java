@@ -207,8 +207,8 @@ public class StaticNeuralTrainer {
                 .addInput("sh1p")
                 .addInput("s0l")
                 .addInput("sh0l")
-                .addInput("sr1l")
                 .addInput("s0l1l")
+                .addInput("sr1l")
                 .addInput("s0l2l")
                 .addInput("s0r2l")
                 .addInput("b0l1l")
@@ -352,29 +352,6 @@ public class StaticNeuralTrainer {
 
         uas = uas / a;
         System.out.println("UAS: " + format.format(100. * uas));
-
-        if(acc==1 && uas<1){
-             uas = 0;
-             a = 0;
-            for (GoldConfiguration configuration : devDataSet) {
-                Configuration finalParse = KBeamArcEagerParser.parseNeural(net, configuration.getSentence(), false, maps, dependencyRelations, 1);
-
-                boolean hasErr= false;
-                for (int i = 1; i < finalParse.sentence.size(); i++) {
-                    a++;
-                    if (finalParse.state.getHead(i) == configuration.head(i)) {
-                        uas++;
-                    } else{
-                        System.out.print("HI!");
-                        hasErr =true;
-                    }
-                }
-                if(hasErr)
-                finalParse = KBeamArcEagerParser.parseNeural(net, configuration.getSentence(), false, maps, dependencyRelations, 1);
-            }
-
-            uas = uas / a;
-        }
 
         if (acc > bestAcc) {
             bestAcc = acc;
