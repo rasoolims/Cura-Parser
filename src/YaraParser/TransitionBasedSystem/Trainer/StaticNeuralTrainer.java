@@ -91,8 +91,7 @@ public class StaticNeuralTrainer {
             while (trainIter.hasNext())
                  net.fit(trainIter.next());
             //trainIter.reset();
-           if(iter%2==0) trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
-           else trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
+           trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
 
             for(int i=0;i<35;i++){
                double lr =  (net.getLayer(i)).conf().getLearningRateByParam("W");
