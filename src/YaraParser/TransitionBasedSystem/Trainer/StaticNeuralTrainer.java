@@ -65,7 +65,7 @@ public class StaticNeuralTrainer {
         int vocab3Size = maps.relSize() + 2;
 
         double learningRate = options.learningRate;
-        Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
+        // Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
         int batchSize = options.batchSize;
 
         CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -88,10 +88,6 @@ public class StaticNeuralTrainer {
 
         for(int iter=0;iter<options.trainingIter;iter++) {
             System.out.println(iter+"th iteration");
-         INDArray arr=   net.getLayer(0).getParam("W").getRow(15);
-            for(int i=0;i<64;i++)
-                System.out.print(arr.getDouble(i)+" ");
-            System.out.println("");
             while (trainIter.hasNext())
                  net.fit(trainIter.next());
             //trainIter.reset();
@@ -104,7 +100,6 @@ public class StaticNeuralTrainer {
                 lr =  (net.getLayer(i)).conf().getLearningRateByParam("b");
                 (net.getLayer(i)).conf().setLearningRateByParam("b",lr*0.96);
             }
-
 
             if (devIter != null) {
                 evaluateOnDev(net,devIter,devDataSet,maps,dependencyRelations,options);
@@ -235,7 +230,7 @@ public class StaticNeuralTrainer {
         }
 
         NeuralNetConfiguration.Builder confBuilder =  new NeuralNetConfiguration.Builder()
-                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).iterations(1)
                 .learningRate(learningRate)
                 .momentum(0.9).regularization(true).l2(0.0001);
         confBuilder.setMomentumSchedule(momentumSchedule);
@@ -290,7 +285,7 @@ public class StaticNeuralTrainer {
 
         ComputationGraph net = new ComputationGraph(confComplex);
         net.init();
-        net.setListeners(new ScoreIterationListener(1));
+        net.setListeners(new ScoreIterationListener(10));
 
 
         if(maps.hasEmbeddings()) {

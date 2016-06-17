@@ -71,7 +71,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
     }
 
-    public static Configuration parseNeural(ComputationGraph nn, Sentence sentence, boolean rootFirst, IndexMaps maps, ArrayList<Integer> dependencyRelations, int beamWidth) throws Exception {
+    public static Configuration parseNeural(final ComputationGraph nn, Sentence sentence, boolean rootFirst, IndexMaps maps, ArrayList<Integer> dependencyRelations, int beamWidth) throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
 
         ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
