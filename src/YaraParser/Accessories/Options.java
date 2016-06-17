@@ -59,7 +59,7 @@ public class Options implements Serializable {
         beamWidth = 64;
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
-        learningRate = 0.01;
+        learningRate = 0.1;
         batchSize = 1000;
         rootFirst = false;
         modelFile = "";

@@ -88,11 +88,23 @@ public class StaticNeuralTrainer {
 
         for(int iter=0;iter<options.trainingIter;iter++) {
             System.out.println(iter+"th iteration");
+         INDArray arr=   net.getLayer(0).getParam("W").getRow(15);
+            for(int i=0;i<64;i++)
+                System.out.print(arr.getDouble(i)+" ");
+            System.out.println("");
             while (trainIter.hasNext())
                  net.fit(trainIter.next());
             //trainIter.reset();
            if(iter%2==0) trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
-            else trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
+           else trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
+
+            for(int i=0;i<35;i++){
+               double lr =  (net.getLayer(i)).conf().getLearningRateByParam("W");
+                (net.getLayer(i)).conf().setLearningRateByParam("W",lr*0.96);
+                lr =  (net.getLayer(i)).conf().getLearningRateByParam("b");
+                (net.getLayer(i)).conf().setLearningRateByParam("b",lr*0.96);
+            }
+
 
             if (devIter != null) {
                 evaluateOnDev(net,devIter,devDataSet,maps,dependencyRelations,options);
@@ -303,7 +315,7 @@ public class StaticNeuralTrainer {
         while (devIter.hasNext()) {
             MultiDataSet t = devIter.next();
             INDArray[] features = t.getFeatures();
-            INDArray[] predicted = net.output(features);
+            INDArray[] predicted = net.output(false,features);
 
             double max = Double.NEGATIVE_INFINITY;
             int argmax = 0;

@@ -20,6 +20,7 @@ import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.jcodec.codecs.mjpeg.MCU;
+import org.nd4j.linalg.api.buffer.DoubleBuffer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
@@ -140,7 +141,17 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             MultiDataSet t = new org.nd4j.linalg.dataset.MultiDataSet(features, null);
 
 
-            INDArray[] predicted = nn.output(t.getFeatures());
+            INDArray[] predicted = nn.output(false,t.getFeatures());
+            double[] logVals = new double[2*(1+dependencyRelations.size())];
+            double minVal = -10000000;
+            for(int i=0;i<logVals.length;i++){
+                logVals[i] = predicted[0].getDouble(i);
+                double lg = Math.log(logVals[i]);
+                if(Double.isInfinite(lg)|| Double.isNaN(lg)){
+                    lg = minVal;
+                }
+                logVals[i] = lg;
+            }
             State currentState = configuration.state;
             double prevScore = configuration.score;
             boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
@@ -159,7 +170,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canShift) {
-                double score = (double) Math.log(predicted[0].getDouble(0));// classifier.shiftScore(features, true);
+                double score = logVals[0];// classifier.shiftScore(features, true);
                 double addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -168,7 +179,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canReduce) {
-                double score = (double) Math.log(predicted[0].getDouble(1)); //classifier.reduceScore(features, true);
+                double score = logVals[1]; //classifier.reduceScore(features, true);
                 double addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -178,7 +189,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             if (canRightArc) {
                 for (int dependency : dependencyRelations) {
-                    double score = (double) Math.log(predicted[0].getDouble(dependency + 2)); //rightArcScores[dependency];
+                    double score = logVals[dependency+2]; //rightArcScores[dependency];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -189,7 +200,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             if (canLeftArc) {
                 for (int dependency : dependencyRelations) {
-                    double score = (double) Math.log(predicted[0].getDouble(dependency + 2 + dependencyRelations.size())); //leftArcScores[dependency];
+                    double score = logVals[dependency+dependencyRelations.size()+2];  //leftArcScores[dependency];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
