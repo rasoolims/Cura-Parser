@@ -11,21 +11,21 @@ import java.io.Serializable;
  */
 
 public class CompactArray implements Serializable {
-    float[] array;
+    double[] array;
     int offset;
 
-    public CompactArray(int offset, float[] array) {
+    public CompactArray(int offset, double[] array) {
         this.offset = offset;
         this.array = array;
     }
 
-    public void expandArray(int index, float value) {
+    public void expandArray(int index, double value) {
         if (index < offset + array.length && index >= offset) {
             array[index - offset] += value;
         } else if (index < offset) {  //expand from left
             int gap = offset - index;
             int newSize = gap + array.length;
-            float[] newArray = new float[newSize];
+            double[] newArray = new double[newSize];
             newArray[0] = value;
             for (int i = 0; i < array.length; i++) {
                 newArray[gap + i] = array[i];
@@ -35,7 +35,7 @@ public class CompactArray implements Serializable {
         } else {
             int gap = index - (array.length + offset - 1);
             int newSize = array.length + gap;
-            float[] newArray = new float[newSize];
+            double[] newArray = new double[newSize];
             newArray[newSize - 1] = value;
             for (int i = 0; i < array.length; i++) {
                 newArray[i] = array[i];
@@ -44,7 +44,7 @@ public class CompactArray implements Serializable {
         }
     }
 
-    public float[] getArray() {
+    public double[] getArray() {
         return array;
     }
 

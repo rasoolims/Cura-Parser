@@ -46,7 +46,7 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         }
 
         State currentState = configuration.state;
-        float prevScore = configuration.score;
+        double prevScore = configuration.score;
 
         boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
         boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
@@ -56,36 +56,36 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
 
         if (canShift) {
             if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
-                float score = classifier.shiftScore(features, isDecode);
-                float addedScore = score + prevScore;
+                double score = classifier.shiftScore(features, isDecode);
+                double addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 0, -1));
             }
         }
         if (canReduce) {
             if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
-                float score = classifier.reduceScore(features, isDecode);
-                float addedScore = score + prevScore;
+                double score = classifier.reduceScore(features, isDecode);
+                double addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 1, -1));
             }
 
         }
 
         if (canRightArc) {
-            float[] rightArcScores = classifier.rightArcScores(features, isDecode);
+            double[] rightArcScores = classifier.rightArcScores(features, isDecode);
             for (int dependency : dependencyRelations) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
-                    float score = rightArcScores[dependency];
-                    float addedScore = score + prevScore;
+                    double score = rightArcScores[dependency];
+                    double addedScore = score + prevScore;
                     elements.add(new BeamElement(addedScore, b, 2, dependency));
                 }
             }
         }
         if (canLeftArc) {
-            float[] leftArcScores = classifier.leftArcScores(features, isDecode);
+            double[] leftArcScores = classifier.leftArcScores(features, isDecode);
             for (int dependency : dependencyRelations) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
-                    float score = leftArcScores[dependency];
-                    float addedScore = score + prevScore;
+                    double score = leftArcScores[dependency];
+                    double addedScore = score + prevScore;
                     elements.add(new BeamElement(addedScore, b, 3, dependency));
 
                 }
@@ -94,29 +94,29 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
 
         if (elements.size() == 0) {
             if (canShift) {
-                float score = classifier.shiftScore(features, isDecode);
-                float addedScore = score + prevScore;
+                double score = classifier.shiftScore(features, isDecode);
+                double addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 0, -1));
             }
             if (canReduce) {
-                float score = classifier.reduceScore(features, isDecode);
-                float addedScore = score + prevScore;
+                double score = classifier.reduceScore(features, isDecode);
+                double addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 1, -1));
             }
 
             if (canRightArc) {
-                float[] rightArcScores = classifier.rightArcScores(features, isDecode);
+                double[] rightArcScores = classifier.rightArcScores(features, isDecode);
                 for (int dependency : dependencyRelations) {
-                    float score = rightArcScores[dependency];
-                    float addedScore = score + prevScore;
+                    double score = rightArcScores[dependency];
+                    double addedScore = score + prevScore;
                     elements.add(new BeamElement(addedScore, b, 2, dependency));
                 }
             }
             if (canLeftArc) {
-                float[] leftArcScores = classifier.leftArcScores(features, isDecode);
+                double[] leftArcScores = classifier.leftArcScores(features, isDecode);
                 for (int dependency : dependencyRelations) {
-                    float score = leftArcScores[dependency];
-                    float addedScore = score + prevScore;
+                    double score = leftArcScores[dependency];
+                    double addedScore = score + prevScore;
                     elements.add(new BeamElement(addedScore, b, 3, dependency));
                 }
             }

@@ -28,6 +28,8 @@ public class Options implements Serializable {
     public String scorePath;
     public String clusterFile;
     public String wordEmbeddingFile;
+    public double learningRate;
+    public int batchSize;
 
     public String modelFile;
     public boolean lowercase;
@@ -57,6 +59,8 @@ public class Options implements Serializable {
         beamWidth = 64;
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
+        learningRate = 0.01;
+        batchSize = 1000;
         rootFirst = false;
         modelFile = "";
         outputFile = "";
@@ -133,6 +137,8 @@ public class Options implements Serializable {
         output.append("\t \t -e [embedding-file] \n");
         output.append("\t \t -h1 [hidden-layer-size-1] \n");
         output.append("\t \t -h2 [hidden-layer-size-2] \n");
+        output.append("\t \t -lr [learning-rate] \n");
+        output.append("\t \t -batch [batch-size] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:20)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
@@ -202,6 +208,10 @@ public class Options implements Serializable {
                 options.hiddenLayer1Size =Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-h2"))
                 options.hiddenLayer2Size =Integer.parseInt(args[i + 1]);
+            else if (args[i].startsWith("-batch"))
+                options.batchSize =Integer.parseInt(args[i + 1]);
+            else if (args[i].startsWith("-lr"))
+                options.learningRate =Double.parseDouble(args[i + 1]);
             else if (args[i].startsWith("-cluster")) {
                 options.clusterFile = args[i + 1];
                 options.useExtendedWithBrownClusterFeatures = true;

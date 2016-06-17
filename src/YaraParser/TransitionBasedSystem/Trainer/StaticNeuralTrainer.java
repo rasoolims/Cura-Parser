@@ -64,13 +64,14 @@ public class StaticNeuralTrainer {
         int vocab2Size = maps.posSize() + 2;
         int vocab3Size = maps.relSize() + 2;
 
-        double learningRate = 0.01;
+        double learningRate = options.learningRate;
         Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
-        int batchSize = 1000;
+        int batchSize = options.batchSize;
 
         CoNLLReader reader = new CoNLLReader(options.inputFile);
         ArrayList<GoldConfiguration> trainDataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
-        MultiDataSetIterator  trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
+        String[]   trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", -1);
+        MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
 
         MultiDataSetIterator devIter = null;
         ArrayList<GoldConfiguration> devDataSet = null;
@@ -89,7 +90,9 @@ public class StaticNeuralTrainer {
             System.out.println(iter+"th iteration");
             while (trainIter.hasNext())
                  net.fit(trainIter.next());
-            trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
+            //trainIter.reset();
+           if(iter%2==0) trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
+            else trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
 
             if (devIter != null) {
                 evaluateOnDev(net,devIter,devDataSet,maps,dependencyRelations,options);
@@ -117,7 +120,7 @@ public class StaticNeuralTrainer {
         String[] trainFiles;
         MultiDataSetIterator trainIter;
         System.out.print("reading train again...");
-        trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", 0.05);
+        trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", 0.001);
         trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
         System.out.print("done!\n");
         return trainIter;
@@ -222,7 +225,7 @@ public class StaticNeuralTrainer {
         NeuralNetConfiguration.Builder confBuilder =  new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .learningRate(learningRate)
-                .momentum(0.96).regularization(true).l2(0.0001);
+                .momentum(0.9).regularization(true).l2(0.0001);
         confBuilder.setMomentumSchedule(momentumSchedule);
 
         ComputationGraphConfiguration confComplex = confBuilder.graphBuilder()
@@ -275,7 +278,7 @@ public class StaticNeuralTrainer {
 
         ComputationGraph net = new ComputationGraph(confComplex);
         net.init();
-        net.setListeners(new ScoreIterationListener(100));
+        net.setListeners(new ScoreIterationListener(1));
 
 
         if(maps.hasEmbeddings()) {
@@ -308,11 +311,11 @@ public class StaticNeuralTrainer {
 
             for (int i = 0; i < predicted[0].length(); i++) {
                 double val = predicted[0].getDouble(i);
-                if (val >= max) {
+                if (val > max) {
                     argmax = i;
                     max = val;
                 }
-                if (t.getLabels(0).getDouble(i) == 1) {
+                if (t.getLabels(0).getInt(i) == 1) {
                     gold = i;
                 }
             }
@@ -342,6 +345,29 @@ public class StaticNeuralTrainer {
 
         uas = uas / a;
         System.out.println("UAS: " + format.format(100. * uas));
+
+        if(acc==1 && uas<1){
+             uas = 0;
+             a = 0;
+            for (GoldConfiguration configuration : devDataSet) {
+                Configuration finalParse = KBeamArcEagerParser.parseNeural(net, configuration.getSentence(), false, maps, dependencyRelations, 1);
+
+                boolean hasErr= false;
+                for (int i = 1; i < finalParse.sentence.size(); i++) {
+                    a++;
+                    if (finalParse.state.getHead(i) == configuration.head(i)) {
+                        uas++;
+                    } else{
+                        System.out.print("HI!");
+                        hasErr =true;
+                    }
+                }
+                if(hasErr)
+                finalParse = KBeamArcEagerParser.parseNeural(net, configuration.getSentence(), false, maps, dependencyRelations, 1);
+            }
+
+            uas = uas / a;
+        }
 
         if (acc > bestAcc) {
             bestAcc = acc;

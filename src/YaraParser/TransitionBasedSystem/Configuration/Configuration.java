@@ -17,19 +17,19 @@ public class Configuration implements Comparable, Cloneable, Serializable {
 
     public ArrayList<Integer> actionHistory;
 
-    public float score;
+    public double score;
 
     public Configuration(Sentence sentence, boolean rootFirst) {
         this.sentence = sentence;
         state = new State(sentence.size(), rootFirst);
-        score = (float) 0.0;
+        score =  0.0;
         actionHistory = new ArrayList<Integer>(2 * (sentence.size() + 1));
     }
 
     public Configuration(Sentence sentence) {
         this.sentence = sentence;
         state = new State(sentence.size());
-        score = (float) 0.0;
+        score =  0.0;
         actionHistory = new ArrayList<Integer>(2 * (sentence.size() + 1));
     }
 
@@ -39,17 +39,17 @@ public class Configuration implements Comparable, Cloneable, Serializable {
      * @param normalized if true, the score will be normalized by the number of done actions
      * @return
      */
-    public float getScore(boolean normalized) {
+    public double getScore(boolean normalized) {
         // if (normalized && actionHistory.size() > 0)
         //     return score / actionHistory.size();
         return score;
     }
 
-    public void addScore(float score) {
+    public void addScore(double score) {
         this.score += score;
     }
 
-    public void setScore(float score) {
+    public void setScore(double score) {
         this.score = score;
     }
 
@@ -64,7 +64,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
 
         // may be unsafe
         Configuration configuration = (Configuration) o;
-        float diff = getScore(true) - configuration.getScore(true);
+        double diff = getScore(true) - configuration.getScore(true);
 
         if (diff > 0)
             return (int) Math.ceil(diff);

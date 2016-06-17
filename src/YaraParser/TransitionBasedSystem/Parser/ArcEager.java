@@ -84,7 +84,7 @@ public class ArcEager extends TransitionBasedParser {
         return true;
     }
 
-    public static boolean isTerminal(HashMap<Configuration, Float> oracles) {
+    public static boolean isTerminal(HashMap<Configuration, Double> oracles) {
         for (Configuration configuration : oracles.keySet())
             if (!configuration.state.isTerminalState())
                 return false;

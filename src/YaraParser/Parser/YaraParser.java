@@ -36,7 +36,7 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.trainingIter = 10;
+            options.trainingIter = 50;
         }
 
         if (options.showHelp) {
@@ -109,7 +109,7 @@ public class YaraParser {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile, -1);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             System.out.println("CoNLL data reading done!");
@@ -149,7 +149,7 @@ public class YaraParser {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile,-1);
             if(options.wordEmbeddingFile.length()>0)
                 maps.readEmbeddings(options.wordEmbeddingFile);
 

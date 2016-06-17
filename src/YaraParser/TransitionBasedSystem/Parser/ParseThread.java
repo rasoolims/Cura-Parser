@@ -67,7 +67,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 for (int b = 0; b < beam.size(); b++) {
                     Configuration configuration = beam.get(b);
                     State currentState = configuration.state;
-                    float prevScore = configuration.score;
+                    double prevScore = configuration.score;
                     boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
                     boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
                     boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
@@ -84,8 +84,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canShift) {
-                        float score = classifier.shiftScore(features, true);
-                        float addedScore = score + prevScore;
+                        double score = classifier.shiftScore(features, true);
+                        double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
                         if (beamPreserver.size() > beamWidth)
@@ -93,8 +93,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canReduce) {
-                        float score = classifier.reduceScore(features, true);
-                        float addedScore = score + prevScore;
+                        double score = classifier.reduceScore(features, true);
+                        double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
                         if (beamPreserver.size() > beamWidth)
@@ -102,10 +102,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canRightArc) {
-                        float[] rightArcScores = classifier.rightArcScores(features, true);
+                        double[] rightArcScores = classifier.rightArcScores(features, true);
                         for (int dependency : dependencyRelations) {
-                            float score = rightArcScores[dependency];
-                            float addedScore = score + prevScore;
+                            double score = rightArcScores[dependency];
+                            double addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
                             if (beamPreserver.size() > beamWidth)
@@ -114,10 +114,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canLeftArc) {
-                        float[] leftArcScores = classifier.leftArcScores(features, true);
+                        double[] leftArcScores = classifier.leftArcScores(features, true);
                         for (int dependency : dependencyRelations) {
-                            float score = leftArcScores[dependency];
-                            float addedScore = score + prevScore;
+                            double score = leftArcScores[dependency];
+                            double addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
                             if (beamPreserver.size() > beamWidth)
@@ -133,7 +133,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     int b = beamElement.number;
                     int action = beamElement.action;
                     int label = beamElement.label;
-                    float score = beamElement.score;
+                    double score = beamElement.score;
 
                     Configuration newConfig = beam.get(b).clone();
 
@@ -161,7 +161,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 Configuration configuration = beam.get(0);
                 State currentState = configuration.state;
                 Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-                float bestScore = Float.NEGATIVE_INFINITY;
+                double bestScore = Double.NEGATIVE_INFINITY;
                 int bestAction = -1;
 
                 boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
@@ -184,23 +184,23 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canShift) {
-                    float score = classifier.shiftScore(features, true);
+                    double score = classifier.shiftScore(features, true);
                     if (score > bestScore) {
                         bestScore = score;
                         bestAction = 0;
                     }
                 }
                 if (canReduce) {
-                    float score = classifier.reduceScore(features, true);
+                    double score = classifier.reduceScore(features, true);
                     if (score > bestScore) {
                         bestScore = score;
                         bestAction = 1;
                     }
                 }
                 if (canRightArc) {
-                    float[] rightArcScores = classifier.rightArcScores(features, true);
+                    double[] rightArcScores = classifier.rightArcScores(features, true);
                     for (int dependency : dependencyRelations) {
-                        float score = rightArcScores[dependency];
+                        double score = rightArcScores[dependency];
                         if (score > bestScore) {
                             bestScore = score;
                             bestAction = 3 + dependency;
@@ -208,9 +208,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
                 }
                 if (ArcEager.canDo(Actions.LeftArc, currentState)) {
-                    float[] leftArcScores = classifier.leftArcScores(features, true);
+                    double[] leftArcScores = classifier.leftArcScores(features, true);
                     for (int dependency : dependencyRelations) {
-                        float score = leftArcScores[dependency];
+                        double score = leftArcScores[dependency];
                         if (score > bestScore) {
                             bestScore = score;
                             bestAction = 3 + dependencyRelations.size() + dependency;
@@ -243,7 +243,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         }
 
         Configuration bestConfiguration = null;
-        float bestScore = Float.NEGATIVE_INFINITY;
+        double bestScore = Double.NEGATIVE_INFINITY;
         for (Configuration configuration : beam) {
             if (configuration.getScore(true) > bestScore) {
                 bestScore = configuration.getScore(true);
@@ -275,7 +275,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 int b = beamElement.number;
                 int action = beamElement.action;
                 int label = beamElement.label;
-                float score = beamElement.score;
+                double score = beamElement.score;
 
                 Configuration newConfig = beam.get(b).clone();
 
@@ -302,7 +302,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         }
 
         Configuration bestConfiguration = null;
-        float bestScore = Float.NEGATIVE_INFINITY;
+        double bestScore = Double.NEGATIVE_INFINITY;
         for (Configuration configuration : beam) {
             if (configuration.getScore(true) > bestScore) {
                 bestScore = configuration.getScore(true);
@@ -316,7 +316,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
-            float prevScore = configuration.score;
+            double prevScore = configuration.score;
             boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
@@ -334,8 +334,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
 
             if (canShift) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
-                    float score = classifier.shiftScore(features, true);
-                    float addedScore = score + prevScore;
+                    double score = classifier.shiftScore(features, true);
+                    double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
                     if (beamPreserver.size() > beamWidth)
@@ -345,8 +345,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
 
             if (canReduce) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
-                    float score = classifier.reduceScore(features, true);
-                    float addedScore = score + prevScore;
+                    double score = classifier.reduceScore(features, true);
+                    double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
                     if (beamPreserver.size() > beamWidth)
@@ -355,11 +355,11 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             }
 
             if (canRightArc) {
-                float[] rightArcScores = classifier.rightArcScores(features, true);
+                double[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
-                        float score = rightArcScores[dependency];
-                        float addedScore = score + prevScore;
+                        double score = rightArcScores[dependency];
+                        double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
                         if (beamPreserver.size() > beamWidth)
@@ -369,11 +369,11 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             }
 
             if (canLeftArc) {
-                float[] leftArcScores = classifier.leftArcScores(features, true);
+                double[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
-                        float score = leftArcScores[dependency];
-                        float addedScore = score + prevScore;
+                        double score = leftArcScores[dependency];
+                        double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
                         if (beamPreserver.size() > beamWidth)
@@ -387,7 +387,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             for (int b = 0; b < beam.size(); b++) {
                 Configuration configuration = beam.get(b);
                 State currentState = configuration.state;
-                float prevScore = configuration.score;
+                double prevScore = configuration.score;
                 boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
                 boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
                 boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
@@ -404,8 +404,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canShift) {
-                    float score = classifier.shiftScore(features, true);
-                    float addedScore = score + prevScore;
+                    double score = classifier.shiftScore(features, true);
+                    double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
                     if (beamPreserver.size() > beamWidth)
@@ -413,8 +413,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canReduce) {
-                    float score = classifier.reduceScore(features, true);
-                    float addedScore = score + prevScore;
+                    double score = classifier.reduceScore(features, true);
+                    double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
                     if (beamPreserver.size() > beamWidth)
@@ -422,10 +422,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canRightArc) {
-                    float[] rightArcScores = classifier.rightArcScores(features, true);
+                    double[] rightArcScores = classifier.rightArcScores(features, true);
                     for (int dependency : dependencyRelations) {
-                        float score = rightArcScores[dependency];
-                        float addedScore = score + prevScore;
+                        double score = rightArcScores[dependency];
+                        double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
                         if (beamPreserver.size() > beamWidth)
@@ -434,10 +434,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canLeftArc) {
-                    float[] leftArcScores = classifier.leftArcScores(features, true);
+                    double[] leftArcScores = classifier.leftArcScores(features, true);
                     for (int dependency : dependencyRelations) {
-                        float score = leftArcScores[dependency];
-                        float addedScore = score + prevScore;
+                        double score = leftArcScores[dependency];
+                        double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
                         if (beamPreserver.size() > beamWidth)

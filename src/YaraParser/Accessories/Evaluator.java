@@ -20,12 +20,12 @@ public class Evaluator {
         ArrayList<CompactTree> goldConfiguration = goldReader.readStringData();
         ArrayList<CompactTree> predConfiguration = predictedReader.readStringData();
 
-        float unlabMatch = 0f;
-        float labMatch = 0f;
+        double unlabMatch = 0;
+        double labMatch = 0;
         int all = 0;
 
-        float fullULabMatch = 0f;
-        float fullLabMatch = 0f;
+        double fullULabMatch = 0;
+        double fullLabMatch = 0;
         int numTree = 0;
 
         for (int i = 0; i < predConfiguration.size(); i++) {
