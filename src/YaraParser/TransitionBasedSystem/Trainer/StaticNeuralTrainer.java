@@ -4,14 +4,13 @@ import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Options;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.NNInfStruct;
-import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
-import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import org.apache.commons.collections.map.HashedMap;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderMultiDataSetIterator;
+import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -79,7 +78,7 @@ public class StaticNeuralTrainer {
             CoNLLReader devReader = new CoNLLReader(options.devPath);
             devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, options.devPath + ".csv", -1);
-            devIter = readMultiDataSetIterator(devFiles, 1, possibleOutputs);
+            devIter = readMultiDataSetIterator(devFiles, 1000, possibleOutputs);
         }
 
 
@@ -140,7 +139,6 @@ public class StaticNeuralTrainer {
             featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
             featuresReader[i].initialize(new FileSplit(new File(path[i])));
         }
-
 
         RecordReader labelsReader = new CSVRecordReader(numLinesToSkip, fileDelimiter);
         String labelsCsvPath = path[32];
@@ -302,55 +300,19 @@ public class StaticNeuralTrainer {
     private static void evaluateOnDev(final ComputationGraph net, MultiDataSetIterator devIter,
                                       ArrayList<GoldConfiguration> devDataSet, IndexMaps maps,
                                       ArrayList<Integer> dependencyRelations, Options options) throws Exception{
-        DecimalFormat format = new DecimalFormat("##.00");
         devIter.reset();
-        int cor = 0;
-        int all = 0;
+        Evaluation evaluation = new Evaluation(2*(dependencyRelations.size()+1));
         while (devIter.hasNext()) {
             MultiDataSet t = devIter.next();
             INDArray[] features = t.getFeatures();
-            INDArray[] predicted = net.output(false,features);
-
-            double max = Double.NEGATIVE_INFINITY;
-            int argmax = 0;
-            int gold = 0;
-
-            for (int i = 0; i < predicted[0].length(); i++) {
-                double val = predicted[0].getDouble(i);
-                if (val > max) {
-                    argmax = i;
-                    max = val;
-                }
-                if (t.getLabels(0).getInt(i) == 1) {
-                    gold = i;
-                }
-            }
-
-            if (argmax == gold) {
-                cor++;
-                all++;
-            } else {
-                all++;
-            }
+            INDArray labels = t.getLabels()[0];
+            INDArray predicted = net.output(false,features)[0];
+           evaluation.eval(labels,predicted);
         }
-        double acc = (double) cor / all;
-        System.out.println("acc: " + format.format(100. * acc));
+        System.out.println(evaluation.stats());
 
-        double uas = 0;
-        int a = 0;
-        for (GoldConfiguration configuration : devDataSet) {
-            Configuration finalParse = KBeamArcEagerParser.parseNeural(net, configuration.getSentence(), false, maps, dependencyRelations, 1);
 
-            for (int i = 1; i < finalParse.sentence.size(); i++) {
-                a++;
-                if (finalParse.state.getHead(i) == configuration.head(i)) {
-                    uas++;
-                }
-            }
-        }
-
-        uas = uas / a;
-        System.out.println("UAS: " + format.format(100. * uas));
+        double acc = evaluation.accuracy();
 
         if (acc > bestAcc) {
             bestAcc = acc;
