@@ -93,7 +93,7 @@ public class StaticNeuralTrainer {
             //trainIter.reset();
            trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
 
-            for(int i=0;i<35;i++){
+            for(int i=0;i<34;i++){
                double lr =  (net.getLayer(i)).conf().getLearningRateByParam("W");
                 (net.getLayer(i)).conf().setLearningRateByParam("W",lr*0.96);
                 lr =  (net.getLayer(i)).conf().getLearningRateByParam("b");
@@ -275,12 +275,12 @@ public class StaticNeuralTrainer {
                 .addLayer("h1", new DenseLayer.Builder().nIn(12 * (wordDimension + posDimension) + 8 * depDimension)
                         .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
                         .nOut(options.hiddenLayer1Size).activation("relu").updater(Updater.NESTEROVS).build(), "concat")
-                .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
-                        .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
-                        .nOut(options.hiddenLayer2Size).activation("relu").updater(Updater.NESTEROVS).build(), "h1")
+             //   .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
+              //          .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
+           //             .nOut(options.hiddenLayer2Size).activation("relu").updater(Updater.NESTEROVS).build(), "h1")
                 .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .nIn(options.hiddenLayer2Size).nOut(possibleOutputs).activation("softmax")
-                        .updater(Updater.NESTEROVS).build(), "h2")
+                        .nIn(options.hiddenLayer1Size).nOut(possibleOutputs).activation("softmax")
+                        .updater(Updater.NESTEROVS).build(), "h1")
                 .setOutputs("out")
                 .backprop(true).build();
 
