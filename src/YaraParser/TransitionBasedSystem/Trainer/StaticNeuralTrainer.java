@@ -15,12 +15,14 @@ import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
+import org.deeplearning4j.nn.conf.distribution.GaussianDistribution;
 import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.EmbeddingLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.params.DefaultParamInitializer;
+import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
@@ -29,7 +31,6 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
 import java.io.*;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
@@ -78,7 +79,7 @@ public class StaticNeuralTrainer {
             CoNLLReader devReader = new CoNLLReader(options.devPath);
             devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, options.devPath + ".csv", -1);
-            devIter = readMultiDataSetIterator(devFiles, 1000, possibleOutputs);
+            devIter = readMultiDataSetIterator(devFiles, 100000, possibleOutputs);
         }
 
 
@@ -272,10 +273,14 @@ public class StaticNeuralTrainer {
                         "L11", "L12", "L13", "L14", "L15", "L16", "L17", "L18", "L19", "L20",
                         "L21", "L22", "L23", "L24", "L25", "L26", "L27", "L28", "L29", "L30","L31","L32")
                 .addLayer("h1", new DenseLayer.Builder().nIn(12 * (wordDimension + posDimension) + 8 * depDimension)
+                        .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
                         .nOut(options.hiddenLayer1Size).activation("relu").updater(Updater.NESTEROVS).build(), "concat")
                 .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
+                        .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
                         .nOut(options.hiddenLayer2Size).activation("relu").updater(Updater.NESTEROVS).build(), "h1")
-                .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD).nIn(options.hiddenLayer2Size).nOut(possibleOutputs).activation("softmax").updater(Updater.NESTEROVS).build(), "h2")
+                .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .nIn(options.hiddenLayer2Size).nOut(possibleOutputs).activation("softmax")
+                        .updater(Updater.NESTEROVS).build(), "h2")
                 .setOutputs("out")
                 .backprop(true).build();
 
@@ -311,9 +316,7 @@ public class StaticNeuralTrainer {
         }
         System.out.println(evaluation.stats());
 
-
         double acc = evaluation.accuracy();
-
         if (acc > bestAcc) {
             bestAcc = acc;
             System.out.println("Saving the new model for iteration ");
