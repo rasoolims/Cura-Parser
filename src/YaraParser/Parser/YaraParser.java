@@ -32,7 +32,7 @@ public class YaraParser {
             options.train = true;
             options.inputFile = "/Users/msr/Desktop/train_smal.conll";
             options.devPath = "/Users/msr/Desktop/dev_smal.conll";
-            options.wordEmbeddingFile = "/Users/msr/Desktop/word.embed";
+         //   options.wordEmbeddingFile = "/Users/msr/Desktop/word.embed";
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;

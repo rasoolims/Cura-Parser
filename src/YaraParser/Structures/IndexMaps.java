@@ -47,6 +47,7 @@ public class IndexMaps implements Serializable {
         this.brown6Clusters = brown6Clusters;
         this.brownFullClusters = brownFullClusters;
         this.rootString = rootString;
+        embeddingsDictionary = new HashMap<>();
     }
 
     public Sentence makeSentence(String[] words, String[] posTags, boolean rootFirst, boolean lowerCased) {

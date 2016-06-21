@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class CoNLLReader {
     /**
@@ -188,6 +189,7 @@ public class CoNLLReader {
                                                  boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
         HashMap<String, Integer> wordMap = maps.getStringMap();
         ArrayList<GoldConfiguration> configurationSet = new ArrayList<GoldConfiguration>();
+        HashSet<String> oovTypes = new HashSet<>();
 
         String line;
         ArrayList<Integer> tokens = new ArrayList<Integer>();
@@ -250,9 +252,12 @@ public class CoNLLReader {
                 if (wordMap.containsKey(word)) {
                     wi = wordMap.get(word);
                     // todo
-                    if(maps.embeddings(wi+2)==null)
-                       wi = -1;
-                }
+                    if(maps.hasEmbeddings() && maps.embeddings(wi+2)==null) {
+                        wi = -1;
+                        oovTypes.add(word);
+                    }
+                } else
+                   oovTypes.add(word);
 
                 int pi = -1;
                 if (wordMap.containsKey(pos))
@@ -304,6 +309,7 @@ public class CoNLLReader {
             configurationSet.add(new GoldConfiguration(currentSentence, goldDependencies));
         }
 
+        System.out.println("oov  "+ oovTypes.size());
         return configurationSet;
     }
 
