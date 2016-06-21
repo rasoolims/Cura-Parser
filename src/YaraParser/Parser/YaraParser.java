@@ -45,7 +45,7 @@ public class YaraParser {
             System.out.println(options);
             if (options.train) {
                // train(options);
-                createTrainData(options, options.inputFile + ".csv", options.devPath + ".csv");
+                createTrainData(options);
             } else if (options.parseTaggedFile || options.parseConllFile || options.parsePartialConll) {
                    parseNN(options);
                // parse(options);
@@ -109,7 +109,7 @@ public class YaraParser {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile, -1);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             System.out.println("CoNLL data reading done!");
@@ -145,11 +145,11 @@ public class YaraParser {
         }
     }
 
-    public static void createTrainData(Options options, String trainOutputPath, String devOutputPath) throws Exception {
+    public static void createTrainData(Options options) throws Exception {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile,-1);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile);
             if(options.wordEmbeddingFile.length()>0)
                 maps.readEmbeddings(options.wordEmbeddingFile);
 

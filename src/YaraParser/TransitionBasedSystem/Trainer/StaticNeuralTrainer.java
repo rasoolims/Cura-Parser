@@ -43,9 +43,10 @@ public class StaticNeuralTrainer {
         int filled = 0;
         INDArray weights = layer.getParam(DefaultParamInitializer.WEIGHT_KEY);
         INDArray rows = Nd4j.createUninitialized(new int[]{maps.vocabSize() + 2, weights.size(1)}, 'c');
+
         for (int i = 0; i < maps.vocabSize() + 2; i++) {
             double[] embeddings = maps.embeddings(i);
-            if (embeddings != null & i>2) {
+            if (embeddings != null) {
                 INDArray newArray = Nd4j.create(embeddings);
                 rows.putRow(i, newArray);
                 filled++;
@@ -90,8 +91,8 @@ public class StaticNeuralTrainer {
             System.out.println(iter+"th iteration");
             while (trainIter.hasNext())
                  net.fit(trainIter.next());
-            //trainIter.reset();
-           trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
+            trainIter.reset();
+           //trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
 
             for(int i=0;i<34;i++){
                double lr =  (net.getLayer(i)).conf().getLearningRateByParam("W");
@@ -101,7 +102,7 @@ public class StaticNeuralTrainer {
             }
 
             if (devIter != null) {
-                evaluateOnDev(net,devIter,devDataSet,maps,dependencyRelations,options);
+                evaluateOnDev(net,devIter,maps,dependencyRelations,options);
             }
         }
         if (devIter == null) {
@@ -117,19 +118,6 @@ public class StaticNeuralTrainer {
         writer.writeObject(new NNInfStruct(net, dependencyRelations.size(), maps, dependencyRelations, options));
         writer.writeObject(net);
         writer.close();
-    }
-
-    private static MultiDataSetIterator resetTrainDataWithOOV(ArcEagerBeamTrainer trainer, int possibleOutputs,
-                                                              Options options, int batchSize,
-                                                              ArrayList<GoldConfiguration> trainDataSet)
-            throws Exception {
-        String[] trainFiles;
-        MultiDataSetIterator trainIter;
-        System.out.print("reading train again...");
-        trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", 0.001);
-        trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
-        System.out.print("done!\n");
-        return trainIter;
     }
 
     private static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs) throws IOException, InterruptedException {
@@ -303,8 +291,7 @@ public class StaticNeuralTrainer {
     }
 
     private static void evaluateOnDev(final ComputationGraph net, MultiDataSetIterator devIter,
-                                      ArrayList<GoldConfiguration> devDataSet, IndexMaps maps,
-                                      ArrayList<Integer> dependencyRelations, Options options) throws Exception{
+                                     IndexMaps maps, ArrayList<Integer> dependencyRelations, Options options) throws Exception{
         devIter.reset();
         Evaluation evaluation = new Evaluation(2*(dependencyRelations.size()+1));
         while (devIter.hasNext()) {
