@@ -32,7 +32,7 @@ public class YaraParser {
             options.train = true;
             options.inputFile = "/Users/msr/Desktop/train_smal.conll";
             options.devPath = "/Users/msr/Desktop/dev_smal.conll";
-         //   options.wordEmbeddingFile = "/Users/msr/Desktop/word.embed";
+            options.wordEmbeddingFile = "/Users/msr/Desktop/word.embed";
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
@@ -109,9 +109,11 @@ public class YaraParser {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options
+                    .clusterFile,1);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
+                    .rootFirst, options.lowercase, maps);
             System.out.println("CoNLL data reading done!");
 
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
@@ -149,9 +151,11 @@ public class YaraParser {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options
+                    .clusterFile, 1);
+            int wDim = 64;
             if(options.wordEmbeddingFile.length()>0)
-                maps.readEmbeddings(options.wordEmbeddingFile);
+                wDim = maps.readEmbeddings(options.wordEmbeddingFile);
 
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
@@ -182,10 +186,10 @@ public class YaraParser {
                 }
             }
 
+            System.out.println("Embedding dimension "+wDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, dependencyLabels.size()),
                     options, dependencyLabels, featureLength, maps);
-            CoNLLReader devReader = new CoNLLReader(options.devPath);
-            StaticNeuralTrainer.trainStaticNeural(trainer, maps, 64, 32, 32, labels.size() - 1, dependencyLabels, options);
+            StaticNeuralTrainer.trainStaticNeural(trainer, maps, wDim, 32, 32, labels.size() - 1, dependencyLabels, options);
         }
     }
 

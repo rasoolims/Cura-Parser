@@ -859,7 +859,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     }
 
 
-    public static void parseNNConllFileNoParallel(NNInfStruct nnInfStruct, String inputFile, String outputFile, int beamWidth, int numOfThreads, boolean partial, String scorePath) throws Exception {
+    public static void parseNNConllFileNoParallel(NNInfStruct nnInfStruct, String inputFile, String outputFile, int
+            beamWidth, int numOfThreads, boolean partial, String scorePath) throws Exception {
         Options options = nnInfStruct.options;
         CoNLLReader reader = new CoNLLReader(inputFile);
         boolean addScore = false;
@@ -874,7 +875,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         int dataCount = 0;
 
         while (true) {
-            ArrayList<GoldConfiguration> data = reader.readData(15000, true, options.labeled, options.rootFirst, options.lowercase, nnInfStruct.maps);
+            ArrayList<GoldConfiguration> data = reader.readData(15000, true, options.labeled, options.rootFirst,
+                    options.lowercase, nnInfStruct.maps);
             size += data.size();
             if (data.size() == 0)
                 break;
@@ -885,9 +887,11 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     System.err.print(dataCount + " ... ");
                 Configuration bestParse;
                // if (partial) //todo
-                //    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst, beamWidth, numOfThreads);
+                //    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst,
+                // beamWidth, numOfThreads);
               //  else
-                bestParse = parseNeural(nnInfStruct.net,goldConfiguration.getSentence(), options.rootFirst,nnInfStruct.maps,nnInfStruct.dependencyLabels, beamWidth);
+                bestParse = parseNeural(nnInfStruct.net,goldConfiguration.getSentence(), options.rootFirst,
+                        nnInfStruct.maps,nnInfStruct.dependencyLabels, beamWidth);
 
                 int[] words = goldConfiguration.getSentence().getWords();
                 allArcs += words.length - 1;

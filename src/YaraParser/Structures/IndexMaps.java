@@ -162,8 +162,9 @@ public class IndexMaps implements Serializable {
         return depRelationMap.size();
     }
 
-    public void readEmbeddings(String path) throws Exception{
+    public int readEmbeddings(String path) throws Exception{
         embeddingsDictionary = new HashMap<>();
+        int eDim = 64;
 
         BufferedReader reader = new BufferedReader(new FileReader(path));
         String line;
@@ -180,6 +181,7 @@ public class IndexMaps implements Serializable {
 
             else if(stringMap.containsKey(spl[0])) {
                 double[] e = new double[spl.length - 1];
+                eDim = e.length;
                 int wordIndex = stringMap.get(spl[0]);
                 for (int i = 0; i < e.length; i++) {
                     e[i] = Double.parseDouble(spl[i + 1]);
@@ -188,6 +190,7 @@ public class IndexMaps implements Serializable {
                 embeddingsDictionary.put(wordIndex+2, e);
             }
         }
+        return eDim;
     }
 
     public double[] embeddings(int wordIndex) {

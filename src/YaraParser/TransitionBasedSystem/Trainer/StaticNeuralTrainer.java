@@ -80,7 +80,7 @@ public class StaticNeuralTrainer {
             CoNLLReader devReader = new CoNLLReader(options.devPath);
             devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, options.devPath + ".csv", -1);
-            devIter = readMultiDataSetIterator(devFiles, 100000, possibleOutputs);
+            devIter = readMultiDataSetIterator(devFiles, batchSize, possibleOutputs);
         }
 
 
@@ -89,20 +89,28 @@ public class StaticNeuralTrainer {
 
         for(int iter=0;iter<options.trainingIter;iter++) {
             System.out.println(iter+"th iteration");
-            while (trainIter.hasNext())
-                 net.fit(trainIter.next());
             trainIter.reset();
+            while (trainIter.hasNext()) {
+                net.fit(trainIter.next());
+                for(int i=0;i<34;i++){
+                    double lr =  (net.getLayer(i)).conf().getLearningRateByParam("W");
+                    (net.getLayer(i)).conf().setLearningRateByParam("W",lr*0.96);
+                    lr =  (net.getLayer(i)).conf().getLearningRateByParam("b");
+                    (net.getLayer(i)).conf().setLearningRateByParam("b",lr*0.96);
+                }
+                double lr =  (net.getLayer(0)).conf().getLearningRateByParam("W");
+                System.out.println("learning rate:" + lr);
+            }
+           // trainIter.reset();
            //trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
 
-            for(int i=0;i<34;i++){
-               double lr =  (net.getLayer(i)).conf().getLearningRateByParam("W");
-                (net.getLayer(i)).conf().setLearningRateByParam("W",lr*0.96);
-                lr =  (net.getLayer(i)).conf().getLearningRateByParam("b");
-                (net.getLayer(i)).conf().setLearningRateByParam("b",lr*0.96);
-            }
+
+            System.out.println("\nevaluate of train");
+            evaluate(net, trainIter, maps, dependencyRelations, options, false);
 
             if (devIter != null) {
-                evaluateOnDev(net,devIter,maps,dependencyRelations,options);
+                System.out.println("\nevaluate of dev");
+                evaluate(net,devIter,maps,dependencyRelations,options,true);
             }
         }
         if (devIter == null) {
@@ -217,65 +225,64 @@ public class StaticNeuralTrainer {
 
         NeuralNetConfiguration.Builder confBuilder =  new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).iterations(1)
-                .learningRate(learningRate)
+                .learningRate(learningRate).updater(Updater.NESTEROVS)//.dropOut(0.5)
                 .momentum(0.9).regularization(true).l2(0.0001);
-        confBuilder.setMomentumSchedule(momentumSchedule);
+       // confBuilder.setMomentumSchedule(momentumSchedule);
 
         ComputationGraphConfiguration confComplex = confBuilder.graphBuilder()
                 .addInputs("s0w", "b0w", "b1w", "b2w", "b0l1w", "b0l2w","s0l1w","s0l2w","sr1w","s0r2w","sh0w","sh1w",
                         "s0p", "b0p", "b1p", "b2p","b0l1p", "b0l2p", "s0l1p", "s0l2p", "sr1p","s0r2p", "sh0p", "sh1p",
                         "s0l", "sh0l","s0l1l","sr1l","s0l2l","s0r2l","b0l1l","b0l2l")
-                .addLayer("L1", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0w")
-                .addLayer("L2", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0w")
-                .addLayer("L3", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b1w")
-                .addLayer("L4", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b2w")
-                .addLayer("L5", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l1w")
-                .addLayer("L6", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l2w")
-                .addLayer("L7", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l1w")
-                .addLayer("L8", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l2w")
-                .addLayer("L9", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sr1w")
-                .addLayer("L10", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0r2w")
-                .addLayer("L11", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh0w")
-                .addLayer("L12", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh1w")
-                .addLayer("L13", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0p")
-                .addLayer("L14", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0p")
-                .addLayer("L15", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b1p")
-                .addLayer("L16", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b2p")
-                .addLayer("L17", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l1p")
-                .addLayer("L18", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l2p")
-                .addLayer("L19", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l1p")
-                .addLayer("L20", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l2p")
-                .addLayer("L21", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sr1p")
-                .addLayer("L22", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0r2p")
-                .addLayer("L23", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh0p")
-                .addLayer("L24", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh1p")
-                .addLayer("L25", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l")
-                .addLayer("L26", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sh0l")
-                .addLayer("L27", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l1l")
-                .addLayer("L28", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "sr1l")
-                .addLayer("L29", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0l2l")
-                .addLayer("L30", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "s0r2l")
-                .addLayer("L31", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l1l")
-                .addLayer("L32", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").updater(Updater.NESTEROVS).build(), "b0l2l")
+                .addLayer("L1", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "s0w")
+                .addLayer("L2", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b0w")
+                .addLayer("L3", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b1w")
+                .addLayer("L4", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b2w")
+                .addLayer("L5", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b0l1w")
+                .addLayer("L6", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b0l2w")
+                .addLayer("L7", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "s0l1w")
+                .addLayer("L8", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "s0l2w")
+                .addLayer("L9", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "sr1w")
+                .addLayer("L10", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "s0r2w")
+                .addLayer("L11", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "sh0w")
+                .addLayer("L12", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "sh1w")
+                .addLayer("L13", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0p")
+                .addLayer("L14", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b0p")
+                .addLayer("L15", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b1p")
+                .addLayer("L16", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b2p")
+                .addLayer("L17", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b0l1p")
+                .addLayer("L18", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b0l2p")
+                .addLayer("L19", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0l1p")
+                .addLayer("L20", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0l2p")
+                .addLayer("L21", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "sr1p")
+                .addLayer("L22", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0r2p")
+                .addLayer("L23", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "sh0p")
+                .addLayer("L24", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "sh1p")
+                .addLayer("L25", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0l")
+                .addLayer("L26", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "sh0l")
+                .addLayer("L27", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0l1l")
+                .addLayer("L28", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "sr1l")
+                .addLayer("L29", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0l2l")
+                .addLayer("L30", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0r2l")
+                .addLayer("L31", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "b0l1l")
+                .addLayer("L32", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "b0l2l")
                 .addVertex("concat", new MergeVertex(), "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10",
                         "L11", "L12", "L13", "L14", "L15", "L16", "L17", "L18", "L19", "L20",
                         "L21", "L22", "L23", "L24", "L25", "L26", "L27", "L28", "L29", "L30","L31","L32")
                 .addLayer("h1", new DenseLayer.Builder().nIn(12 * (wordDimension + posDimension) + 8 * depDimension)
                         .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
-                        .nOut(options.hiddenLayer1Size).activation("relu").updater(Updater.NESTEROVS).build(), "concat")
+                        .nOut(options.hiddenLayer1Size).activation("relu").build(), "concat")
              //   .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
               //          .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
-           //             .nOut(options.hiddenLayer2Size).activation("relu").updater(Updater.NESTEROVS).build(), "h1")
+           //             .nOut(options.hiddenLayer2Size).activation("relu").build(), "h1")
                 .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .nIn(options.hiddenLayer1Size).nOut(possibleOutputs).activation("softmax")
-                        .updater(Updater.NESTEROVS).build(), "h1")
+                        .nIn(options.hiddenLayer1Size).nOut(possibleOutputs).activation("softmax").build(), "h1")
                 .setOutputs("out")
                 .backprop(true).build();
 
 
         ComputationGraph net = new ComputationGraph(confComplex);
         net.init();
-        net.setListeners(new ScoreIterationListener(10));
+        net.setListeners(new ScoreIterationListener(1));
 
 
         if(maps.hasEmbeddings()) {
@@ -290,24 +297,30 @@ public class StaticNeuralTrainer {
         return net;
     }
 
-    private static void evaluateOnDev(final ComputationGraph net, MultiDataSetIterator devIter,
-                                     IndexMaps maps, ArrayList<Integer> dependencyRelations, Options options) throws Exception{
-        devIter.reset();
-        Evaluation evaluation = new Evaluation(2*(dependencyRelations.size()+1));
-        while (devIter.hasNext()) {
-            MultiDataSet t = devIter.next();
+    private static void evaluate(final ComputationGraph net, final MultiDataSetIterator iter, final IndexMaps maps,
+                                     final ArrayList<Integer> dependencyRelations, final Options options, boolean save)
+            throws Exception {
+        iter.reset();
+        Evaluation evaluation = new Evaluation(2 * (dependencyRelations.size() + 1));
+        while (iter.hasNext()) {
+            MultiDataSet t = iter.next();
             INDArray[] features = t.getFeatures();
             INDArray labels = t.getLabels()[0];
-            INDArray predicted = net.output(false,features)[0];
-           evaluation.eval(labels,predicted);
+            INDArray predicted = net.output(false, features)[0];
+            evaluation.eval(labels, predicted);
         }
-        System.out.println(evaluation.stats());
+        System.out.println("acc: " + evaluation.accuracy());
+        System.out.println("precision: " + evaluation.precision());
+        System.out.println("recall: " + evaluation.recall());
+        System.out.println("f1 score: " + evaluation.f1() + "\n");
 
-        double acc = evaluation.accuracy();
-        if (acc > bestAcc) {
-            bestAcc = acc;
-            System.out.println("Saving the new model for iteration ");
-            saveModel(maps, dependencyRelations, options, net);
+        if (save) {
+            double fscore = evaluation.f1();
+            if (fscore > bestAcc) {
+                bestAcc = fscore;
+                System.out.println("Saving the new model for iteration \n\n");
+                saveModel(maps, dependencyRelations, options, net);
+            }
         }
     }
 }
