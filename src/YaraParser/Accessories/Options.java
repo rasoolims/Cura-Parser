@@ -60,7 +60,7 @@ public class Options implements Serializable {
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
         learningRate = 0.1;
-        batchSize = 10000;
+        batchSize = 1000;
         rootFirst = false;
         modelFile = "";
         outputFile = "";

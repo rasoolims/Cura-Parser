@@ -1499,7 +1499,7 @@ public class FeatureExtractor {
     }
 
 
-    public static int[] extractBaseFeatures(Configuration configuration, IndexMaps maps) {
+    public static int[] extractBaseFeatures(Configuration configuration, IndexMaps maps) throws Exception {
 
         State state = configuration.state;
         Sentence sentence = configuration.sentence;
@@ -1521,6 +1521,12 @@ public class FeatureExtractor {
         int s0w = 1;
         int s0p = 1;
         int s0l = 1;
+
+        int s1w = 1;
+        int s1p = 1;
+
+        int s2w = 1;
+        int s2p = 1;
 
         int b0l1p = 1;
         int b0l1w = 1;
@@ -1596,6 +1602,23 @@ public class FeatureExtractor {
             s0l = maps.getNeuralDepRelationKey(state.getDependency(s0Position));
 
 
+            if(1>state.stackSize()){
+               int top1 = state.pop();
+               int s1Position = state.peek();
+                s1w = s1Position == 0 ? 2 : maps.getNeuralWordKey(words[s1Position - 1]);
+                s1p = s1Position == 0 ? 2 : maps.getNeuralPOSKey(tags[s1Position - 1]);
+
+                if(1>state.stackSize()){
+                    int top2 = state.pop();
+                    int s2Position = state.peek();
+                    s2w = s2Position == 0 ? 2 : maps.getNeuralWordKey(words[s2Position - 1]);
+                    s2p = s2Position == 0 ? 2 : maps.getNeuralPOSKey(tags[s2Position - 1]);
+                    state.push(top2);
+                }
+
+                state.push(top1);
+            }
+
             int leftMost = state.leftMostModifier(s0Position);
             if (leftMost >= 0) {
                 s0l1p = leftMost == 0 ? 2 : maps.getNeuralPOSKey(tags[leftMost - 1]);
@@ -1641,10 +1664,12 @@ public class FeatureExtractor {
                 }
             }
         }
-        int[] baseFeatureIds = new int[32];
+        int[] baseFeatureIds = new int[36];
 
         int index = 0;
         baseFeatureIds[index++] = s0w;
+        baseFeatureIds[index++] = s1w;
+        baseFeatureIds[index++] = s2w;
         baseFeatureIds[index++] = b0w;
         baseFeatureIds[index++] = b1w;
         baseFeatureIds[index++] = b2w;
@@ -1658,6 +1683,8 @@ public class FeatureExtractor {
         baseFeatureIds[index++] = sh1w;
 
         baseFeatureIds[index++] = s0p;
+        baseFeatureIds[index++] = s1p;
+        baseFeatureIds[index++] = s2p;
         baseFeatureIds[index++] = b0p;
         baseFeatureIds[index++] = b1p;
         baseFeatureIds[index++] = b2p;

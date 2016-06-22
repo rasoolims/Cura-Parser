@@ -20,10 +20,16 @@ import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.EmbeddingLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
+import org.deeplearning4j.nn.conf.stepfunctions.GradientStepFunction;
+import org.deeplearning4j.nn.conf.stepfunctions.NegativeDefaultStepFunction;
+import org.deeplearning4j.nn.conf.stepfunctions.NegativeGradientStepFunction;
+import org.deeplearning4j.nn.conf.stepfunctions.StepFunction;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.params.DefaultParamInitializer;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.optimize.stepfunctions.StepFunctions;
+import org.deeplearning4j.ui.weights.HistogramIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
@@ -88,21 +94,22 @@ public class StaticNeuralTrainer {
                posDimension,depDimension,possibleOutputs,maps);
 
         for(int iter=0;iter<options.trainingIter;iter++) {
-            System.out.println(iter+"th iteration");
+            System.out.println(iter + "th iteration");
             trainIter.reset();
             while (trainIter.hasNext()) {
                 net.fit(trainIter.next());
-                for(int i=0;i<34;i++){
-                    double lr =  (net.getLayer(i)).conf().getLearningRateByParam("W");
-                    (net.getLayer(i)).conf().setLearningRateByParam("W",lr*0.96);
-                    lr =  (net.getLayer(i)).conf().getLearningRateByParam("b");
-                    (net.getLayer(i)).conf().setLearningRateByParam("b",lr*0.96);
-                }
-                double lr =  (net.getLayer(0)).conf().getLearningRateByParam("W");
-                System.out.println("learning rate:" + lr);
             }
-           // trainIter.reset();
-           //trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
+            for (int i = 0; i < 34; i++) {
+                double lr = (net.getLayer(i)).conf().getLearningRateByParam("W");
+                (net.getLayer(i)).conf().setLearningRateByParam("W", lr * 0.96);
+                lr = (net.getLayer(i)).conf().getLearningRateByParam("b");
+                (net.getLayer(i)).conf().setLearningRateByParam("b", lr * 0.96);
+            }
+            double lr = (net.getLayer(0)).conf().getLearningRateByParam("W");
+
+            System.out.println("learning rate:" + lr);
+            // trainIter.reset();
+            //trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
 
 
             System.out.println("\nevaluate of train");
@@ -110,7 +117,7 @@ public class StaticNeuralTrainer {
 
             if (devIter != null) {
                 System.out.println("\nevaluate of dev");
-                evaluate(net,devIter,maps,dependencyRelations,options,true);
+                evaluate(net, devIter, maps, dependencyRelations, options, true);
             }
         }
         if (devIter == null) {
@@ -131,51 +138,58 @@ public class StaticNeuralTrainer {
     private static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs) throws IOException, InterruptedException {
         int numLinesToSkip = 0;
         String fileDelimiter = ",";
-        RecordReader[] featuresReader = new RecordReader[32];
+        RecordReader[] featuresReader = new RecordReader[36];
         for (int i = 0; i < featuresReader.length; i++) {
             featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
             featuresReader[i].initialize(new FileSplit(new File(path[i])));
         }
 
         RecordReader labelsReader = new CSVRecordReader(numLinesToSkip, fileDelimiter);
-        String labelsCsvPath = path[32];
+        String labelsCsvPath = path[36];
         labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
 
+        int ind = 0;
         MultiDataSetIterator iterator = new RecordReaderMultiDataSetIterator.Builder(batchSize)
-                .addReader("s0w", featuresReader[0])
-                .addReader("b0w", featuresReader[1])
-                .addReader("b1w", featuresReader[2])
-                .addReader("b2w", featuresReader[3])
-                .addReader("b0l1w", featuresReader[4])
-                .addReader("b0l2w", featuresReader[5])
-                .addReader("s0l1w", featuresReader[6])
-                .addReader("s0l2w", featuresReader[7])
-                .addReader("sr1w", featuresReader[8])
-                .addReader("s0r2w", featuresReader[9])
-                .addReader("sh0w", featuresReader[10])
-                .addReader("sh1w", featuresReader[11])
-                .addReader("s0p", featuresReader[12])
-                .addReader("b0p", featuresReader[13])
-                .addReader("b1p", featuresReader[14])
-                .addReader("b2p", featuresReader[15])
-                .addReader("b0l1p", featuresReader[16])
-                .addReader("b0l2p", featuresReader[17])
-                .addReader("s0l1p", featuresReader[18])
-                .addReader("s0l2p", featuresReader[19])
-                .addReader("sr1p", featuresReader[20])
-                .addReader("s0r2p", featuresReader[21])
-                .addReader("sh0p", featuresReader[22])
-                .addReader("sh1p", featuresReader[23])
-                .addReader("s0l", featuresReader[24])
-                .addReader("sh0l", featuresReader[25])
-                .addReader("s0l1l", featuresReader[26])
-                .addReader("sr1l", featuresReader[27])
-                .addReader("s0l2l", featuresReader[28])
-                .addReader("s0r2l", featuresReader[29])
-                .addReader("b0l1l", featuresReader[30])
-                .addReader("b0l2l", featuresReader[31])
+                .addReader("s0w", featuresReader[ind++])
+                .addReader("s1w", featuresReader[ind++])
+                .addReader("s2w", featuresReader[ind++])
+                .addReader("b0w", featuresReader[ind++])
+                .addReader("b1w", featuresReader[ind++])
+                .addReader("b2w", featuresReader[ind++])
+                .addReader("b0l1w", featuresReader[ind++])
+                .addReader("b0l2w", featuresReader[ind++])
+                .addReader("s0l1w", featuresReader[ind++])
+                .addReader("s0l2w", featuresReader[ind++])
+                .addReader("sr1w", featuresReader[ind++])
+                .addReader("s0r2w", featuresReader[ind++])
+                .addReader("sh0w", featuresReader[ind++])
+                .addReader("sh1w", featuresReader[ind++])
+                .addReader("s0p", featuresReader[ind++])
+                .addReader("s1p", featuresReader[ind++])
+                .addReader("s2p", featuresReader[ind++])
+                .addReader("b0p", featuresReader[ind++])
+                .addReader("b1p", featuresReader[ind++])
+                .addReader("b2p", featuresReader[ind++])
+                .addReader("b0l1p", featuresReader[ind++])
+                .addReader("b0l2p", featuresReader[ind++])
+                .addReader("s0l1p", featuresReader[ind++])
+                .addReader("s0l2p", featuresReader[ind++])
+                .addReader("sr1p", featuresReader[ind++])
+                .addReader("s0r2p", featuresReader[ind++])
+                .addReader("sh0p", featuresReader[ind++])
+                .addReader("sh1p", featuresReader[ind++])
+                .addReader("s0l", featuresReader[ind++])
+                .addReader("sh0l", featuresReader[ind++])
+                .addReader("s0l1l", featuresReader[ind++])
+                .addReader("sr1l", featuresReader[ind++])
+                .addReader("s0l2l", featuresReader[ind++])
+                .addReader("s0r2l", featuresReader[ind++])
+                .addReader("b0l1l", featuresReader[ind++])
+                .addReader("b0l2l", featuresReader[ind++])
                 .addReader("csvLabels", labelsReader)
                 .addInput("s0w")
+                .addInput("s1w")
+                .addInput("s2w")
                 .addInput("b0w")
                 .addInput("b1w")
                 .addInput("b2w")
@@ -188,6 +202,8 @@ public class StaticNeuralTrainer {
                 .addInput("sh0w")
                 .addInput("sh1w")
                 .addInput("s0p")
+                .addInput("s1p")
+                .addInput("s2p")
                 .addInput("b0p")
                 .addInput("b1p")
                 .addInput("b2p")
@@ -224,52 +240,76 @@ public class StaticNeuralTrainer {
         }
 
         NeuralNetConfiguration.Builder confBuilder =  new NeuralNetConfiguration.Builder()
-                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).iterations(1)
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true).iterations(1)
                 .learningRate(learningRate).updater(Updater.NESTEROVS)//.dropOut(0.5)
-                .momentum(0.9).regularization(true).l2(0.0001);
+                .momentum(0.9).regularization(true).l2(0.0001).stepFunction(new NegativeDefaultStepFunction());
        // confBuilder.setMomentumSchedule(momentumSchedule);
 
+        String[] embeddingLayerNames = new String[36];
+        for(int e = 0;e<embeddingLayerNames.length;e++){
+            embeddingLayerNames[e] = "L"+(e+1);
+        }
+
+
+        int lIndex = 0;
+        int vIndex = 0;
         ComputationGraphConfiguration confComplex = confBuilder.graphBuilder()
-                .addInputs("s0w", "b0w", "b1w", "b2w", "b0l1w", "b0l2w","s0l1w","s0l2w","sr1w","s0r2w","sh0w","sh1w",
-                        "s0p", "b0p", "b1p", "b2p","b0l1p", "b0l2p", "s0l1p", "s0l2p", "sr1p","s0r2p", "sh0p", "sh1p",
+                .addInputs("s0w", "s1w", "s2w", "b0w", "b1w", "b2w", "b0l1w", "b0l2w","s0l1w","s0l2w","sr1w","s0r2w",
+                        "sh0w","sh1w",
+                        "s0p", "s1p","s2p", "b0p", "b1p", "b2p","b0l1p", "b0l2p", "s0l1p", "s0l2p", "sr1p","s0r2p",
+                        "sh0p", "sh1p",
                         "s0l", "sh0l","s0l1l","sr1l","s0l2l","s0r2l","b0l1l","b0l2l")
-                .addLayer("L1", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "s0w")
-                .addLayer("L2", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b0w")
-                .addLayer("L3", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b1w")
-                .addLayer("L4", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b2w")
-                .addLayer("L5", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b0l1w")
-                .addLayer("L6", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "b0l2w")
-                .addLayer("L7", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "s0l1w")
-                .addLayer("L8", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "s0l2w")
-                .addLayer("L9", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "sr1w")
-                .addLayer("L10", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "s0r2w")
-                .addLayer("L11", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "sh0w")
-                .addLayer("L12", new EmbeddingLayer.Builder().nIn(vocab1Size).nOut(wordDimension).activation("identity").build(), "sh1w")
-                .addLayer("L13", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0p")
-                .addLayer("L14", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b0p")
-                .addLayer("L15", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b1p")
-                .addLayer("L16", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b2p")
-                .addLayer("L17", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b0l1p")
-                .addLayer("L18", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "b0l2p")
-                .addLayer("L19", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0l1p")
-                .addLayer("L20", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0l2p")
-                .addLayer("L21", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "sr1p")
-                .addLayer("L22", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "s0r2p")
-                .addLayer("L23", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "sh0p")
-                .addLayer("L24", new EmbeddingLayer.Builder().nIn(vocab2Size).nOut(posDimension).activation("identity").build(), "sh1p")
-                .addLayer("L25", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0l")
-                .addLayer("L26", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "sh0l")
-                .addLayer("L27", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0l1l")
-                .addLayer("L28", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "sr1l")
-                .addLayer("L29", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0l2l")
-                .addLayer("L30", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "s0r2l")
-                .addLayer("L31", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "b0l1l")
-                .addLayer("L32", new EmbeddingLayer.Builder().nIn(vocab3Size).nOut(depDimension).activation("identity").build(), "b0l2l")
-                .addVertex("concat", new MergeVertex(), "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10",
-                        "L11", "L12", "L13", "L14", "L15", "L16", "L17", "L18", "L19", "L20",
-                        "L21", "L22", "L23", "L24", "L25", "L26", "L27", "L28", "L29", "L30","L31","L32")
-                .addLayer("h1", new DenseLayer.Builder().nIn(12 * (wordDimension + posDimension) + 8 * depDimension)
-                        .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b0w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b0l1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b0l2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0l1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0l2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "sr1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0r2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "sh0w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "sh1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b0p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b0l1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b0l2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0l1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0l2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "sr1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0r2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "sh0p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "sh1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "s0l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "sh0l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "s0l1l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "sr1l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "s0l2l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "s0r2l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "b0l1l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "b0l2l")
+                .addVertex("concat", new MergeVertex(), embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++],  embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++],  embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++],embeddingLayerNames[vIndex++],embeddingLayerNames[vIndex++])
+                .addLayer("h1", new DenseLayer.Builder().nIn(14 * (wordDimension + posDimension) + 8 * depDimension)
+                        .weightInit(WeightInit.RELU).biasInit(0.2)
                         .nOut(options.hiddenLayer1Size).activation("relu").build(), "concat")
              //   .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
               //          .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
@@ -282,11 +322,10 @@ public class StaticNeuralTrainer {
 
         ComputationGraph net = new ComputationGraph(confComplex);
         net.init();
-        net.setListeners(new ScoreIterationListener(1));
-
+        net.setListeners(new ScoreIterationListener(10));
 
         if(maps.hasEmbeddings()) {
-            for (int i = 0; i < 12; i++) {
+            for (int i = 0; i < 14; i++) {
                 System.out.println("Initializing with pre-trained word vectors");
                 org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer layer =
                         (org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer) net.getLayer(i);
@@ -295,6 +334,11 @@ public class StaticNeuralTrainer {
         }
 
         return net;
+    }
+
+    private static EmbeddingLayer embeddingLayerBuilder(int inDim, int outDim){
+          return new EmbeddingLayer.Builder().nIn(inDim).nOut(outDim).activation("identity")
+                  .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).build();
     }
 
     private static void evaluate(final ComputationGraph net, final MultiDataSetIterator iter, final IndexMaps maps,
@@ -321,6 +365,14 @@ public class StaticNeuralTrainer {
                 System.out.println("Saving the new model for iteration \n\n");
                 saveModel(maps, dependencyRelations, options, net);
             }
+        } else{
+            System.out.println("Saving the new trained (overfit) model for iteration \n\n");
+            FileOutputStream fos = new FileOutputStream(options.modelFile+".overfit");
+            GZIPOutputStream gz = new GZIPOutputStream(fos);
+            ObjectOutput writer = new ObjectOutputStream(gz);
+            writer.writeObject(new NNInfStruct(net, dependencyRelations.size(), maps, dependencyRelations, options));
+            writer.writeObject(net);
+            writer.close();
         }
     }
 }

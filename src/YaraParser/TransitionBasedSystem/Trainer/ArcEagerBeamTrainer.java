@@ -63,15 +63,15 @@ public class ArcEagerBeamTrainer {
     }
 
     public String[] createStaticTrainingDataForNeuralNet(ArrayList<GoldConfiguration> trainData, String outputPath, double dropOutProb) throws Exception {
-        String[] files = new String[33];
-        BufferedWriter[] writer = new BufferedWriter[33];
-        for (int i = 0; i < 32; i++) {
+        String[] files = new String[37];
+        BufferedWriter[] writer = new BufferedWriter[37];
+        for (int i = 0; i < 36; i++) {
             files[i] = outputPath + ".feat" + i;
             writer[i] = new BufferedWriter(new FileWriter(files[i]));
         }
 
-        files[32] = outputPath + ".lab";
-        writer[32] = new BufferedWriter(new FileWriter(files[32]));
+        files[36] = outputPath + ".lab";
+        writer[36] = new BufferedWriter(new FileWriter(files[36]));
         int dataCount = 0;
 
         for (GoldConfiguration goldConfiguration : trainData) {
@@ -80,7 +80,7 @@ public class ArcEagerBeamTrainer {
                 System.out.print(dataCount + "...");
             writeTrainigInstanceForSentence(goldConfiguration, writer, dropOutProb);
         }
-        for (int i = 0; i < 33; i++) writer[i].close();
+        for (int i = 0; i < 37; i++) writer[i].close();
         return files;
     }
 
@@ -130,7 +130,7 @@ public class ArcEagerBeamTrainer {
             //    outputBuilder.append(action);
             for (int i = 0; i < baseFeatures.length; i++) {
                 //     if(i<=3 || (i>=12 && i<=15) || (i>=24 && i<=25)) {
-                if (i < 12 && randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)       //todo
+                if (i < 14 && randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)       //todo
                     baseFeatures[i] = 0;
                 writer[i].write(baseFeatures[i] + "\n");
                 //     outputBuilder.append(baseFeatures[i]);
@@ -139,7 +139,7 @@ public class ArcEagerBeamTrainer {
                 //   }
             }
             outputBuilder.append("\n");
-            writer[32].write(action + "\n");
+            writer[36].write(action + "\n");
             //   writer1.write(outputBuilder.toString());
             //writer2.write(action+"\n");
 
