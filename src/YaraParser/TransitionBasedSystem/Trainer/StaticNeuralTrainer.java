@@ -111,9 +111,8 @@ public class StaticNeuralTrainer {
             // trainIter.reset();
             //trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
 
-
-            System.out.println("\nevaluate of train");
-            evaluate(net, trainIter, maps, dependencyRelations, options, false);
+           // System.out.println("\nevaluate of train");
+           // evaluate(net, trainIter, maps, dependencyRelations, options, false);
 
             if (devIter != null) {
                 System.out.println("\nevaluate of dev");
