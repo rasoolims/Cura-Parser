@@ -138,14 +138,14 @@ public class StaticNeuralTrainer {
     private static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs) throws IOException, InterruptedException {
         int numLinesToSkip = 0;
         String fileDelimiter = ",";
-        RecordReader[] featuresReader = new RecordReader[36];
+        RecordReader[] featuresReader = new RecordReader[40];
         for (int i = 0; i < featuresReader.length; i++) {
             featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
             featuresReader[i].initialize(new FileSplit(new File(path[i])));
         }
 
         RecordReader labelsReader = new CSVRecordReader(numLinesToSkip, fileDelimiter);
-        String labelsCsvPath = path[36];
+        String labelsCsvPath = path[40];
         labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
 
         int ind = 0;
@@ -153,9 +153,11 @@ public class StaticNeuralTrainer {
                 .addReader("s0w", featuresReader[ind++])
                 .addReader("s1w", featuresReader[ind++])
                 .addReader("s2w", featuresReader[ind++])
+                .addReader("s3w", featuresReader[ind++])
                 .addReader("b0w", featuresReader[ind++])
                 .addReader("b1w", featuresReader[ind++])
                 .addReader("b2w", featuresReader[ind++])
+                .addReader("b3w", featuresReader[ind++])
                 .addReader("b0l1w", featuresReader[ind++])
                 .addReader("b0l2w", featuresReader[ind++])
                 .addReader("s0l1w", featuresReader[ind++])
@@ -167,9 +169,11 @@ public class StaticNeuralTrainer {
                 .addReader("s0p", featuresReader[ind++])
                 .addReader("s1p", featuresReader[ind++])
                 .addReader("s2p", featuresReader[ind++])
+                .addReader("s3p", featuresReader[ind++])
                 .addReader("b0p", featuresReader[ind++])
                 .addReader("b1p", featuresReader[ind++])
                 .addReader("b2p", featuresReader[ind++])
+                .addReader("b3p", featuresReader[ind++])
                 .addReader("b0l1p", featuresReader[ind++])
                 .addReader("b0l2p", featuresReader[ind++])
                 .addReader("s0l1p", featuresReader[ind++])
@@ -190,9 +194,11 @@ public class StaticNeuralTrainer {
                 .addInput("s0w")
                 .addInput("s1w")
                 .addInput("s2w")
+                .addInput("s3w")
                 .addInput("b0w")
                 .addInput("b1w")
                 .addInput("b2w")
+                .addInput("b3w")
                 .addInput("b0l1w")
                 .addInput("b0l2w")
                 .addInput("s0l1w")
@@ -204,9 +210,11 @@ public class StaticNeuralTrainer {
                 .addInput("s0p")
                 .addInput("s1p")
                 .addInput("s2p")
+                .addInput("s3p")
                 .addInput("b0p")
                 .addInput("b1p")
                 .addInput("b2p")
+                .addInput("b3p")
                 .addInput("b0l1p")
                 .addInput("b0l2p")
                 .addInput("s0l1p")
@@ -245,7 +253,7 @@ public class StaticNeuralTrainer {
                 .momentum(0.9).regularization(true).l2(0.0001).stepFunction(new NegativeDefaultStepFunction());
        // confBuilder.setMomentumSchedule(momentumSchedule);
 
-        String[] embeddingLayerNames = new String[36];
+        String[] embeddingLayerNames = new String[40];
         for(int e = 0;e<embeddingLayerNames.length;e++){
             embeddingLayerNames[e] = "L"+(e+1);
         }
@@ -254,17 +262,20 @@ public class StaticNeuralTrainer {
         int lIndex = 0;
         int vIndex = 0;
         ComputationGraphConfiguration confComplex = confBuilder.graphBuilder()
-                .addInputs("s0w", "s1w", "s2w", "b0w", "b1w", "b2w", "b0l1w", "b0l2w","s0l1w","s0l2w","sr1w","s0r2w",
-                        "sh0w","sh1w",
-                        "s0p", "s1p","s2p", "b0p", "b1p", "b2p","b0l1p", "b0l2p", "s0l1p", "s0l2p", "sr1p","s0r2p",
+                .addInputs("s0w", "s1w", "s2w", "s3w","b0w", "b1w", "b2w","b3w", "b0l1w", "b0l2w","s0l1w","s0l2w",
+                        "sr1w", "s0r2w", "sh0w","sh1w",
+                        "s0p", "s1p","s2p","s3p", "b0p", "b1p", "b2p", "b3p","b0l1p", "b0l2p", "s0l1p", "s0l2p", "sr1p",
+                        "s0r2p",
                         "sh0p", "sh1p",
                         "s0l", "sh0l","s0l1l","sr1l","s0l2l","s0r2l","b0l1l","b0l2l")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s1w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s3w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b0w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b1w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b3w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b0l1w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b0l2w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0l1w")
@@ -276,9 +287,11 @@ public class StaticNeuralTrainer {
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0p")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s1p")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s3p")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b0p")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b1p")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b3p")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b0l1p")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b0l2p")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0l1p")
@@ -298,6 +311,7 @@ public class StaticNeuralTrainer {
                 .addVertex("concat", new MergeVertex(), embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
@@ -308,7 +322,7 @@ public class StaticNeuralTrainer {
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++],embeddingLayerNames[vIndex++],embeddingLayerNames[vIndex++])
-                .addLayer("h1", new DenseLayer.Builder().nIn(14 * (wordDimension + posDimension) + 8 * depDimension)
+                .addLayer("h1", new DenseLayer.Builder().nIn(16 * (wordDimension + posDimension) + 8 * depDimension)
                         .weightInit(WeightInit.RELU).biasInit(0.2)
                         .nOut(options.hiddenLayer1Size).activation("relu").build(), "concat")
              //   .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
