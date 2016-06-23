@@ -77,7 +77,7 @@ public class StaticNeuralTrainer {
 
         CoNLLReader reader = new CoNLLReader(options.inputFile);
         ArrayList<GoldConfiguration> trainDataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
-        String[]   trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", -1);
+        String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", -1);
         MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
 
         MultiDataSetIterator devIter = null;
@@ -90,35 +90,32 @@ public class StaticNeuralTrainer {
         }
 
 
-       ComputationGraph net = constructNetwork(options,learningRate,vocab1Size,vocab2Size,vocab3Size,wordDimension,
-               posDimension,depDimension,possibleOutputs,maps);
+        ComputationGraph net = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size, wordDimension,
+                posDimension, depDimension, possibleOutputs, maps);
 
-        for(int iter=0;iter<options.trainingIter;iter++) {
+        for (int iter = 0; iter < options.trainingIter; iter++) {
             System.out.println(iter + "th iteration");
             trainIter.reset();
             while (trainIter.hasNext()) {
                 net.fit(trainIter.next());
             }
+
             for (int i = 0; i < 51; i++) {
                 double lr = (net.getLayer(i)).conf().getLearningRateByParam("W");
                 (net.getLayer(i)).conf().setLearningRateByParam("W", lr * 0.96);
                 lr = (net.getLayer(i)).conf().getLearningRateByParam("b");
                 (net.getLayer(i)).conf().setLearningRateByParam("b", lr * 0.96);
             }
+
             double lr = (net.getLayer(0)).conf().getLearningRateByParam("W");
-
             System.out.println("learning rate:" + lr);
-            // trainIter.reset();
-            //trainIter = resetTrainDataWithOOV(trainer, possibleOutputs, options, batchSize, trainDataSet);
-
-           // System.out.println("\nevaluate of train");
-           // evaluate(net, trainIter, maps, dependencyRelations, options, false);
 
             if (devIter != null) {
                 System.out.println("\nevaluate of dev");
                 evaluate(net, devIter, maps, dependencyRelations, options, true);
             }
         }
+
         if (devIter == null) {
             System.out.println("Saving the new model for the final iteration ");
             saveModel(maps, dependencyRelations, options, net);
@@ -370,7 +367,7 @@ public class StaticNeuralTrainer {
 
         ComputationGraph net = new ComputationGraph(confComplex);
         net.init();
-        net.setListeners(new ScoreIterationListener(10));
+        net.setListeners(new ScoreIterationListener(1));
 
         if(maps.hasEmbeddings()) {
             for (int i = 0; i < 19; i++) {
