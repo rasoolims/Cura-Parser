@@ -49,11 +49,13 @@ public class ArcEager extends TransitionBasedParser {
 
     public static boolean canDo(Actions action, State state) {
         if (action == Actions.Shift) { //shift
-            return !(!state.bufferEmpty() && state.bufferHead() == state.rootIndex && !state.stackEmpty()) && !state.bufferEmpty() && !state.isEmptyFlag();
+            return !(!state.bufferEmpty() && state.bufferHead() == state.rootIndex && !state.stackEmpty()) && !state
+                    .bufferEmpty() && !state.isEmptyFlag();
         } else if (action == Actions.RightArc) { //right arc
             if (state.stackEmpty())
                 return false;
-            return !(!state.bufferEmpty() && state.bufferHead() == state.rootIndex) && !state.bufferEmpty() && !state.stackEmpty();
+            return !(!state.bufferEmpty() && state.bufferHead() == state.rootIndex) && !state.bufferEmpty() && !state
+                    .stackEmpty();
 
         } else if (action == Actions.LeftArc) { //left arc
             if (state.stackEmpty() || state.bufferEmpty())
@@ -64,7 +66,8 @@ public class ArcEager extends TransitionBasedParser {
 
             return state.peek() != state.rootIndex && !state.hasHead(state.peek()) && !state.stackEmpty();
         } else if (action == Actions.Reduce) { //reduce
-            return !state.stackEmpty() && state.hasHead(state.peek()) || !state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == state.rootIndex;
+            return !state.stackEmpty() && state.hasHead(state.peek()) || !state.stackEmpty() && state.stackSize() ==
+                    1 && state.bufferSize() == 0 && state.peek() == state.rootIndex;
         } else if (action == Actions.Unshift) { //unshift
             return !state.stackEmpty() && !state.hasHead(state.peek()) && state.isEmptyFlag();
         }

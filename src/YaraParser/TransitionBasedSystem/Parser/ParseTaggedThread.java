@@ -27,7 +27,8 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
     int beamWidth;
     KBeamArcEagerParser parser;
 
-    public ParseTaggedThread(int lineNum, String line, String delim, boolean rootFirst, boolean lowerCased, IndexMaps maps, int beamWidth, KBeamArcEagerParser parser) {
+    public ParseTaggedThread(int lineNum, String line, String delim, boolean rootFirst, boolean lowerCased, IndexMaps
+            maps, int beamWidth, KBeamArcEagerParser parser) {
         this.lineNum = lineNum;
         this.line = line;
         this.delim = delim;
@@ -90,7 +91,8 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
                 brownCluster6thPrefix.add(0);
             }
 
-            Sentence sentence = new Sentence(tokens, tags, brownCluster4thPrefix, brownCluster6thPrefix, brownClusterFullString);
+            Sentence sentence = new Sentence(tokens, tags, brownCluster4thPrefix, brownCluster6thPrefix,
+                    brownClusterFullString);
             Configuration bestParse = parser.parse(sentence, rootFirst, beamWidth, 1);
 
             StringBuilder finalOutput = new StringBuilder();
@@ -112,7 +114,8 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
                     head = 0;
                 String label = head == 0 ? maps.rootString : maps.revStrings[dep];
 
-                String output = w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" + label + "\t_\t_\n";
+                String output = w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" +
+                        label + "\t_\t_\n";
                 finalOutput.append(output);
             }
             if (words.length > 0)

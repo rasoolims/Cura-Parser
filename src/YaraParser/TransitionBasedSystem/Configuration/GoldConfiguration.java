@@ -70,7 +70,8 @@ public class GoldConfiguration {
                     if ((dep1 > head2 && dep1 < dep2 && head1 < head2) || (dep1 < head2 && dep1 > dep2 && head1 < dep2))
                         return true;
                 if (dep1 < head1 && head1 != head2)
-                    if ((head1 > head2 && head1 < dep2 && dep1 < head2) || (head1 < head2 && head1 > dep2 && dep1 < dep2))
+                    if ((head1 > head2 && head1 < dep2 && dep1 < head2) || (head1 < head2 && head1 > dep2 && dep1 <
+                            dep2))
                         return true;
             }
         }
@@ -137,16 +138,19 @@ public class GoldConfiguration {
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
-                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first == (stackHead))
+                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first ==
+                            (stackHead))
                         cost += 1;
                 }
         } else if (action == Actions.LeftArc && cost == 0) { //left arc
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
-                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first == (stackHead))
+                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first ==
+                            (stackHead))
                         cost += 1;
-                    if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == (bufferItem))
+                    if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first ==
+                            (bufferItem))
                         if (bufferItem != state.bufferHead())
                             cost += 1;
                 }
@@ -163,7 +167,8 @@ public class GoldConfiguration {
             }
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
-                    if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (bufferItem))
+                    if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first ==
+                            (bufferItem))
                         cost += 1;
                 }
         }

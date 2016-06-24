@@ -20,16 +20,11 @@ import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.EmbeddingLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
-import org.deeplearning4j.nn.conf.stepfunctions.GradientStepFunction;
 import org.deeplearning4j.nn.conf.stepfunctions.NegativeDefaultStepFunction;
-import org.deeplearning4j.nn.conf.stepfunctions.NegativeGradientStepFunction;
-import org.deeplearning4j.nn.conf.stepfunctions.StepFunction;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.params.DefaultParamInitializer;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.deeplearning4j.optimize.stepfunctions.StepFunctions;
-import org.deeplearning4j.ui.weights.HistogramIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
@@ -42,10 +37,11 @@ import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 public class StaticNeuralTrainer {
-    private static  double bestAcc = 0;
+    private static double bestAcc = 0;
 
-    private  static void initializeWordEmbeddingLayers(IndexMaps maps,
-                                                org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer layer) {
+    private static void initializeWordEmbeddingLayers(IndexMaps maps,
+                                                      org.deeplearning4j.nn.layers.feedforward.embedding
+                                                              .EmbeddingLayer layer) {
         int filled = 0;
         INDArray weights = layer.getParam(DefaultParamInitializer.WEIGHT_KEY);
         INDArray rows = Nd4j.createUninitialized(new int[]{maps.vocabSize() + 2, weights.size(1)}, 'c');
@@ -61,12 +57,13 @@ public class StaticNeuralTrainer {
             }
         }
         layer.setParam("W", rows);
-        System.out.println("filled "+filled+" out of "+maps.vocabSize()+" vectors manually!");
+        System.out.println("filled " + filled + " out of " + maps.vocabSize() + " vectors manually!");
     }
 
-    public static void trainStaticNeural( ArcEagerBeamTrainer trainer, IndexMaps maps,
+    public static void trainStaticNeural(ArcEagerBeamTrainer trainer, IndexMaps maps,
                                          int wordDimension, int posDimension, int depDimension,
-                                         int possibleOutputs,  ArrayList<Integer> dependencyRelations, Options options) throws Exception {
+                                         int possibleOutputs, ArrayList<Integer> dependencyRelations, Options
+                                                 options) throws Exception {
         int vocab1Size = maps.vocabSize() + 2;
         int vocab2Size = maps.posSize() + 2;
         int vocab3Size = maps.relSize() + 2;
@@ -76,21 +73,25 @@ public class StaticNeuralTrainer {
         int batchSize = options.batchSize;
 
         CoNLLReader reader = new CoNLLReader(options.inputFile);
-        ArrayList<GoldConfiguration> trainDataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
-        String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", -1);
+        ArrayList<GoldConfiguration> trainDataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled,
+                options.rootFirst, options.lowercase, maps);
+        String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv",
+                -1);
         MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
 
         MultiDataSetIterator devIter = null;
         ArrayList<GoldConfiguration> devDataSet = null;
         if (options.devPath != null && options.devPath.length() > 0) {
             CoNLLReader devReader = new CoNLLReader(options.devPath);
-            devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+            devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options
+                    .lowercase, maps);
             String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, options.devPath + ".csv", -1);
             devIter = readMultiDataSetIterator(devFiles, batchSize, possibleOutputs);
         }
 
 
-        ComputationGraph net = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size, wordDimension,
+        ComputationGraph net = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
+                wordDimension,
                 posDimension, depDimension, possibleOutputs, maps);
 
         for (int iter = 0; iter < options.trainingIter; iter++) {
@@ -122,7 +123,8 @@ public class StaticNeuralTrainer {
         }
     }
 
-    private static void saveModel(IndexMaps maps, ArrayList<Integer> dependencyRelations, Options options, ComputationGraph net) throws IOException {
+    private static void saveModel(IndexMaps maps, ArrayList<Integer> dependencyRelations, Options options,
+                                  ComputationGraph net) throws IOException {
         FileOutputStream fos = new FileOutputStream(options.modelFile);
         GZIPOutputStream gz = new GZIPOutputStream(fos);
         ObjectOutput writer = new ObjectOutputStream(gz);
@@ -131,17 +133,18 @@ public class StaticNeuralTrainer {
         writer.close();
     }
 
-    private static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs) throws IOException, InterruptedException {
+    private static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs)
+            throws IOException, InterruptedException {
         int numLinesToSkip = 0;
         String fileDelimiter = ",";
-        RecordReader[] featuresReader = new RecordReader[path.length-1];
+        RecordReader[] featuresReader = new RecordReader[path.length - 1];
         for (int i = 0; i < featuresReader.length; i++) {
             featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
             featuresReader[i].initialize(new FileSplit(new File(path[i])));
         }
 
         RecordReader labelsReader = new CSVRecordReader(numLinesToSkip, fileDelimiter);
-        String labelsCsvPath = path[path.length-1];
+        String labelsCsvPath = path[path.length - 1];
         labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
 
         int ind = 0;
@@ -257,108 +260,109 @@ public class StaticNeuralTrainer {
     private static ComputationGraph constructNetwork(Options options, double learningRate, int vocab1Size,
                                                      int vocab2Size, int vocab3Size, int wordDimension,
                                                      int posDimension, int depDimension, int possibleOutputs,
-                                                     IndexMaps maps){
+                                                     IndexMaps maps) {
         Map<Integer, Double> momentumSchedule = new HashedMap();
         double m = .96;
-        for(int i=1;i<100000;i++){
-            momentumSchedule.put(i,m);
-            m*=0.96;
+        for (int i = 1; i < 100000; i++) {
+            momentumSchedule.put(i, m);
+            m *= 0.96;
         }
 
-        NeuralNetConfiguration.Builder confBuilder =  new NeuralNetConfiguration.Builder()
-                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true).iterations(1)
+        NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true).iterations(3)
                 .learningRate(learningRate).updater(Updater.NESTEROVS)//.dropOut(0.5)
                 .momentum(0.9).regularization(true).l2(0.0001).stepFunction(new NegativeDefaultStepFunction());
-       // confBuilder.setMomentumSchedule(momentumSchedule);
+        // confBuilder.setMomentumSchedule(momentumSchedule);
 
         String[] embeddingLayerNames = new String[49];
-        for(int e = 0;e<embeddingLayerNames.length;e++){
-            embeddingLayerNames[e] = "L"+(e+1);
+        for (int e = 0; e < embeddingLayerNames.length; e++) {
+            embeddingLayerNames[e] = "L" + (e + 1);
         }
 
 
         int lIndex = 0;
         int vIndex = 0;
         ComputationGraphConfiguration confComplex = confBuilder.graphBuilder()
-                .addInputs("s0w", "s1w", "s2w", "s3w","b0w", "b1w", "b2w","b3w", "b0l1w", "b0l2w","s0l1w","s0l2w",
-                        "sr1w", "s0r2w", "sh0w","sh1w", "b0llw","s0llw","s0rrw",
-                        "s0p", "s1p","s2p","s3p", "b0p", "b1p", "b2p", "b3p","b0l1p", "b0l2p", "s0l1p", "s0l2p", "sr1p",
-                        "s0r2p", "sh0p", "sh1p", "b0llp","s0llp","s0rrp",
-                        "s0l", "sh0l","s0l1l","sr1l","s0l2l","s0r2l","b0l1l","b0l2l","b0lll","s0lll","s0rrl")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s1w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s2w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s3w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b0w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b1w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b2w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b3w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b0l1w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b0l2w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0l1w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0l2w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "sr1w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0r2w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "sh0w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "sh1w")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "b0llw")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0llw")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size,wordDimension), "s0rrw")
+                .addInputs("s0w", "s1w", "s2w", "s3w", "b0w", "b1w", "b2w", "b3w", "b0l1w", "b0l2w", "s0l1w", "s0l2w",
+                        "sr1w", "s0r2w", "sh0w", "sh1w", "b0llw", "s0llw", "s0rrw",
+                        "s0p", "s1p", "s2p", "s3p", "b0p", "b1p", "b2p", "b3p", "b0l1p", "b0l2p", "s0l1p", "s0l2p",
+                        "sr1p",
+                        "s0r2p", "sh0p", "sh1p", "b0llp", "s0llp", "s0rrp",
+                        "s0l", "sh0l", "s0l1l", "sr1l", "s0l2l", "s0r2l", "b0l1l", "b0l2l", "b0lll", "s0lll", "s0rrl")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s0w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s3w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "b0w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "b1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "b2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "b3w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "b0l1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "b0l2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s0l1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s0l2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "sr1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s0r2w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "sh0w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "sh1w")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "b0llw")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s0llw")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s0rrw")
 
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s1p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s2p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s3p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b0p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b1p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b2p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b3p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b0l1p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b0l2p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0l1p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0l2p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "sr1p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0r2p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "sh0p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "sh1p")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "b0llp")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0llp")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size,posDimension), "s0rrp")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "s0p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "s1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "s2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "s3p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "b0p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "b1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "b2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "b3p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "b0l1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "b0l2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "s0l1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "s0l2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "sr1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "s0r2p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "sh0p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "sh1p")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "b0llp")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "s0llp")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab2Size, posDimension), "s0rrp")
 
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "s0l")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "sh0l")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "s0l1l")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "sr1l")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "s0l2l")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "s0r2l")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "b0l1l")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "b0l2l")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "b0lll")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "s0lll")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size,depDimension), "s0rrl")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "s0l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "sh0l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "s0l1l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "sr1l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "s0l2l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "s0r2l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "b0l1l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "b0l2l")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "b0lll")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "s0lll")
+                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "s0rrl")
                 .addVertex("concat", new MergeVertex(), embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
-                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],  embeddingLayerNames[vIndex++],
-                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
-                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],  embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
-                        embeddingLayerNames[vIndex++],  embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
-                        embeddingLayerNames[vIndex++],  embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
-                        embeddingLayerNames[vIndex++],embeddingLayerNames[vIndex++],embeddingLayerNames[vIndex++])
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++])
                 .addLayer("h1", new DenseLayer.Builder().nIn(19 * (wordDimension + posDimension) + 11 * depDimension)
                         .weightInit(WeightInit.RELU).biasInit(0.2)
                         .nOut(options.hiddenLayer1Size).activation("relu").build(), "concat")
-             //   .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
-              //          .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
-           //             .nOut(options.hiddenLayer2Size).activation("relu").build(), "h1")
+                //   .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
+                //          .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
+                //             .nOut(options.hiddenLayer2Size).activation("relu").build(), "h1")
                 .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
                         .nIn(options.hiddenLayer1Size).nOut(possibleOutputs).activation("softmax").build(), "h1")
                 .setOutputs("out")
@@ -369,7 +373,7 @@ public class StaticNeuralTrainer {
         net.init();
         net.setListeners(new ScoreIterationListener(1));
 
-        if(maps.hasEmbeddings()) {
+        if (maps.hasEmbeddings()) {
             for (int i = 0; i < 19; i++) {
                 System.out.println("Initializing with pre-trained word vectors");
                 org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer layer =
@@ -381,13 +385,13 @@ public class StaticNeuralTrainer {
         return net;
     }
 
-    private static EmbeddingLayer embeddingLayerBuilder(int inDim, int outDim){
-          return new EmbeddingLayer.Builder().nIn(inDim).nOut(outDim).activation("identity")
-                  .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).build();
+    private static EmbeddingLayer embeddingLayerBuilder(int inDim, int outDim) {
+        return new EmbeddingLayer.Builder().nIn(inDim).nOut(outDim).activation("identity")
+                .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0, 0.01)).build();
     }
 
     private static void evaluate(final ComputationGraph net, final MultiDataSetIterator iter, final IndexMaps maps,
-                                     final ArrayList<Integer> dependencyRelations, final Options options, boolean save)
+                                 final ArrayList<Integer> dependencyRelations, final Options options, boolean save)
             throws Exception {
         iter.reset();
         Evaluation evaluation = new Evaluation(2 * (dependencyRelations.size() + 1));
@@ -410,9 +414,9 @@ public class StaticNeuralTrainer {
                 System.out.println("Saving the new model for iteration \n\n");
                 saveModel(maps, dependencyRelations, options, net);
             }
-        } else{
+        } else {
             System.out.println("Saving the new trained (overfit) model for iteration \n\n");
-            FileOutputStream fos = new FileOutputStream(options.modelFile+".overfit");
+            FileOutputStream fos = new FileOutputStream(options.modelFile + ".overfit");
             GZIPOutputStream gz = new GZIPOutputStream(fos);
             ObjectOutput writer = new ObjectOutputStream(gz);
             writer.writeObject(new NNInfStruct(net, dependencyRelations.size(), maps, dependencyRelations, options));

@@ -122,18 +122,24 @@ public class Options implements Serializable {
         StringBuilder output = new StringBuilder();
         output.append("© Yara YaraParser.Parser \n");
         output.append("\u00a9 Copyright 2014, Yahoo! Inc.\n");
-        output.append("\u00a9 Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.");
+        output.append("\u00a9 Licensed under the terms of the Apache License 2.0. See LICENSE file at the project " +
+                "root for terms.");
         output.append("http://www.apache.org/licenses/LICENSE-2.0\n");
         output.append("\n");
 
         output.append("Usage:\n");
 
         output.append("* Train a parser:\n");
-        output.append("\tjava -jar YaraParser.jar train -train-file [train-file] -dev [dev-file] -model [model-file] -punc [punc-file]\n");
-        output.append("\t** The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2\n");
-        output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
+        output.append("\tjava -jar YaraParser.jar train -train-file [train-file] -dev [dev-file] -model [model-file] " +
+                "-punc [punc-file]\n");
+        output.append("\t** The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. " +
+                "mode_iter2\n");
+        output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one" +
+                " line\n");
         output.append("\t** Other options\n");
-        output.append("\t \t -cluster [cluster-file] Brown cluster file: at most 4096 clusters are supported by the parser (default: empty)\n\t\t\t the format should be the same as https://github.com/percyliang/brown-cluster/blob/master/output.txt \n");
+        output.append("\t \t -cluster [cluster-file] Brown cluster file: at most 4096 clusters are supported by the " +
+                "parser (default: empty)\n\t\t\t the format should be the same as https://github" +
+                ".com/percyliang/brown-cluster/blob/master/output.txt \n");
         output.append("\t \t -e [embedding-file] \n");
         output.append("\t \t -h1 [hidden-layer-size-1] \n");
         output.append("\t \t -h2 [hidden-layer-size-2] \n");
@@ -144,32 +150,42 @@ public class Options implements Serializable {
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
         output.append("\t \t lowercase (default: case-sensitive words, unless explicitly put 'lowercase')\n");
         output.append("\t \t basic (default: use extended feature set, unless explicitly put 'basic')\n");
-        output.append("\t \t early (default: use max violation update, unless explicitly put `early' for early update)\n");
-        output.append("\t \t static (default: use dynamic oracles, unless explicitly put `static' for static oracles)\n");
-        output.append("\t \t random (default: choose maximum scoring oracle, unless explicitly put `random' for randomly choosing an oracle)\n");
+        output.append("\t \t early (default: use max violation update, unless explicitly put `early' for early " +
+                "update)\n");
+        output.append("\t \t static (default: use dynamic oracles, unless explicitly put `static' for static oracles)" +
+                "\n");
+        output.append("\t \t random (default: choose maximum scoring oracle, unless explicitly put `random' for " +
+                "randomly choosing an oracle)\n");
         output.append("\t \t nt:[#_of_threads] (default:8)\n");
-        output.append("\t \t pt:[#partail_training_starting_iteration] (default:3; shows the starting iteration for considering partial trees)\n");
-        output.append("\t \t root_first (default: put ROOT in the last position, unless explicitly put 'root_first')\n\n");
+        output.append("\t \t pt:[#partail_training_starting_iteration] (default:3; shows the starting iteration for " +
+                "considering partial trees)\n");
+        output.append("\t \t root_first (default: put ROOT in the last position, unless explicitly put 'root_first')" +
+                "\n\n");
 
         output.append("* Parse a CoNLL'2006 file:\n");
-        output.append("\tjava -jar YaraParser.jar parse_conll -input [test-file] -out [output-file] -model [model-file] nt:[#_of_threads (optional -- default:8)] \n");
+        output.append("\tjava -jar YaraParser.jar parse_conll -input [test-file] -out [output-file] -model " +
+                "[model-file] nt:[#_of_threads (optional -- default:8)] \n");
         output.append("\t** The test file should have the conll 2006 format\n");
         output.append("\t** Optional: -score [score file] averaged score of each output parse tree in a file\n\n");
 
         output.append("* Parse a tagged file:\n");
-        output.append("\tjava -jar YaraParser.jar parse_tagged -input [test-file] -out [output-file]  -model [model-file] nt:[#_of_threads (optional -- default:8)] \n");
+        output.append("\tjava -jar YaraParser.jar parse_tagged -input [test-file] -out [output-file]  -model " +
+                "[model-file] nt:[#_of_threads (optional -- default:8)] \n");
         output.append("\t** The test file should have each sentence in line and word_tag pairs are space-delimited\n");
         output.append("\t** Optional:  -delim [delim] (default is _)\n");
         output.append("\t \t Example: He_PRP is_VBZ nice_AJ ._.\n\n");
 
         output.append("* Parse a CoNLL'2006 file with partial gold trees:\n");
-        output.append("\tjava -jar YaraParser.jar parse_partial -input [test-file] -out [output-file] -model [model-file] nt:[#_of_threads (optional -- default:8)] \n");
-        output.append("\t** The test file should have the conll 2006 format; each word that does not have a parent, should have a -1 parent-index");
+        output.append("\tjava -jar YaraParser.jar parse_partial -input [test-file] -out [output-file] -model " +
+                "[model-file] nt:[#_of_threads (optional -- default:8)] \n");
+        output.append("\t** The test file should have the conll 2006 format; each word that does not have a parent, " +
+                "should have a -1 parent-index");
         output.append("\t** Optional: -score [score file] averaged score of each output parse tree in a file\n\n");
 
         output.append("* Evaluate a Conll file:\n");
         output.append("\tjava -jar YaraParser.jar eval -gold [gold-file] -parse [parsed-file]  -punc [punc-file]\n");
-        output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
+        output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one" +
+                " line\n");
         output.append("\t** Both files should have conll 2006 format\n");
         System.out.println(output.toString());
     }
@@ -205,13 +221,13 @@ public class Options implements Serializable {
             else if (args[i].startsWith("-e"))
                 options.wordEmbeddingFile = args[i + 1];
             else if (args[i].startsWith("-h1"))
-                options.hiddenLayer1Size =Integer.parseInt(args[i + 1]);
+                options.hiddenLayer1Size = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-h2"))
-                options.hiddenLayer2Size =Integer.parseInt(args[i + 1]);
+                options.hiddenLayer2Size = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-batch"))
-                options.batchSize =Integer.parseInt(args[i + 1]);
+                options.batchSize = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-lr"))
-                options.learningRate =Double.parseDouble(args[i + 1]);
+                options.learningRate = Double.parseDouble(args[i + 1]);
             else if (args[i].startsWith("-cluster")) {
                 options.clusterFile = args[i + 1];
                 options.useExtendedWithBrownClusterFeatures = true;
@@ -224,7 +240,8 @@ public class Options implements Serializable {
             else if (args[i].startsWith("nt:"))
                 options.numOfThreads = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].startsWith("pt:"))
-                options.partialTrainingStartingIteration = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
+                options.partialTrainingStartingIteration = Integer.parseInt(args[i].substring(args[i].lastIndexOf
+                        (":") + 1));
             else if (args[i].equals("unlabeled"))
                 options.labeled = Boolean.parseBoolean(args[i]);
             else if (args[i].equals("lowercase"))

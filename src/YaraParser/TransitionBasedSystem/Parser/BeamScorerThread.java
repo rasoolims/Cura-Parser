@@ -25,7 +25,8 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
     int b;
     boolean rootFirst;
 
-    public BeamScorerThread(boolean isDecode, AveragedPerceptron classifier, Configuration configuration, ArrayList<Integer> dependencyRelations, int featureLength, int b, boolean rootFirst) {
+    public BeamScorerThread(boolean isDecode, AveragedPerceptron classifier, Configuration configuration,
+                            ArrayList<Integer> dependencyRelations, int featureLength, int b, boolean rootFirst) {
         this.isDecode = isDecode;
         this.classifier = classifier;
         this.configuration = configuration;

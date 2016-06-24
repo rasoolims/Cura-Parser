@@ -22,14 +22,14 @@ public class Configuration implements Comparable, Cloneable, Serializable {
     public Configuration(Sentence sentence, boolean rootFirst) {
         this.sentence = sentence;
         state = new State(sentence.size(), rootFirst);
-        score =  0.0;
+        score = 0.0;
         actionHistory = new ArrayList<Integer>(2 * (sentence.size() + 1));
     }
 
     public Configuration(Sentence sentence) {
         this.sentence = sentence;
         state = new State(sentence.size());
-        score =  0.0;
+        score = 0.0;
         actionHistory = new ArrayList<Integer>(2 * (sentence.size() + 1));
     }
 

@@ -5,8 +5,6 @@
 
 package YaraParser.Structures;
 
-import net.didion.jwnl.data.Exc;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Serializable;
@@ -26,11 +24,13 @@ public class IndexMaps implements Serializable {
     private HashMap<Integer, Integer> wordMap;
     private HashMap<Integer, Integer> posMap;
     private HashMap<Integer, Integer> depRelationMap;
-    private HashMap<Integer,double[]> embeddingsDictionary;
+    private HashMap<Integer, double[]> embeddingsDictionary;
 
     public IndexMaps(HashMap<String, Integer> stringMap, HashMap<Integer, Integer> labelMap, String rootString,
-                     HashMap<Integer, Integer> wordMap, HashMap<Integer, Integer> posMap, HashMap<Integer, Integer> depRelationMap,
-                     HashMap<Integer, Integer> brown4Clusters, HashMap<Integer, Integer> brown6Clusters, HashMap<String, Integer> brownFullClusters) {
+                     HashMap<Integer, Integer> wordMap, HashMap<Integer, Integer> posMap, HashMap<Integer, Integer>
+                             depRelationMap,
+                     HashMap<Integer, Integer> brown4Clusters, HashMap<Integer, Integer> brown6Clusters,
+                     HashMap<String, Integer> brownFullClusters) {
         this.stringMap = stringMap;
         this.wordMap = wordMap;
         this.posMap = posMap;
@@ -145,7 +145,7 @@ public class IndexMaps implements Serializable {
         int key = 0;
         if (depRelationMap.containsKey(labelId))
             key = depRelationMap.get(labelId);
-        if(labelId == -1)
+        if (labelId == -1)
             key = 1; // null
         return key;
     }
@@ -162,24 +162,22 @@ public class IndexMaps implements Serializable {
         return depRelationMap.size();
     }
 
-    public int readEmbeddings(String path) throws Exception{
+    public int readEmbeddings(String path) throws Exception {
         embeddingsDictionary = new HashMap<>();
         int eDim = 64;
 
         BufferedReader reader = new BufferedReader(new FileReader(path));
         String line;
-        while((line=reader.readLine())!=null){
+        while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split(" ");
-            if(spl[0].equals("_UNK_")){
+            if (spl[0].equals("_UNK_")) {
                 double[] e = new double[spl.length - 1];
                 for (int i = 0; i < e.length; i++) {
                     e[i] = Double.parseDouble(spl[i + 1]);
                 }
                 // adding 2 for unknown and null
                 embeddingsDictionary.put(0, e);
-            }
-
-            else if(stringMap.containsKey(spl[0])) {
+            } else if (stringMap.containsKey(spl[0])) {
                 double[] e = new double[spl.length - 1];
                 eDim = e.length;
                 int wordIndex = stringMap.get(spl[0]);
@@ -187,7 +185,7 @@ public class IndexMaps implements Serializable {
                     e[i] = Double.parseDouble(spl[i + 1]);
                 }
                 // adding 2 for unknown and null
-                embeddingsDictionary.put(wordIndex+2, e);
+                embeddingsDictionary.put(wordIndex + 2, e);
             }
         }
         return eDim;
@@ -197,7 +195,7 @@ public class IndexMaps implements Serializable {
         return embeddingsDictionary.get(wordIndex);
     }
 
-    public boolean hasEmbeddings(){
-        return embeddingsDictionary!=null && embeddingsDictionary.size()>0;
+    public boolean hasEmbeddings() {
+        return embeddingsDictionary != null && embeddingsDictionary.size() > 0;
     }
 }

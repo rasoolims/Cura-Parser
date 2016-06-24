@@ -2,7 +2,6 @@ package YaraParser.Structures;
 
 import YaraParser.Accessories.Options;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.util.Index;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -22,7 +21,8 @@ public class NNInfStruct implements Serializable {
     public ArrayList<Integer> dependencyLabels;
     public Options options;
 
-    public NNInfStruct(ComputationGraph net, int dependencySize, IndexMaps maps, ArrayList<Integer> dependencyLabels, Options options) {
+    public NNInfStruct(ComputationGraph net, int dependencySize, IndexMaps maps, ArrayList<Integer> dependencyLabels,
+                       Options options) {
         this.net = net;
         this.dependencySize = dependencySize;
         this.maps = maps;

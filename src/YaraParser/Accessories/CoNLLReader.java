@@ -32,7 +32,8 @@ public class CoNLLReader {
         fileReader = new BufferedReader(new FileReader(filePath));
     }
 
-    public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased, String clusterFile, int rareMaxWordCount) throws Exception {
+    public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased, String clusterFile,
+                                          int rareMaxWordCount) throws Exception {
         HashMap<String, Integer> stringMap = new HashMap<String, Integer>();
         HashMap<Integer, Integer> labelMap = new HashMap<Integer, Integer>();
         HashMap<String, Integer> clusterMap = new HashMap<String, Integer>();
@@ -47,18 +48,18 @@ public class CoNLLReader {
         String rootString = "ROOT";
         int wi = 1;
         int labelCount = 3;
-        if(labeled) {
+        if (labeled) {
             wi = 1;
             stringMap.put("ROOT", 0);
             labelMap.put(0, 0);
             depRelationMap.put(0, 2);
-        }else{
+        } else {
             wi = 0;
             labelCount = 2;
         }
 
 
-        HashMap<String,Integer> wordCount = new HashMap<>();
+        HashMap<String, Integer> wordCount = new HashMap<>();
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
         String line;
         while ((line = reader.readLine()) != null) {
@@ -67,10 +68,10 @@ public class CoNLLReader {
                 String word = spl[1];
                 if (lowercased)
                     word = word.toLowerCase();
-                if(wordCount.containsKey(word))
-                    wordCount.put(word,wordCount.get(word)+1);
+                if (wordCount.containsKey(word))
+                    wordCount.put(word, wordCount.get(word) + 1);
                 else
-                    wordCount.put(word,1);
+                    wordCount.put(word, 1);
                 String label = spl[7];
                 int head = Integer.parseInt(spl[6]);
                 if (head == 0)
@@ -90,7 +91,6 @@ public class CoNLLReader {
         }
 
 
-
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
@@ -102,7 +102,7 @@ public class CoNLLReader {
             }
         }
 
-        posMap.put(0,2);
+        posMap.put(0, 2);
         int posCount = 3;// 0 for OOV, 1 for null, 2 for root!
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
@@ -163,14 +163,14 @@ public class CoNLLReader {
                 String word = spl[1];
                 if (lowercased)
                     word = word.toLowerCase();
-                if (wordCount.get(word)>rareMaxWordCount && !stringMap.containsKey(word)) {
+                if (wordCount.get(word) > rareMaxWordCount && !stringMap.containsKey(word)) {
                     stringMap.put(word, wi++);
                 }
             }
         }
 
         reader = new BufferedReader(new FileReader(filePath));
-        wordMap.put(0,2);
+        wordMap.put(0, 2);
         int wc = 3; // 0 for OOV, 1 for null, 2 for ROOT!
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
@@ -178,17 +178,17 @@ public class CoNLLReader {
                 String word = spl[1];
                 if (lowercased)
                     word = word.toLowerCase();
-                if (wordCount.get(word)>rareMaxWordCount && !wordMap.containsKey(stringMap.get(word))) {
+                if (wordCount.get(word) > rareMaxWordCount && !wordMap.containsKey(stringMap.get(word))) {
                     wordMap.put(stringMap.get(word), wc++);
                 }
             }
         }
 
         int rare = 0;
-        for(String word:wordCount.keySet())
-            if(wordCount.get(word)<=rareMaxWordCount)
+        for (String word : wordCount.keySet())
+            if (wordCount.get(word) <= rareMaxWordCount)
                 rare++;
-        System.out.println("#rare_types: "+rare +" out of "+wordCount.size());
+        System.out.println("#rare_types: " + rare + " out of " + wordCount.size());
 
         return new IndexMaps(stringMap, labelMap, rootString,
                 wordMap, posMap, depRelationMap, cluster4Map, cluster6Map, clusterMap);
@@ -200,7 +200,8 @@ public class CoNLLReader {
      * @return
      */
     public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled,
-                                                 boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
+                                                 boolean rootFirst, boolean lowerCased, IndexMaps maps) throws
+            Exception {
         HashMap<String, Integer> wordMap = maps.getStringMap();
         ArrayList<GoldConfiguration> configurationSet = new ArrayList<GoldConfiguration>();
         HashSet<String> oovTypes = new HashSet<>();
@@ -271,7 +272,7 @@ public class CoNLLReader {
 //                        oovTypes.add(word);
 //                    }
                 } else
-                   oovTypes.add(word);
+                    oovTypes.add(word);
 
                 int pi = -1;
                 if (wordMap.containsKey(pos))
@@ -323,7 +324,7 @@ public class CoNLLReader {
             configurationSet.add(new GoldConfiguration(currentSentence, goldDependencies));
         }
 
-        System.out.println("oov  "+ oovTypes.size());
+        System.out.println("oov  " + oovTypes.size());
         return configurationSet;
     }
 

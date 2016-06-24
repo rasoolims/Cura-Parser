@@ -19,13 +19,14 @@ import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.jcodec.codecs.mjpeg.MCU;
-import org.nd4j.linalg.api.buffer.DoubleBuffer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -71,7 +72,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
     }
 
-    public static Configuration parseNeural(final ComputationGraph nn, Sentence sentence, boolean rootFirst, IndexMaps maps, ArrayList<Integer> dependencyRelations, int beamWidth) throws Exception {
+    public static Configuration parseNeural(final ComputationGraph nn, Sentence sentence, boolean rootFirst,
+                                            IndexMaps maps, ArrayList<Integer> dependencyRelations, int beamWidth)
+            throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
 
         ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
@@ -126,7 +129,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         return bestConfiguration;
     }
 
-    private static void parseNeuralWithOneThread(ComputationGraph nn, ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, int beamWidth, IndexMaps maps, ArrayList<Integer> dependencyRelations) throws Exception {
+    private static void parseNeuralWithOneThread(ComputationGraph nn, ArrayList<Configuration> beam,
+                                                 TreeSet<BeamElement> beamPreserver, int beamWidth, IndexMaps maps,
+                                                 ArrayList<Integer> dependencyRelations) throws Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
@@ -141,13 +146,13 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             MultiDataSet t = new org.nd4j.linalg.dataset.MultiDataSet(features, null);
 
 
-            INDArray[] predicted = nn.output(false,t.getFeatures());
-            double[] logVals = new double[2*(1+dependencyRelations.size())];
+            INDArray[] predicted = nn.output(false, t.getFeatures());
+            double[] logVals = new double[2 * (1 + dependencyRelations.size())];
             double minVal = -10000000;
-            for(int i=0;i<logVals.length;i++){
+            for (int i = 0; i < logVals.length; i++) {
                 logVals[i] = predicted[0].getDouble(i);
                 double lg = Math.log(logVals[i]);
-                if(Double.isInfinite(lg)|| Double.isNaN(lg)){
+                if (Double.isInfinite(lg) || Double.isNaN(lg)) {
                     lg = minVal;
                 }
                 logVals[i] = lg;
@@ -189,7 +194,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             if (canRightArc) {
                 for (int dependency : dependencyRelations) {
-                    double score = logVals[dependency+2]; //rightArcScores[dependency];
+                    double score = logVals[dependency + 2]; //rightArcScores[dependency];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -200,7 +205,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             if (canLeftArc) {
                 for (int dependency : dependencyRelations) {
-                    double score = logVals[dependency+dependencyRelations.size()+2];  //leftArcScores[dependency];
+                    double score = logVals[dependency + dependencyRelations.size() + 2];  //leftArcScores[dependency];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
@@ -211,7 +216,119 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
     }
 
-    private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence, boolean rootFirst, int beamWidth) throws Exception {
+    public static void parseNNConllFileNoParallel(NNInfStruct nnInfStruct, String inputFile, String outputFile, int
+            beamWidth, int numOfThreads, boolean partial, String scorePath) throws Exception {
+        Options options = nnInfStruct.options;
+        CoNLLReader reader = new CoNLLReader(inputFile);
+        boolean addScore = false;
+        if (scorePath.trim().length() > 0)
+            addScore = true;
+        ArrayList<Double> scoreList = new ArrayList<Double>();
+
+        long start = System.currentTimeMillis();
+        int allArcs = 0;
+        int size = 0;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile + ".tmp"));
+        int dataCount = 0;
+
+        while (true) {
+            ArrayList<GoldConfiguration> data = reader.readData(15000, true, options.labeled, options.rootFirst,
+                    options.lowercase, nnInfStruct.maps);
+            size += data.size();
+            if (data.size() == 0)
+                break;
+
+            for (GoldConfiguration goldConfiguration : data) {
+                dataCount++;
+                if (dataCount % 100 == 0)
+                    System.err.print(dataCount + " ... ");
+                Configuration bestParse;
+                // if (partial) //todo
+                //    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst,
+                // beamWidth, numOfThreads);
+                //  else
+                bestParse = parseNeural(nnInfStruct.net, goldConfiguration.getSentence(), options.rootFirst,
+                        nnInfStruct.maps, nnInfStruct.dependencyLabels, beamWidth);
+
+                int[] words = goldConfiguration.getSentence().getWords();
+                allArcs += words.length - 1;
+                if (addScore)
+                    scoreList.add(bestParse.score / bestParse.sentence.size());
+
+                StringBuilder finalOutput = new StringBuilder();
+                for (int i = 0; i < words.length; i++) {
+                    int w = i + 1;
+                    int head = bestParse.state.getHead(w);
+                    int dep = bestParse.state.getDependency(w);
+
+                    if (w == bestParse.state.rootIndex && !options.rootFirst)
+                        continue;
+
+                    if (head == bestParse.state.rootIndex)
+                        head = 0;
+
+                    String label = head == 0 ? nnInfStruct.maps.rootString : nnInfStruct.maps.revStrings[dep];
+                    String output = head + "\t" + label + "\n";
+                    finalOutput.append(output);
+                }
+                finalOutput.append("\n");
+                writer.write(finalOutput.toString());
+            }
+        }
+
+        System.err.print("\n");
+        long end = System.currentTimeMillis();
+        double each = (1.0 * (end - start)) / size;
+        double eacharc = (1.0 * (end - start)) / allArcs;
+
+        writer.flush();
+        writer.close();
+
+        DecimalFormat format = new DecimalFormat("##.00");
+
+        System.err.print(format.format(eacharc) + " ms for each arc!\n");
+        System.err.print(format.format(each) + " ms for each sentence!\n\n");
+
+        BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
+        BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
+        BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));
+
+        String line;
+
+        while ((line = pReader.readLine()) != null) {
+            String gLine = gReader.readLine();
+            if (line.trim().length() > 0) {
+                while (gLine.trim().length() == 0)
+                    gLine = gReader.readLine();
+                String[] ps = line.split("\t");
+                String[] gs = gLine.split("\t");
+                gs[6] = ps[0];
+                gs[7] = ps[1];
+                StringBuilder output = new StringBuilder();
+                for (int i = 0; i < gs.length; i++) {
+                    output.append(gs[i]).append("\t");
+                }
+                pwriter.write(output.toString().trim() + "\n");
+            } else {
+                pwriter.write("\n");
+            }
+        }
+        pwriter.flush();
+        pwriter.close();
+
+        if (addScore) {
+            BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
+
+            for (int i = 0; i < scoreList.size(); i++)
+                scoreWriter.write(scoreList.get(i) + "\n");
+            scoreWriter.flush();
+            scoreWriter.close();
+        }
+
+    }
+
+    private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence
+            sentence, boolean rootFirst, int beamWidth) throws Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -346,7 +463,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         return bestConfiguration;
     }
 
-    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth, boolean rootFirst) throws Exception {
+    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean
+            isNonProjective, GoldConfiguration goldConfiguration, int beamWidth, boolean rootFirst) throws Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -391,7 +509,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             if (canRightArc) {
                 double[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
-                    if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
+                    if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState)
+                            == 0) {
                         double score = rightArcScores[dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
@@ -405,7 +524,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             if (canLeftArc) {
                 double[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
-                    if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
+                    if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) ==
+                            0) {
                         double score = leftArcScores[dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
@@ -483,7 +603,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
     }
 
-    public Configuration parsePartial(GoldConfiguration goldConfiguration, Sentence sentence, boolean rootFirst, int beamWidth, int numOfThreads) throws Exception {
+    public Configuration parsePartial(GoldConfiguration goldConfiguration, Sentence sentence, boolean rootFirst, int
+            beamWidth, int numOfThreads) throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
         boolean isNonProjective = false;
         if (goldConfiguration.isNonprojective()) {
@@ -497,7 +618,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
             if (numOfThreads == 1) {
-                parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth, rootFirst);
+                parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth,
+                        rootFirst);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new PartialTreeBeamScorerThread(true, classifier, goldConfiguration, beam.get(b),
@@ -556,11 +678,14 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         return bestConfiguration;
     }
 
-    public void parseConllFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
+    public void parseConllFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean
+            labeled, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
         if (numThreads == 1)
-            parseConllFileNoParallel(inputFile, outputFile, rootFirst, beamWidth, labeled, lowerCased, numThreads, partial, scorePath);
+            parseConllFileNoParallel(inputFile, outputFile, rootFirst, beamWidth, labeled, lowerCased, numThreads,
+                    partial, scorePath);
         else
-            parseConllFileParallel(inputFile, outputFile, rootFirst, beamWidth, lowerCased, numThreads, partial, scorePath);
+            parseConllFileParallel(inputFile, outputFile, rootFirst, beamWidth, lowerCased, numThreads, partial,
+                    scorePath);
     }
 
     /**
@@ -572,7 +697,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
      * @param beamWidth
      * @throws Exception
      */
-    public void parseConllFileNoParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numOfThreads, boolean partial, String scorePath) throws Exception {
+    public void parseConllFileNoParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth,
+                                         boolean labeled, boolean lowerCased, int numOfThreads, boolean partial,
+                                         String scorePath) throws Exception {
         CoNLLReader reader = new CoNLLReader(inputFile);
         boolean addScore = false;
         if (scorePath.trim().length() > 0)
@@ -597,7 +724,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     System.err.print(dataCount + " ... ");
                 Configuration bestParse;
                 if (partial)
-                    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst, beamWidth, numOfThreads);
+                    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst,
+                            beamWidth, numOfThreads);
                 else bestParse = parse(goldConfiguration.getSentence(), rootFirst, beamWidth, numOfThreads);
 
                 int[] words = goldConfiguration.getSentence().getWords();
@@ -676,7 +804,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
     }
 
-    public void parseTaggedFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, String separator, int numOfThreads) throws Exception {
+    public void parseTaggedFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean
+            lowerCased, String separator, int numOfThreads) throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
         long start = System.currentTimeMillis();
@@ -689,7 +818,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         int count = 0;
         int lineNum = 0;
         while ((line = reader.readLine()) != null) {
-            pool.submit(new ParseTaggedThread(lineNum++, line, separator, rootFirst, lowerCased, maps, beamWidth, this));
+            pool.submit(new ParseTaggedThread(lineNum++, line, separator, rootFirst, lowerCased, maps, beamWidth,
+                    this));
 
             if (lineNum % 1000 == 0) {
                 String[] outs = new String[lineNum];
@@ -737,7 +867,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         System.out.println("done!");
     }
 
-    public void parseConllFileParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
+    public void parseConllFileParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean
+            lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
         CoNLLReader reader = new CoNLLReader(inputFile);
 
         boolean addScore = false;
@@ -746,7 +877,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         ArrayList<Double> scoreList = new ArrayList<Double>();
 
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-        CompletionService<Pair<Configuration, Integer>> pool = new ExecutorCompletionService<Pair<Configuration, Integer>>(executor);
+        CompletionService<Pair<Configuration, Integer>> pool = new ExecutorCompletionService<Pair<Configuration,
+                Integer>>(executor);
 
         long start = System.currentTimeMillis();
         int allArcs = 0;
@@ -764,7 +896,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             Configuration[] confs = new Configuration[data.size()];
 
             for (GoldConfiguration goldConfiguration : data) {
-                ParseThread thread = new ParseThread(index, classifier, dependencyRelations, featureLength, goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration, partial);
+                ParseThread thread = new ParseThread(index, classifier, dependencyRelations, featureLength,
+                        goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration, partial);
                 pool.submit(thread);
                 index++;
             }
@@ -857,119 +990,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             scoreWriter.close();
         }
     }
-
-
-    public static void parseNNConllFileNoParallel(NNInfStruct nnInfStruct, String inputFile, String outputFile, int
-            beamWidth, int numOfThreads, boolean partial, String scorePath) throws Exception {
-        Options options = nnInfStruct.options;
-        CoNLLReader reader = new CoNLLReader(inputFile);
-        boolean addScore = false;
-        if (scorePath.trim().length() > 0)
-            addScore = true;
-        ArrayList<Double> scoreList = new ArrayList<Double>();
-
-        long start = System.currentTimeMillis();
-        int allArcs = 0;
-        int size = 0;
-        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile + ".tmp"));
-        int dataCount = 0;
-
-        while (true) {
-            ArrayList<GoldConfiguration> data = reader.readData(15000, true, options.labeled, options.rootFirst,
-                    options.lowercase, nnInfStruct.maps);
-            size += data.size();
-            if (data.size() == 0)
-                break;
-
-            for (GoldConfiguration goldConfiguration : data) {
-                dataCount++;
-                if (dataCount % 100 == 0)
-                    System.err.print(dataCount + " ... ");
-                Configuration bestParse;
-               // if (partial) //todo
-                //    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst,
-                // beamWidth, numOfThreads);
-              //  else
-                bestParse = parseNeural(nnInfStruct.net,goldConfiguration.getSentence(), options.rootFirst,
-                        nnInfStruct.maps,nnInfStruct.dependencyLabels, beamWidth);
-
-                int[] words = goldConfiguration.getSentence().getWords();
-                allArcs += words.length - 1;
-                if (addScore)
-                    scoreList.add(bestParse.score / bestParse.sentence.size());
-
-                StringBuilder finalOutput = new StringBuilder();
-                for (int i = 0; i < words.length; i++) {
-                    int w = i + 1;
-                    int head = bestParse.state.getHead(w);
-                    int dep = bestParse.state.getDependency(w);
-
-                    if (w == bestParse.state.rootIndex && !options.rootFirst)
-                        continue;
-
-                    if (head == bestParse.state.rootIndex)
-                        head = 0;
-
-                    String label = head == 0 ? nnInfStruct.maps.rootString : nnInfStruct.maps.revStrings[dep];
-                    String output = head + "\t" + label + "\n";
-                    finalOutput.append(output);
-                }
-                finalOutput.append("\n");
-                writer.write(finalOutput.toString());
-            }
-        }
-
-        System.err.print("\n");
-        long end = System.currentTimeMillis();
-        double each = (1.0 * (end - start)) / size;
-        double eacharc = (1.0 * (end - start)) / allArcs;
-
-        writer.flush();
-        writer.close();
-
-        DecimalFormat format = new DecimalFormat("##.00");
-
-        System.err.print(format.format(eacharc) + " ms for each arc!\n");
-        System.err.print(format.format(each) + " ms for each sentence!\n\n");
-
-        BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
-        BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
-        BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));
-
-        String line;
-
-        while ((line = pReader.readLine()) != null) {
-            String gLine = gReader.readLine();
-            if (line.trim().length() > 0) {
-                while (gLine.trim().length() == 0)
-                    gLine = gReader.readLine();
-                String[] ps = line.split("\t");
-                String[] gs = gLine.split("\t");
-                gs[6] = ps[0];
-                gs[7] = ps[1];
-                StringBuilder output = new StringBuilder();
-                for (int i = 0; i < gs.length; i++) {
-                    output.append(gs[i]).append("\t");
-                }
-                pwriter.write(output.toString().trim() + "\n");
-            } else {
-                pwriter.write("\n");
-            }
-        }
-        pwriter.flush();
-        pwriter.close();
-
-        if (addScore) {
-            BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
-
-            for (int i = 0; i < scoreList.size(); i++)
-                scoreWriter.write(scoreList.get(i) + "\n");
-            scoreWriter.flush();
-            scoreWriter.close();
-        }
-
-    }
-
 
     public void shutDownLiveThreads() {
         boolean isTerminated = executor.isTerminated();

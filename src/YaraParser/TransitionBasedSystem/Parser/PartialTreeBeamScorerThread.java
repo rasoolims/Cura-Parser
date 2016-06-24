@@ -26,7 +26,9 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
     int featureLength;
     int b;
 
-    public PartialTreeBeamScorerThread(boolean isDecode, AveragedPerceptron classifier, GoldConfiguration goldConfiguration, Configuration configuration, ArrayList<Integer> dependencyRelations, int featureLength, int b) {
+    public PartialTreeBeamScorerThread(boolean isDecode, AveragedPerceptron classifier, GoldConfiguration
+            goldConfiguration, Configuration configuration, ArrayList<Integer> dependencyRelations, int
+            featureLength, int b) {
         this.isDecode = isDecode;
         this.classifier = classifier;
         this.configuration = configuration;

@@ -20,7 +20,8 @@ public class Sentence implements Comparable {
     private int[] brownClusterFullString;
 
 
-    public Sentence(ArrayList<Integer> tokens, ArrayList<Integer> pos, ArrayList<Integer> brownCluster4thPrefix, ArrayList<Integer> brownCluster6thPrefix, ArrayList<Integer> brownClusterFullString) {
+    public Sentence(ArrayList<Integer> tokens, ArrayList<Integer> pos, ArrayList<Integer> brownCluster4thPrefix,
+                    ArrayList<Integer> brownCluster6thPrefix, ArrayList<Integer> brownClusterFullString) {
         words = new int[tokens.size()];
         tags = new int[tokens.size()];
         this.brownCluster4thPrefix = new int[tokens.size()];

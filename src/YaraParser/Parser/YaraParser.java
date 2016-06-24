@@ -16,13 +16,13 @@ import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
 import YaraParser.TransitionBasedSystem.Trainer.StaticNeuralTrainer;
-import org.deeplearning4j.nn.graph.ComputationGraph;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 public class YaraParser {
     public static void main(String[] args) throws Exception {
@@ -44,11 +44,11 @@ public class YaraParser {
         } else {
             System.out.println(options);
             if (options.train) {
-               // train(options);
+                // train(options);
                 createTrainData(options);
             } else if (options.parseTaggedFile || options.parseConllFile || options.parsePartialConll) {
-                   parseNN(options);
-               // parse(options);
+                parseNN(options);
+                // parse(options);
             } else if (options.evaluate) {
                 evaluate(options);
             } else {
@@ -81,22 +81,26 @@ public class YaraParser {
             AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
 
             int featureSize = averagedPerceptron.featureSize();
-            KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, options.numOfThreads);
+            KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize,
+                    maps, options.numOfThreads);
 
             if (options.parseTaggedFile)
                 parser.parseTaggedFile(options.inputFile,
-                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, inf_options.lowercase, options.separator, options.numOfThreads);
+                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, inf_options.lowercase,
+                        options.separator, options.numOfThreads);
             else if (options.parseConllFile)
                 parser.parseConllFile(options.inputFile,
-                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, true, inf_options.lowercase, options.numOfThreads, false, options.scorePath);
+                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, true, inf_options
+                                .lowercase, options.numOfThreads, false, options.scorePath);
             else if (options.parsePartialConll)
                 parser.parseConllFile(options.inputFile,
-                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, options.labeled, inf_options.lowercase, options.numOfThreads, true, options.scorePath);
+                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, options.labeled,
+                        inf_options.lowercase, options.numOfThreads, true, options.scorePath);
             parser.shutDownLiveThreads();
         }
     }
 
-    private static void parseNN(Options options) throws  Exception {
+    private static void parseNN(Options options) throws Exception {
         FileInputStream fos = new FileInputStream(options.modelFile);
         GZIPInputStream gz = new GZIPInputStream(fos);
         ObjectInput reader = new ObjectInputStream(gz);
@@ -110,7 +114,7 @@ public class YaraParser {
             Options.showHelp();
         } else {
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options
-                    .clusterFile,1);
+                    .clusterFile, 1);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
                     .rootFirst, options.lowercase, maps);
@@ -141,9 +145,11 @@ public class YaraParser {
                 }
             }
 
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, dependencyLabels.size()),
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
+                    AveragedPerceptron(featureLength, dependencyLabels.size()),
                     options, dependencyLabels, featureLength, maps);
-            trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase, options.punctuations, options.partialTrainingStartingIteration);
+            trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase,
+                    options.punctuations, options.partialTrainingStartingIteration);
         }
     }
 
@@ -154,11 +160,12 @@ public class YaraParser {
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options
                     .clusterFile, 1);
             int wDim = 64;
-            if(options.wordEmbeddingFile.length()>0)
+            if (options.wordEmbeddingFile.length() > 0)
                 wDim = maps.readEmbeddings(options.wordEmbeddingFile);
 
             CoNLLReader reader = new CoNLLReader(options.inputFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
+                    .rootFirst, options.lowercase, maps);
             System.out.println("CoNLL data reading done!");
 
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
@@ -186,10 +193,12 @@ public class YaraParser {
                 }
             }
 
-            System.out.println("Embedding dimension "+wDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, dependencyLabels.size()),
+            System.out.println("Embedding dimension " + wDim);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
+                    AveragedPerceptron(featureLength, dependencyLabels.size()),
                     options, dependencyLabels, featureLength, maps);
-            StaticNeuralTrainer.trainStaticNeural(trainer, maps, wDim, 32, 32, labels.size() - 1, dependencyLabels, options);
+            StaticNeuralTrainer.trainStaticNeural(trainer, maps, wDim, 32, 32, labels.size() - 1, dependencyLabels,
+                    options);
         }
     }
 

@@ -312,7 +312,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         return bestConfiguration;
     }
 
-    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth) throws Exception {
+    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean
+            isNonProjective, GoldConfiguration goldConfiguration, int beamWidth) throws Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -357,7 +358,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             if (canRightArc) {
                 double[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
-                    if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
+                    if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState)
+                            == 0) {
                         double score = rightArcScores[dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
@@ -371,7 +373,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             if (canLeftArc) {
                 double[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
-                    if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
+                    if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) ==
+                            0) {
                         double score = leftArcScores[dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
