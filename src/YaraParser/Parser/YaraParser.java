@@ -30,13 +30,14 @@ public class YaraParser {
 
         if (args.length < 2) {
             options.train = true;
-            options.inputFile = "/Users/msr/Desktop/train_smal.conll";
-            options.devPath = "/Users/msr/Desktop/dev_smal.conll";
-            options.wordEmbeddingFile = "/Users/msr/Desktop/word.embed";
+            options.inputFile = "/Users/msr/Desktop/data/train_smal.conll";
+            options.devPath = "/Users/msr/Desktop/data/dev_smal.conll";
+            options.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.trainingIter = 50;
+            options.trainingIter = 25;
+            options.beamWidth = 1;
         }
 
         if (options.showHelp) {
@@ -46,6 +47,17 @@ public class YaraParser {
             if (options.train) {
                 // train(options);
                 createTrainData(options);
+                FileInputStream fos = new FileInputStream(options.modelFile);
+                GZIPInputStream gz = new GZIPInputStream(fos);
+                ObjectInput reader = new ObjectInputStream(gz);
+                NNInfStruct nnInfStruct = (NNInfStruct) reader.readObject();
+                KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.devPath, "/tmp/output",
+                        options.beamWidth, 1, false, "");
+                Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);
+                KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.inputFile, "/tmp/output",
+                        options.beamWidth, 1, false, "");
+                Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
+
             } else if (options.parseTaggedFile || options.parseConllFile || options.parsePartialConll) {
                 parseNN(options);
                 // parse(options);

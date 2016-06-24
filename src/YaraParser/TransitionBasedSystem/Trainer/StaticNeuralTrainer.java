@@ -269,10 +269,9 @@ public class StaticNeuralTrainer {
         }
 
         NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
-                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true).iterations(3)
-                .learningRate(learningRate).updater(Updater.NESTEROVS)//.dropOut(0.5)
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true)
+                .learningRate(learningRate).updater(Updater.NESTEROVS)
                 .momentum(0.9).regularization(true).l2(0.0001).stepFunction(new NegativeDefaultStepFunction());
-        // confBuilder.setMomentumSchedule(momentumSchedule);
 
         String[] embeddingLayerNames = new String[49];
         for (int e = 0; e < embeddingLayerNames.length; e++) {
@@ -286,8 +285,7 @@ public class StaticNeuralTrainer {
                 .addInputs("s0w", "s1w", "s2w", "s3w", "b0w", "b1w", "b2w", "b3w", "b0l1w", "b0l2w", "s0l1w", "s0l2w",
                         "sr1w", "s0r2w", "sh0w", "sh1w", "b0llw", "s0llw", "s0rrw",
                         "s0p", "s1p", "s2p", "s3p", "b0p", "b1p", "b2p", "b3p", "b0l1p", "b0l2p", "s0l1p", "s0l2p",
-                        "sr1p",
-                        "s0r2p", "sh0p", "sh1p", "b0llp", "s0llp", "s0rrp",
+                        "sr1p", "s0r2p", "sh0p", "sh1p", "b0llp", "s0llp", "s0rrp",
                         "s0l", "sh0l", "s0l1l", "sr1l", "s0l2l", "s0r2l", "b0l1l", "b0l2l", "b0lll", "s0lll", "s0rrl")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s0w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s1w")
@@ -408,9 +406,9 @@ public class StaticNeuralTrainer {
         System.out.println("f1 score: " + evaluation.f1() + "\n");
 
         if (save) {
-            double fscore = evaluation.f1();
-            if (fscore > bestAcc) {
-                bestAcc = fscore;
+            double acc = evaluation.accuracy();
+            if (acc > bestAcc) {
+                bestAcc = acc;
                 System.out.println("Saving the new model for iteration \n\n");
                 saveModel(maps, dependencyRelations, options, net);
             }

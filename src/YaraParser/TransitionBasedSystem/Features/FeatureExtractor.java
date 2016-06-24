@@ -1613,7 +1613,6 @@ public class FeatureExtractor {
 
                 if (2 < state.bufferSize()) {
                     b2Position = state.getBufferItem(2);
-
                     b2w = b2Position == 0 ? 2 : maps.getNeuralWordKey(words[b2Position - 1]);
                     b2p = b2Position == 0 ? 2 : maps.getNeuralPOSKey(tags[b2Position - 1]);
 

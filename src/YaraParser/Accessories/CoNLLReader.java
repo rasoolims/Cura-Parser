@@ -50,10 +50,11 @@ public class CoNLLReader {
         int labelCount = 3;
         if (labeled) {
             wi = 1;
-            stringMap.put("ROOT", 0);
+            stringMap.put(rootString, 0);
             labelMap.put(0, 0);
             depRelationMap.put(0, 2);
         } else {
+            stringMap.put(rootString, 0);
             wi = 0;
             labelCount = 2;
         }
@@ -292,7 +293,7 @@ public class CoNLLReader {
                 if (!labeled)
                     relation = "~";
 
-                int ri = -1;
+                int ri = 0;
                 if (wordMap.containsKey(relation))
                     ri = wordMap.get(relation);
                 if (headIndex == -1)

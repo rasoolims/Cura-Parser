@@ -104,7 +104,7 @@
             <version>${canova.version}</version>
         </dependency>
 
-           <dependency>
+        <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>nd4j-netlib-blas</artifactId>
             <version>0.4-rc3.6</version>

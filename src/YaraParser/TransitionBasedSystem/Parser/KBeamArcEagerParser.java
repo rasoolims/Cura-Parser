@@ -138,25 +138,19 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             INDArray[] features = new INDArray[baseFeatures.length];
             for (int i = 0; i < baseFeatures.length; i++) {
-                INDArray inEmbedding = Nd4j.create(1);
-                inEmbedding.putScalar(0, baseFeatures[i]);
+                INDArray inEmbedding = Nd4j.create(1, 1);
+                inEmbedding.putScalar(0, 0, baseFeatures[i]);
 
                 features[i] = inEmbedding;
             }
             MultiDataSet t = new org.nd4j.linalg.dataset.MultiDataSet(features, null);
 
-
-            INDArray[] predicted = nn.output(false, t.getFeatures());
+            INDArray[] predicted = nn.output(false, features);
             double[] logVals = new double[2 * (1 + dependencyRelations.size())];
-            double minVal = -10000000;
             for (int i = 0; i < logVals.length; i++) {
-                logVals[i] = predicted[0].getDouble(i);
-                double lg = Math.log(logVals[i]);
-                if (Double.isInfinite(lg) || Double.isNaN(lg)) {
-                    lg = minVal;
-                }
-                logVals[i] = lg;
+                logVals[i] = Math.log(predicted[0].getDouble(i));
             }
+
             State currentState = configuration.state;
             double prevScore = configuration.score;
             boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
