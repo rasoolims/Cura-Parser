@@ -33,6 +33,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
@@ -100,6 +101,13 @@ public class StaticNeuralTrainer {
             while (trainIter.hasNext()) {
                 net.fit(trainIter.next());
             }
+
+
+            System.out.println("Reshuffling the data!");
+            Collections.shuffle(trainDataSet);
+            trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv",
+                    -1);
+            trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
 
             for (int i = 0; i < 51; i++) {
                 double lr = (net.getLayer(i)).conf().getLearningRateByParam("W");
@@ -269,7 +277,7 @@ public class StaticNeuralTrainer {
         }
 
         NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
-                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true)
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true).iterations(1)
                 .learningRate(learningRate).updater(Updater.NESTEROVS)
                 .momentum(0.9).regularization(true).l2(0.0001).stepFunction(new NegativeDefaultStepFunction());
 
