@@ -30,6 +30,7 @@ public class Options implements Serializable {
     public String wordEmbeddingFile;
     public double learningRate;
     public int batchSize;
+    public int decayStep;
 
     public String modelFile;
     public boolean lowercase;
@@ -59,8 +60,9 @@ public class Options implements Serializable {
         beamWidth = 64;
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
-        learningRate = 0.1;
-        batchSize = 10000;
+        learningRate = 0.08;
+        batchSize = 32;
+        decayStep = 3600;
         rootFirst = false;
         modelFile = "";
         outputFile = "";
@@ -144,6 +146,7 @@ public class Options implements Serializable {
         output.append("\t \t -h1 [hidden-layer-size-1] \n");
         output.append("\t \t -h2 [hidden-layer-size-2] \n");
         output.append("\t \t -lr [learning-rate] \n");
+        output.append("\t \t -ds [decay-step] \n");
         output.append("\t \t -batch [batch-size] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:20)\n");
@@ -228,6 +231,8 @@ public class Options implements Serializable {
                 options.batchSize = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-lr"))
                 options.learningRate = Double.parseDouble(args[i + 1]);
+            else if (args[i].startsWith("-ds"))
+                options.decayStep = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-cluster")) {
                 options.clusterFile = args[i + 1];
                 options.useExtendedWithBrownClusterFeatures = true;

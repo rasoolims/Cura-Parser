@@ -95,29 +95,31 @@ public class StaticNeuralTrainer {
                 wordDimension,
                 posDimension, depDimension, possibleOutputs, maps);
 
+        int step = 0;
         for (int iter = 0; iter < options.trainingIter; iter++) {
             System.out.println(iter + "th iteration");
             trainIter.reset();
             while (trainIter.hasNext()) {
                 net.fit(trainIter.next());
-            }
 
+                step++;
+                if (step % options.decayStep == 0) {
+                    for (int i = 0; i < 51; i++) {
+                        double lr = (net.getLayer(i)).conf().getLearningRateByParam("W");
+                        (net.getLayer(i)).conf().setLearningRateByParam("W", lr * 0.96);
+                        lr = (net.getLayer(i)).conf().getLearningRateByParam("b");
+                        (net.getLayer(i)).conf().setLearningRateByParam("b", lr * 0.96);
+                    }
+                    double lr = (net.getLayer(0)).conf().getLearningRateByParam("W");
+                    System.out.println("learning rate:" + lr);
+                }
+            }
 
             System.out.println("Reshuffling the data!");
             Collections.shuffle(trainDataSet);
             trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv",
                     -1);
             trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
-
-            for (int i = 0; i < 51; i++) {
-                double lr = (net.getLayer(i)).conf().getLearningRateByParam("W");
-                (net.getLayer(i)).conf().setLearningRateByParam("W", lr * 0.96);
-                lr = (net.getLayer(i)).conf().getLearningRateByParam("b");
-                (net.getLayer(i)).conf().setLearningRateByParam("b", lr * 0.96);
-            }
-
-            double lr = (net.getLayer(0)).conf().getLearningRateByParam("W");
-            System.out.println("learning rate:" + lr);
 
             if (devIter != null) {
                 System.out.println("\nevaluate of dev");
@@ -377,7 +379,7 @@ public class StaticNeuralTrainer {
 
         ComputationGraph net = new ComputationGraph(confComplex);
         net.init();
-        net.setListeners(new ScoreIterationListener(1));
+        net.setListeners(new ScoreIterationListener(100));
 
         if (maps.hasEmbeddings()) {
             for (int i = 0; i < 19; i++) {
