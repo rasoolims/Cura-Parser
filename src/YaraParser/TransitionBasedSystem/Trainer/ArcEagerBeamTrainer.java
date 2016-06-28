@@ -80,13 +80,13 @@ public class ArcEagerBeamTrainer {
             dataCount++;
             if (dataCount % 1000 == 0)
                 System.out.print(dataCount + "...");
-            writeTrainigInstanceForSentence(goldConfiguration, writer, dropOutProb);
+            writeTrainingInstanceForSentence(goldConfiguration, writer, dropOutProb);
         }
         for (int i = 0; i < 50; i++) writer[i].close();
         return files;
     }
 
-    private void writeTrainigInstanceForSentence(GoldConfiguration goldConfiguration, BufferedWriter[] writer, double
+    private void writeTrainingInstanceForSentence(GoldConfiguration goldConfiguration, BufferedWriter[] writer, double
             dropoutProb) throws Exception {
         options.useDynamicOracle = false;
 
