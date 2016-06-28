@@ -379,7 +379,7 @@ public class StaticNeuralTrainer {
 
         ComputationGraph net = new ComputationGraph(confComplex);
         net.init();
-        net.setListeners(new ScoreIterationListener(100));
+        net.setListeners(new ScoreIterationListener(10));
 
         if (maps.hasEmbeddings()) {
             for (int i = 0; i < 19; i++) {
