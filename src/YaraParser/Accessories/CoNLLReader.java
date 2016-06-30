@@ -44,6 +44,9 @@ public class CoNLLReader {
         HashMap<Integer, Integer> depRelationMap = new HashMap<Integer, Integer>();
         HashMap<Integer, Integer> posMap = new HashMap<Integer, Integer>();
 
+        wordMap.put(0, 2);
+        int wc = 3; // 0 for OOV, 1 for null, 2 for ROOT!
+
 
         String rootString = "ROOT";
         int wi = 1;
@@ -130,6 +133,7 @@ public class CoNLLReader {
 
                     if (!stringMap.containsKey(cluster)) {
                         clusterMap.put(word, wi);
+                        wordMap.put(wi,wc++);
                         stringMap.put(cluster, wi++);
                     } else {
                         clusterNum = stringMap.get(cluster);
@@ -171,8 +175,7 @@ public class CoNLLReader {
         }
 
         reader = new BufferedReader(new FileReader(filePath));
-        wordMap.put(0, 2);
-        int wc = 3; // 0 for OOV, 1 for null, 2 for ROOT!
+
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
@@ -272,8 +275,16 @@ public class CoNLLReader {
 //                        wi = -1;
 //                        oovTypes.add(word);
 //                    }
-                } else
+                } else if(maps.hasClusters()) {
+                    int[] ids = maps.clusterId(word);
+                    if(ids[0]>0){
+                      wi = ids[0];
+                    } else {
+                        oovTypes.add(word);
+                    }
+                } else{
                     oovTypes.add(word);
+                }
 
                 int pi = -1;
                 if (wordMap.containsKey(pos))
