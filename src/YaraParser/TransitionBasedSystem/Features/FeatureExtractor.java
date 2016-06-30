@@ -1633,19 +1633,19 @@ public class FeatureExtractor {
             s0l = maps.getNeuralDepRelationKey(state.getDependency(s0Position));
 
 
-            if (1 > state.stackSize()) {
+            if (1 < state.stackSize()) {
                 int top1 = state.pop();
                 int s1Position = state.peek();
                 s1w = s1Position == 0 ? 2 : maps.getNeuralWordKey(words[s1Position - 1]);
                 s1p = s1Position == 0 ? 2 : maps.getNeuralPOSKey(tags[s1Position - 1]);
 
-                if (1 > state.stackSize()) {
+                if (1 < state.stackSize()) {
                     int top2 = state.pop();
                     int s2Position = state.peek();
                     s2w = s2Position == 0 ? 2 : maps.getNeuralWordKey(words[s2Position - 1]);
                     s2p = s2Position == 0 ? 2 : maps.getNeuralPOSKey(tags[s2Position - 1]);
 
-                    if (1 > state.stackSize()) {
+                    if (1 < state.stackSize()) {
                         int top3 = state.pop();
                         int s3Position = state.peek();
                         s3w = s3Position == 0 ? 2 : maps.getNeuralWordKey(words[s3Position - 1]);
