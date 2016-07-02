@@ -1567,7 +1567,6 @@ public class FeatureExtractor {
 
         int sh1w = 1;
         int sh1p = 1;
-        int sh1l = 1;
 
         int s0l2w = 1;
         int s0l2p = 1;
@@ -1702,7 +1701,6 @@ public class FeatureExtractor {
                     int h2 = state.getHead(headIndex);
                     sh1w =  maps.getNeuralWordKey(words[h2 - 1]);
                     sh1p =  maps.getNeuralPOSKey(tags[h2 - 1]);
-                    sh1l = maps.getNeuralDepRelationKey(state.getDependency(h2));
                 }
             }
             if (rightMost >= 0) {
@@ -1714,7 +1712,7 @@ public class FeatureExtractor {
                 }
             }
         }
-        int[] baseFeatureIds = new int[50];
+        int[] baseFeatureIds = new int[49];
 
         int index = 0;
         baseFeatureIds[index++] = s0w;
@@ -1760,7 +1758,6 @@ public class FeatureExtractor {
 
         baseFeatureIds[index++] = s0l;
         baseFeatureIds[index++] = sh0l;
-        baseFeatureIds[index++] = sh1l;
         baseFeatureIds[index++] = s0l1l;
         baseFeatureIds[index++] = sr1l;
         baseFeatureIds[index++] = s0l2l;

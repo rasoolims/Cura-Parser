@@ -201,7 +201,6 @@ public class StaticNeuralTrainer {
 
                 .addReader("s0l", featuresReader[ind++])
                 .addReader("sh0l", featuresReader[ind++])
-                .addReader("sh1l", featuresReader[ind++])
                 .addReader("s0l1l", featuresReader[ind++])
                 .addReader("sr1l", featuresReader[ind++])
                 .addReader("s0l2l", featuresReader[ind++])
@@ -254,7 +253,6 @@ public class StaticNeuralTrainer {
 
                 .addInput("s0l")
                 .addInput("sh0l")
-                .addInput("sh1l")
                 .addInput("s0l1l")
                 .addInput("sr1l")
                 .addInput("s0l2l")
@@ -285,7 +283,7 @@ public class StaticNeuralTrainer {
                 .learningRate(learningRate).updater(Updater.NESTEROVS)
                 .momentum(0.9).regularization(true).l2(0.0001).stepFunction(new NegativeDefaultStepFunction());
 
-        String[] embeddingLayerNames = new String[50];
+        String[] embeddingLayerNames = new String[49];
         for (int e = 0; e < embeddingLayerNames.length; e++) {
             embeddingLayerNames[e] = "L" + (e + 1);
         }
@@ -298,8 +296,7 @@ public class StaticNeuralTrainer {
                         "sr1w", "s0r2w", "sh0w", "sh1w", "b0llw", "s0llw", "s0rrw",
                         "s0p", "s1p", "s2p", "s3p", "b0p", "b1p", "b2p", "b3p", "b0l1p", "b0l2p", "s0l1p", "s0l2p",
                         "sr1p", "s0r2p", "sh0p", "sh1p", "b0llp", "s0llp", "s0rrp",
-                        "s0l", "sh0l", "sh1l", "s0l1l", "sr1l", "s0l2l", "s0r2l", "b0l1l", "b0l2l", "b0lll", "s0lll",
-                        "s0rrl")
+                        "s0l", "sh0l", "s0l1l", "sr1l", "s0l2l", "s0r2l", "b0l1l", "b0l2l", "b0lll", "s0lll", "s0rrl")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s0w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s1w")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab1Size, wordDimension), "s2w")
@@ -342,7 +339,6 @@ public class StaticNeuralTrainer {
 
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "s0l")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "sh0l")
-                .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "sh1l")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "s0l1l")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "sr1l")
                 .addLayer(embeddingLayerNames[lIndex++], embeddingLayerBuilder(vocab3Size, depDimension), "s0l2l")
@@ -364,12 +360,12 @@ public class StaticNeuralTrainer {
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
-                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],  embeddingLayerNames[vIndex++],
+                        embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++])
-                .addLayer("h1", new DenseLayer.Builder().nIn(19 * (wordDimension + posDimension) + 12 * depDimension)
+                .addLayer("h1", new DenseLayer.Builder().nIn(19 * (wordDimension + posDimension) + 11 * depDimension)
                         .weightInit(WeightInit.RELU).biasInit(0.2)
                         .nOut(options.hiddenLayer1Size).activation("relu").build(), "concat")
                 //   .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
