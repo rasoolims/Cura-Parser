@@ -1504,11 +1504,6 @@ public class FeatureExtractor {
         State state = configuration.state;
         Sentence sentence = configuration.sentence;
 
-        int b0Position = 0;
-        int b1Position = 0;
-        int b2Position = 0;
-        int s0Position = 0;
-
         int b0w = 1;
         int b0p = 1;
 
@@ -1572,6 +1567,7 @@ public class FeatureExtractor {
 
         int sh1w = 1;
         int sh1p = 1;
+        int sh1l = 1;
 
         int s0l2w = 1;
         int s0l2p = 1;
@@ -1581,75 +1577,74 @@ public class FeatureExtractor {
         int[] tags = sentence.getTags();
 
         if (0 < state.bufferSize()) {
-            b0Position = state.bufferHead();
-            b0w = b0Position == 0 ? 2 : maps.getNeuralWordKey(words[b0Position - 1]);
-            b0p = b0Position == 0 ? 2 : maps.getNeuralPOSKey(tags[b0Position - 1]);
+            int b0Position = state.bufferHead();
+            b0w =  maps.getNeuralWordKey(words[b0Position - 1]);
+            b0p = maps.getNeuralPOSKey(tags[b0Position - 1]);
 
             int leftMost = state.leftMostModifier(b0Position);
             if (leftMost >= 0) {
-                b0l1p = leftMost == 0 ? 2 : maps.getNeuralPOSKey(tags[leftMost - 1]);
-                b0l1w = leftMost == 0 ? 2 : maps.getNeuralWordKey(words[leftMost - 1]);
+                b0l1w = maps.getNeuralWordKey(words[leftMost - 1]);
+                b0l1p = maps.getNeuralPOSKey(tags[leftMost - 1]);
                 b0l1l = maps.getNeuralDepRelationKey(state.getDependency(leftMost));
 
                 int l2 = state.secondLeftMostModifier(b0Position);
                 if (l2 >= 0) {
-                    b0l2w = l2 == 0 ? 2 : maps.getNeuralWordKey(words[l2 - 1]);
-                    b0l2p = l2 == 0 ? 2 : maps.getNeuralPOSKey(tags[l2 - 1]);
+                    b0l2w =  maps.getNeuralWordKey(words[l2 - 1]);
+                    b0l2p =  maps.getNeuralPOSKey(tags[l2 - 1]);
                     b0l2l = maps.getNeuralDepRelationKey(state.getDependency(l2));
                 }
 
                 int secondLeftMost = state.leftMostModifier(leftMost);
                 if (secondLeftMost >= 0) {
-                    b0llp = secondLeftMost == 0 ? 2 : maps.getNeuralPOSKey(tags[secondLeftMost - 1]);
-                    b0llw = secondLeftMost == 0 ? 2 : maps.getNeuralWordKey(words[secondLeftMost - 1]);
+                    b0llw =  maps.getNeuralWordKey(words[secondLeftMost - 1]);
+                    b0llp = maps.getNeuralPOSKey(tags[secondLeftMost - 1]);
                     b0lll = maps.getNeuralDepRelationKey(state.getDependency(secondLeftMost));
                 }
             }
 
             if (1 < state.bufferSize()) {
-                b1Position = state.getBufferItem(1);
-                b1w = b1Position == 0 ? 2 : maps.getNeuralWordKey(words[b1Position - 1]);
-                b1p = b1Position == 0 ? 2 : maps.getNeuralPOSKey(tags[b1Position - 1]);
+                int b1Position = state.getBufferItem(1);
+                b1w =  maps.getNeuralWordKey(words[b1Position - 1]);
+                b1p =  maps.getNeuralPOSKey(tags[b1Position - 1]);
 
                 if (2 < state.bufferSize()) {
-                    b2Position = state.getBufferItem(2);
-                    b2w = b2Position == 0 ? 2 : maps.getNeuralWordKey(words[b2Position - 1]);
-                    b2p = b2Position == 0 ? 2 : maps.getNeuralPOSKey(tags[b2Position - 1]);
+                    int b2Position = state.getBufferItem(2);
+                    b2w =  maps.getNeuralWordKey(words[b2Position - 1]);
+                    b2p =  maps.getNeuralPOSKey(tags[b2Position - 1]);
 
                     if (3 < state.bufferSize()) {
                         int b3Position = state.getBufferItem(3);
 
-                        b3w = b3Position == 0 ? 2 : maps.getNeuralWordKey(words[b3Position - 1]);
-                        b3p = b3Position == 0 ? 2 : maps.getNeuralPOSKey(tags[b3Position - 1]);
+                        b3w =  maps.getNeuralWordKey(words[b3Position - 1]);
+                        b3p =  maps.getNeuralPOSKey(tags[b3Position - 1]);
                     }
                 }
             }
         }
 
         if (0 < state.stackSize()) {
-            s0Position = state.peek();
-            s0w = s0Position == 0 ? 2 : maps.getNeuralWordKey(words[s0Position - 1]);
-            s0p = s0Position == 0 ? 2 : maps.getNeuralPOSKey(tags[s0Position - 1]);
+            int s0Position = state.peek();
+            s0w = maps.getNeuralWordKey(words[s0Position - 1]);
+            s0p = maps.getNeuralPOSKey(tags[s0Position - 1]);
             s0l = maps.getNeuralDepRelationKey(state.getDependency(s0Position));
-
 
             if (1 < state.stackSize()) {
                 int top1 = state.pop();
                 int s1Position = state.peek();
-                s1w = s1Position == 0 ? 2 : maps.getNeuralWordKey(words[s1Position - 1]);
-                s1p = s1Position == 0 ? 2 : maps.getNeuralPOSKey(tags[s1Position - 1]);
+                s1w =  maps.getNeuralWordKey(words[s1Position - 1]);
+                s1p =  maps.getNeuralPOSKey(tags[s1Position - 1]);
 
                 if (1 < state.stackSize()) {
                     int top2 = state.pop();
                     int s2Position = state.peek();
-                    s2w = s2Position == 0 ? 2 : maps.getNeuralWordKey(words[s2Position - 1]);
-                    s2p = s2Position == 0 ? 2 : maps.getNeuralPOSKey(tags[s2Position - 1]);
+                    s2w =  maps.getNeuralWordKey(words[s2Position - 1]);
+                    s2p =  maps.getNeuralPOSKey(tags[s2Position - 1]);
 
                     if (1 < state.stackSize()) {
                         int top3 = state.pop();
                         int s3Position = state.peek();
-                        s3w = s3Position == 0 ? 2 : maps.getNeuralWordKey(words[s3Position - 1]);
-                        s3p = s3Position == 0 ? 2 : maps.getNeuralPOSKey(tags[s3Position - 1]);
+                        s3w =  maps.getNeuralWordKey(words[s3Position - 1]);
+                        s3p =  maps.getNeuralPOSKey(tags[s3Position - 1]);
                         state.push(top3);
                     }
                     state.push(top2);
@@ -1660,28 +1655,28 @@ public class FeatureExtractor {
 
             int leftMost = state.leftMostModifier(s0Position);
             if (leftMost >= 0) {
-                s0l1p = leftMost == 0 ? 2 : maps.getNeuralPOSKey(tags[leftMost - 1]);
-                s0l1w = leftMost == 0 ? 2 : maps.getNeuralWordKey(words[leftMost - 1]);
+                s0l1p =  maps.getNeuralPOSKey(tags[leftMost - 1]);
+                s0l1w =  maps.getNeuralWordKey(words[leftMost - 1]);
                 s0l1l = maps.getNeuralDepRelationKey(state.getDependency(leftMost));
 
                 int secondLeftMost = state.leftMostModifier(leftMost);
                 if (secondLeftMost >= 0) {
-                    s0llp = secondLeftMost == 0 ? 2 : maps.getNeuralPOSKey(tags[secondLeftMost - 1]);
-                    s0llw = secondLeftMost == 0 ? 2 : maps.getNeuralWordKey(words[secondLeftMost - 1]);
+                    s0llp =  maps.getNeuralPOSKey(tags[secondLeftMost - 1]);
+                    s0llw =  maps.getNeuralWordKey(words[secondLeftMost - 1]);
                     s0lll = maps.getNeuralDepRelationKey(state.getDependency(secondLeftMost));
                 }
             }
 
             int rightMost = state.rightMostModifier(s0Position);
             if (rightMost >= 0) {
-                sr1p = rightMost == 0 ? 2 : maps.getNeuralPOSKey(tags[rightMost - 1]);
-                sr1w = rightMost == 0 ? 2 : maps.getNeuralWordKey(words[rightMost - 1]);
+                sr1p =  maps.getNeuralPOSKey(tags[rightMost - 1]);
+                sr1w =  maps.getNeuralWordKey(words[rightMost - 1]);
                 sr1l = maps.getNeuralDepRelationKey(state.getDependency(rightMost));
 
                 int secondRightMost = state.rightMostModifier(rightMost);
                 if (secondRightMost >= 0) {
-                    s0rrp = secondRightMost == 0 ? 2 : maps.getNeuralPOSKey(tags[secondRightMost - 1]);
-                    s0rrw = secondRightMost == 0 ? 2 : maps.getNeuralWordKey(words[secondRightMost - 1]);
+                    s0rrp =  maps.getNeuralPOSKey(tags[secondRightMost - 1]);
+                    s0rrw = maps.getNeuralWordKey(words[secondRightMost - 1]);
                     s0rrl = maps.getNeuralDepRelationKey(state.getDependency(secondRightMost));
                 }
 
@@ -1689,36 +1684,37 @@ public class FeatureExtractor {
 
             int headIndex = state.getHead(s0Position);
             if (headIndex >= 0) {
-                sh0w = headIndex == 0 ? 2 : maps.getNeuralWordKey(words[headIndex - 1]);
-                sh0p = headIndex == 0 ? 2 : maps.getNeuralPOSKey(tags[headIndex - 1]);
+                sh0w = maps.getNeuralWordKey(words[headIndex - 1]);
+                sh0p =  maps.getNeuralPOSKey(tags[headIndex - 1]);
                 sh0l = maps.getNeuralDepRelationKey(state.getDependency(headIndex));
             }
 
             if (leftMost >= 0) {
                 int l2 = state.secondLeftMostModifier(s0Position);
                 if (l2 >= 0) {
-                    s0l2w = l2 == 0 ? 2 : maps.getNeuralWordKey(words[l2 - 1]);
-                    s0l2p = l2 == 0 ? 2 : maps.getNeuralPOSKey(tags[l2 - 1]);
+                    s0l2w =  maps.getNeuralWordKey(words[l2 - 1]);
+                    s0l2p = maps.getNeuralPOSKey(tags[l2 - 1]);
                     s0l2l = maps.getNeuralDepRelationKey(state.getDependency(l2));
                 }
             }
             if (headIndex >= 0) {
                 if (state.hasHead(headIndex)) {
                     int h2 = state.getHead(headIndex);
-                    sh1w = h2 == 0 ? 2 : maps.getNeuralWordKey(words[h2 - 1]);
-                    sh1p = h2 == 0 ? 2 : maps.getNeuralPOSKey(tags[h2 - 1]);
+                    sh1w =  maps.getNeuralWordKey(words[h2 - 1]);
+                    sh1p =  maps.getNeuralPOSKey(tags[h2 - 1]);
+                    sh1l = maps.getNeuralDepRelationKey(state.getDependency(h2));
                 }
             }
             if (rightMost >= 0) {
                 int r2 = state.secondRightMostModifier(s0Position);
                 if (r2 >= 0) {
-                    s0r2w = r2 == 0 ? 2 : maps.getNeuralWordKey(words[r2 - 1]);
-                    s0r2p = r2 == 0 ? 2 : maps.getNeuralPOSKey(tags[r2 - 1]);
+                    s0r2w =  maps.getNeuralWordKey(words[r2 - 1]);
+                    s0r2p =  maps.getNeuralPOSKey(tags[r2 - 1]);
                     s0r2l = maps.getNeuralDepRelationKey(state.getDependency(r2));
                 }
             }
         }
-        int[] baseFeatureIds = new int[49];
+        int[] baseFeatureIds = new int[50];
 
         int index = 0;
         baseFeatureIds[index++] = s0w;
@@ -1764,6 +1760,7 @@ public class FeatureExtractor {
 
         baseFeatureIds[index++] = s0l;
         baseFeatureIds[index++] = sh0l;
+        baseFeatureIds[index++] = sh1l;
         baseFeatureIds[index++] = s0l1l;
         baseFeatureIds[index++] = sr1l;
         baseFeatureIds[index++] = s0l2l;
@@ -1776,5 +1773,4 @@ public class FeatureExtractor {
 
         return baseFeatureIds;
     }
-
 }
