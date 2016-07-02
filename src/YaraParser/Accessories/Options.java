@@ -30,7 +30,7 @@ public class Options implements Serializable {
     public String wordEmbeddingFile;
     public double learningRate;
     public int batchSize;
-    public int decayStep;
+    public double decayStep;
 
     public String modelFile;
     public boolean lowercase;
@@ -60,9 +60,9 @@ public class Options implements Serializable {
         beamWidth = 64;
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
-        learningRate = 0.08;
+        learningRate = 0.05;
         batchSize = 1000;
-        decayStep = 3600;
+        decayStep = 0.2;
         rootFirst = false;
         modelFile = "";
         outputFile = "";
@@ -232,7 +232,7 @@ public class Options implements Serializable {
             else if (args[i].startsWith("-lr"))
                 options.learningRate = Double.parseDouble(args[i + 1]);
             else if (args[i].startsWith("-ds"))
-                options.decayStep = Integer.parseInt(args[i + 1]);
+                options.decayStep = Double.parseDouble(args[i + 1]);
             else if (args[i].startsWith("-cluster")) {
                 options.clusterFile = args[i + 1];
                 options.useExtendedWithBrownClusterFeatures = true;

@@ -76,6 +76,12 @@ public class StaticNeuralTrainer {
         CoNLLReader reader = new CoNLLReader(options.inputFile);
         ArrayList<GoldConfiguration> trainDataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled,
                 options.rootFirst, options.lowercase, maps);
+        int dataSize = 0;
+        for(GoldConfiguration d: trainDataSet)
+            dataSize+= d.getSentence().size()*2;
+        dataSize/= batchSize;
+
+        Collections.shuffle(trainDataSet);
         String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv",
                 -1);
         MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
@@ -96,6 +102,10 @@ public class StaticNeuralTrainer {
                 posDimension, depDimension, possibleOutputs, maps);
 
         int step = 0;
+        int decayStep = (int)(options.decayStep*dataSize);
+        decayStep = decayStep==0? 1: decayStep;
+
+        System.out.println("decay step is "+decayStep);
         for (int iter = 0; iter < options.trainingIter; iter++) {
             System.out.println(iter + "th iteration");
             trainIter.reset();
@@ -103,7 +113,7 @@ public class StaticNeuralTrainer {
                 net.fit(trainIter.next());
 
                 step++;
-                if (step % options.decayStep == 0) {
+                if (step %  decayStep == 0) {
                     for (int i = 0; i < 51; i++) {
                         double lr = (net.getLayer(i)).conf().getLearningRateByParam("W");
                         (net.getLayer(i)).conf().setLearningRateByParam("W", lr * 0.96);
@@ -366,7 +376,7 @@ public class StaticNeuralTrainer {
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++])
                 .addLayer("h1", new DenseLayer.Builder().nIn(19 * (wordDimension + posDimension) + 11 * depDimension)
-                        .weightInit(WeightInit.RELU).biasInit(0.2)
+                        .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0, 0.01)).biasInit(0.2)
                         .nOut(options.hiddenLayer1Size).activation("relu").build(), "concat")
                 //   .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
                 //          .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
