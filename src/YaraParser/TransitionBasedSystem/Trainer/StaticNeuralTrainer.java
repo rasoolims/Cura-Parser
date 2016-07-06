@@ -110,15 +110,62 @@ public class StaticNeuralTrainer {
             System.out.println(iter + "th iteration");
             trainIter.reset();
             while (trainIter.hasNext()) {
-                net.fit(trainIter.next());
+                INDArray wArrBefore = net.getLayer(0).getParam("W").mul(18);
+                INDArray bArrBefore = net.getLayer(0).getParam("b").mul(18);
+                INDArray wArr2Before = net.getLayer(19).getParam("W").mul(18);
+                INDArray bArr2Before = net.getLayer(19).getParam("b").mul(18);
+                INDArray wArr3Before = net.getLayer(38).getParam("W").mul(11);
+                INDArray bArr3Before = net.getLayer(38).getParam("b").mul(11);
 
+                net.fit(trainIter.next());
                 step++;
+
+               INDArray wArr = net.getLayer(0).getParam("W");
+               INDArray bArr = net.getLayer(0).getParam("b");
+                for (int i = 1; i < 19; i++) {
+                    wArr.addi(net.getLayer(i).getParam("W"));
+                    bArr.addi(net.getLayer(i).getParam("b"));
+                }
+                wArr = wArr.subi(wArrBefore);
+                bArr = bArr.subi(bArrBefore);
+                for (int i = 0; i < 19; i++) {
+                    net.getLayer(i).setParam("W",wArr);
+                    net.getLayer(i).setParam("b",bArr);
+                }
+
+                INDArray wArr2 = net.getLayer(19).getParam("W");
+                INDArray bArr2 = net.getLayer(19).getParam("b");
+                for (int i = 20; i < 38; i++) {
+                    wArr2.addi(net.getLayer(i).getParam("W"));
+                    bArr2.addi(net.getLayer(i).getParam("b"));
+                }
+                wArr2.subi(wArr2Before);
+                bArr2.subi(bArr2Before);
+                for (int i = 19; i < 38; i++) {
+                    net.getLayer(i).setParam("W",wArr2);
+                    net.getLayer(i).setParam("b",bArr2);
+                }
+
+                INDArray wArr3 = net.getLayer(38).getParam("W");
+                INDArray bArr3 = net.getLayer(38).getParam("b");
+                for (int i = 39; i < 49; i++) {
+                    wArr3.addi(net.getLayer(i).getParam("W"));
+                    bArr3.addi(net.getLayer(i).getParam("b"));
+                }
+                wArr3.subi(wArr3Before);
+                bArr3.subi(bArr3Before);
+                for (int i = 38; i < 49; i++) {
+                    net.getLayer(i).setParam("W",wArr3);
+                    net.getLayer(i).setParam("b",bArr3);
+                }
+
                 if (step %  decayStep == 0) {
                     for (int i = 0; i < 51; i++) {
                         double lr = (net.getLayer(i)).conf().getLearningRateByParam("W");
                         (net.getLayer(i)).conf().setLearningRateByParam("W", lr * 0.96);
                         lr = (net.getLayer(i)).conf().getLearningRateByParam("b");
                         (net.getLayer(i)).conf().setLearningRateByParam("b", lr * 0.96);
+
                     }
                     double lr = (net.getLayer(0)).conf().getLearningRateByParam("W");
                     System.out.println("learning rate:" + lr);
@@ -398,6 +445,25 @@ public class StaticNeuralTrainer {
                         (org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer) net.getLayer(i);
                 initializeWordEmbeddingLayers(maps, layer);
             }
+        }
+
+        INDArray wArr = net.getLayer(0).getParam("W");
+        INDArray bArr = net.getLayer(0).getParam("b");
+        for (int i = 1; i < 19; i++) {
+            net.getLayer(i).setParam("W",wArr);
+            net.getLayer(i).setParam("b",bArr);
+        }
+        INDArray wArr2 = net.getLayer(19).getParam("W");
+        INDArray bArr2 = net.getLayer(19).getParam("b");
+        for (int i = 20; i < 38; i++) {
+            net.getLayer(i).setParam("W",wArr2);
+            net.getLayer(i).setParam("b",bArr2);
+        }
+        INDArray wArr3 = net.getLayer(38).getParam("W");
+        INDArray bArr3 = net.getLayer(38).getParam("b");
+        for (int i = 39; i < 49; i++) {
+            net.getLayer(i).setParam("W",wArr3);
+            net.getLayer(i).setParam("b",bArr3);
         }
 
         return net;
