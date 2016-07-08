@@ -35,6 +35,10 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.GZIPOutputStream;
 
 public class StaticNeuralTrainer {
@@ -98,12 +102,15 @@ public class StaticNeuralTrainer {
 
 
         ComputationGraph net = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
-                wordDimension,
-                posDimension, depDimension, possibleOutputs, maps);
+                wordDimension, posDimension, depDimension, possibleOutputs, maps);
+        ComputationGraph avgNet = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
+                wordDimension,posDimension, depDimension, possibleOutputs, maps); ;
 
         int step = 0;
         int decayStep = (int)(options.decayStep*dataSize);
         decayStep = decayStep==0? 1: decayStep;
+        ExecutorService executor = Executors.newFixedThreadPool(options.numOfThreads);
+        CompletionService<Boolean> pool =  new ExecutorCompletionService<Boolean>(executor);
 
         System.out.println("decay step is "+decayStep);
         for (int iter = 0; iter < options.trainingIter; iter++) {
@@ -118,58 +125,34 @@ public class StaticNeuralTrainer {
                 INDArray bArr3Before = net.getLayer(38).getParam("b").mul(11);
 
                 net.fit(trainIter.next());
+
+                pool.submit(new EmbeddingSharingThread(wArrBefore,bArrBefore,net,0,19));
+                pool.submit(new EmbeddingSharingThread(wArr2Before,bArr2Before,net,19,38));
+                pool.submit(new EmbeddingSharingThread(wArr3Before,bArr3Before,net,38,49));
+
+                for(int i=0;i<3;i++)
+                    pool.take().get();
+
+                double ratio = Math.min(0.9999, (double)step / (9+step));
+
+                for (int i = 0; i < 51; i++) {
+                    avgNet.getLayer(i).getParam("W").muli(ratio).addi(net.getLayer(i).getParam("W").mul(1 - ratio));
+                    avgNet.getLayer(i).getParam("b").muli(ratio).addi(net.getLayer(i).getParam("b").mul(1 - ratio));
+                }
+
                 step++;
-
-               INDArray wArr = net.getLayer(0).getParam("W");
-               INDArray bArr = net.getLayer(0).getParam("b");
-                for (int i = 1; i < 19; i++) {
-                    wArr.addi(net.getLayer(i).getParam("W"));
-                    bArr.addi(net.getLayer(i).getParam("b"));
-                }
-                wArr = wArr.subi(wArrBefore);
-                bArr = bArr.subi(bArrBefore);
-                for (int i = 0; i < 19; i++) {
-                    net.getLayer(i).setParam("W",wArr);
-                    net.getLayer(i).setParam("b",bArr);
-                }
-
-                INDArray wArr2 = net.getLayer(19).getParam("W");
-                INDArray bArr2 = net.getLayer(19).getParam("b");
-                for (int i = 20; i < 38; i++) {
-                    wArr2.addi(net.getLayer(i).getParam("W"));
-                    bArr2.addi(net.getLayer(i).getParam("b"));
-                }
-                wArr2.subi(wArr2Before);
-                bArr2.subi(bArr2Before);
-                for (int i = 19; i < 38; i++) {
-                    net.getLayer(i).setParam("W",wArr2);
-                    net.getLayer(i).setParam("b",bArr2);
-                }
-
-                INDArray wArr3 = net.getLayer(38).getParam("W");
-                INDArray bArr3 = net.getLayer(38).getParam("b");
-                for (int i = 39; i < 49; i++) {
-                    wArr3.addi(net.getLayer(i).getParam("W"));
-                    bArr3.addi(net.getLayer(i).getParam("b"));
-                }
-                wArr3.subi(wArr3Before);
-                bArr3.subi(bArr3Before);
-                for (int i = 38; i < 49; i++) {
-                    net.getLayer(i).setParam("W",wArr3);
-                    net.getLayer(i).setParam("b",bArr3);
-                }
-
-                if (step %  decayStep == 0) {
+                if (step % decayStep == 0) {
                     for (int i = 0; i < 51; i++) {
                         double lr = (net.getLayer(i)).conf().getLearningRateByParam("W");
                         (net.getLayer(i)).conf().setLearningRateByParam("W", lr * 0.96);
                         lr = (net.getLayer(i)).conf().getLearningRateByParam("b");
                         (net.getLayer(i)).conf().setLearningRateByParam("b", lr * 0.96);
-
                     }
                     double lr = (net.getLayer(0)).conf().getLearningRateByParam("W");
                     System.out.println("learning rate:" + lr);
+                    System.out.println("avg decay:" + Math.min(0.9999, (double)step / (9+step)));
                 }
+
             }
 
             System.out.println("Reshuffling the data!");
@@ -181,6 +164,9 @@ public class StaticNeuralTrainer {
             if (devIter != null) {
                 System.out.println("\nevaluate of dev");
                 evaluate(net, devIter, maps, dependencyRelations, options, true);
+
+                System.out.println("\nevaluate of dev avg");
+                evaluate(avgNet, devIter, maps, dependencyRelations, options, true);
             }
         }
 
