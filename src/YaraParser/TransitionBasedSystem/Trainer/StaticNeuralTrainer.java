@@ -126,19 +126,20 @@ public class StaticNeuralTrainer {
 
                 net.fit(trainIter.next());
 
-                pool.submit(new EmbeddingSharingThread(wArrBefore,bArrBefore,net,0,19));
-                pool.submit(new EmbeddingSharingThread(wArr2Before,bArr2Before,net,19,38));
-                pool.submit(new EmbeddingSharingThread(wArr3Before,bArr3Before,net,38,49));
+                pool.submit(new EmbeddingSharingThread(wArrBefore, bArrBefore, net, 0, 19));
+                pool.submit(new EmbeddingSharingThread(wArr2Before, bArr2Before, net, 19, 38));
+                pool.submit(new EmbeddingSharingThread(wArr3Before, bArr3Before, net, 38, 49));
 
-                for(int i=0;i<3;i++)
+                for (int i = 0; i < 3; i++)
                     pool.take().get();
 
-                double ratio = Math.min(0.9999, (double)step / (9+step));
+                double ratio = Math.min(0.9999, (double) step / (9 + step));
 
                 for (int i = 0; i < 51; i++) {
-                    avgNet.getLayer(i).getParam("W").muli(ratio).addi(net.getLayer(i).getParam("W").mul(1 - ratio));
-                    avgNet.getLayer(i).getParam("b").muli(ratio).addi(net.getLayer(i).getParam("b").mul(1 - ratio));
+                    pool.submit(new AveragingThread(i, net, avgNet, ratio));
                 }
+                for (int i = 0; i < 51; i++)
+                    pool.take().get();
 
                 step++;
                 if (step % decayStep == 0) {
@@ -150,9 +151,8 @@ public class StaticNeuralTrainer {
                     }
                     double lr = (net.getLayer(0)).conf().getLearningRateByParam("W");
                     System.out.println("learning rate:" + lr);
-                    System.out.println("avg decay:" + Math.min(0.9999, (double)step / (9+step)));
+                    System.out.println("avg decay:" + Math.min(0.9999, (double) step / (9 + step)));
                 }
-
             }
 
             System.out.println("Reshuffling the data!");
