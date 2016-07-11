@@ -13,13 +13,15 @@ import java.util.concurrent.Callable;
  */
 
 public class AveragingThread implements Callable<Boolean> {
-    int i;
+    int s;
+    int e;
     ComputationGraph net;
     ComputationGraph avgNet;
     double decay;
 
-    public AveragingThread(int i, ComputationGraph net, ComputationGraph avgNet, double decay) {
-        this.i = i;
+    public AveragingThread(int s, int e, ComputationGraph net, ComputationGraph avgNet, double decay) {
+        this.s = s;
+        this.e = e;
         this.net = net;
         this.avgNet = avgNet;
         this.decay = decay;
@@ -33,8 +35,10 @@ public class AveragingThread implements Callable<Boolean> {
      */
     @Override
     public Boolean call() throws Exception {
-        avgNet.getLayer(i).getParam("W").muli(decay).addi(net.getLayer(i).getParam("W").mul(1 - decay));
-        avgNet.getLayer(i).getParam("b").muli(decay).addi(net.getLayer(i).getParam("b").mul(1 - decay));
+        for(int i=s;i<e;i++) {
+            avgNet.getLayer(i).getParam("W").muli(decay).addi(net.getLayer(i).getParam("W").mul(1 - decay));
+            avgNet.getLayer(i).getParam("b").muli(decay).addi(net.getLayer(i).getParam("b").mul(1 - decay));
+        }
         return true;
     }
 }

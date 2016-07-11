@@ -80,7 +80,7 @@ public class Options implements Serializable {
         useRandomOracleSelection = false;
         trainingIter = 20;
         evaluate = false;
-        numOfThreads = 24;
+        numOfThreads = 8;
         useExtendedWithBrownClusterFeatures = false;
         parsePartialConll = false;
 

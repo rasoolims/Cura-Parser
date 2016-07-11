@@ -134,11 +134,13 @@ public class StaticNeuralTrainer {
                     pool.take().get();
 
                 double ratio = Math.min(0.9999, (double) step / (9 + step));
-
-                for (int i = 0; i < 51; i++) {
-                    pool.submit(new AveragingThread(i, net, avgNet, ratio));
+                int cnt = 0;
+                for (int i = 0; i < 51; i+=8) {
+                    pool.submit(new AveragingThread(i,Math.min(i+8,51),net,avgNet,ratio)) ;
+                    cnt++;
                 }
-                for (int i = 0; i < 51; i++)
+
+                for (int i = 0; i < cnt; i++)
                     pool.take().get();
 
                 step++;
@@ -425,12 +427,10 @@ public class StaticNeuralTrainer {
         net.setListeners(new ScoreIterationListener(10));
 
         if (maps.hasEmbeddings()) {
-            for (int i = 0; i < 19; i++) {
-                System.out.println("Initializing with pre-trained word vectors");
-                org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer layer =
-                        (org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer) net.getLayer(i);
-                initializeWordEmbeddingLayers(maps, layer);
-            }
+            System.out.println("Initializing with pre-trained word vectors");
+            org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer layer =
+                    (org.deeplearning4j.nn.layers.feedforward.embedding.EmbeddingLayer) net.getLayer(0);
+            initializeWordEmbeddingLayers(maps, layer);
         }
 
         INDArray wArr = net.getLayer(0).getParam("W");
@@ -492,6 +492,21 @@ public class StaticNeuralTrainer {
             writer.writeObject(new NNInfStruct(net, dependencyRelations.size(), maps, dependencyRelations, options));
             writer.writeObject(net);
             writer.close();
+        }
+    }
+
+    private static void shareEmbedding(INDArray wArrBefore, INDArray bArrBefore, ComputationGraph net, int s, int e){
+        INDArray wArr = net.getLayer(s).getParam("W");
+        INDArray bArr = net.getLayer(s).getParam("b");
+        for (int i = s + 1; i < e; i++) {
+            wArr.addi(net.getLayer(i).getParam("W"));
+            bArr.addi(net.getLayer(i).getParam("b"));
+        }
+        wArr = wArr.subi(wArrBefore);
+        bArr = bArr.subi(bArrBefore);
+        for (int i = s; i < e; i++) {
+            net.getLayer(i).setParam("W", wArr);
+            net.getLayer(i).setParam("b", bArr);
         }
     }
 }
