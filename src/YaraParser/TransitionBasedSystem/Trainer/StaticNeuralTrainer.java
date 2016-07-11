@@ -100,7 +100,6 @@ public class StaticNeuralTrainer {
             devIter = readMultiDataSetIterator(devFiles, batchSize, possibleOutputs);
         }
 
-
         ComputationGraph net = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
                 wordDimension, posDimension, depDimension, possibleOutputs, maps);
         ComputationGraph avgNet = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
@@ -109,9 +108,6 @@ public class StaticNeuralTrainer {
         int step = 0;
         int decayStep = (int)(options.decayStep*dataSize);
         decayStep = decayStep==0? 1: decayStep;
-        ExecutorService executor = Executors.newFixedThreadPool(options.numOfThreads);
-        CompletionService<Boolean> pool =  new ExecutorCompletionService<Boolean>(executor);
-
         System.out.println("decay step is "+decayStep);
         for (int iter = 0; iter < options.trainingIter; iter++) {
             System.out.println(iter + "th iteration");
@@ -126,22 +122,15 @@ public class StaticNeuralTrainer {
 
                 net.fit(trainIter.next());
 
-                pool.submit(new EmbeddingSharingThread(wArrBefore, bArrBefore, net, 0, 19));
-                pool.submit(new EmbeddingSharingThread(wArr2Before, bArr2Before, net, 19, 38));
-                pool.submit(new EmbeddingSharingThread(wArr3Before, bArr3Before, net, 38, 49));
-
-                for (int i = 0; i < 3; i++)
-                    pool.take().get();
+                shareEmbedding(wArrBefore, bArrBefore, net, 0, 19);
+                shareEmbedding(wArr2Before, bArr2Before, net, 19, 38);
+                shareEmbedding(wArr3Before, bArr3Before, net, 38, 49);
 
                 double ratio = Math.min(0.9999, (double) step / (9 + step));
-                int cnt = 0;
-                for (int i = 0; i < 51; i+=8) {
-                    pool.submit(new AveragingThread(i,Math.min(i+8,51),net,avgNet,ratio)) ;
-                    cnt++;
+                for (int i = 0; i < 51; i++) {
+                    avgNet.getLayer(i).getParam("W").muli(ratio).addi(net.getLayer(i).getParam("W").mul(1 - ratio));
+                    avgNet.getLayer(i).getParam("b").muli(ratio).addi(net.getLayer(i).getParam("b").mul(1 - ratio));
                 }
-
-                for (int i = 0; i < cnt; i++)
-                    pool.take().get();
 
                 step++;
                 if (step % decayStep == 0) {
