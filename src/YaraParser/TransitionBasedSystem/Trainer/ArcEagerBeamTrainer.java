@@ -88,8 +88,6 @@ public class ArcEagerBeamTrainer {
 
     private void writeTrainingInstanceForSentence(GoldConfiguration goldConfiguration, BufferedWriter[] writer, double
             dropoutProb) throws Exception {
-        options.useDynamicOracle = false;
-
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
         ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
@@ -118,12 +116,18 @@ public class ArcEagerBeamTrainer {
 
             if (options.useDynamicOracle) {
                 bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
+
+                // pick random oracle each time
+                List<Configuration> keys = new ArrayList<Configuration>(newOracles.keySet());
+                Configuration randomKey = keys.get(randGen.nextInt(keys.size()));
+                oracles = new HashMap<Configuration, Double>();
+                oracles.put(randomKey, 0.0);
+                bestScoringOracle = randomKey;
+
             } else {
                 bestScoringOracle = staticOracle(goldConfiguration, oracles, newOracles);
+                oracles = newOracles;
             }
-
-            oracles = newOracles;
-
             int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size() - 1);
 
             if (action >= 2)
