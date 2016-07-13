@@ -134,27 +134,17 @@ public class ArcEagerBeamTrainer {
                 action -= 1;
 
             StringBuilder outputBuilder = new StringBuilder();
-            //    outputBuilder.append(action);
             for (int i = 0; i < baseFeatures.length; i++) {
-                //     if(i<=3 || (i>=12 && i<=15) || (i>=24 && i<=25)) {
-                if (i < 19 && randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)       //todo
-                    baseFeatures[i] = 0;
+                if (i < 19 && maps.rareWords.contains(baseFeatures[i]))
+                    if (randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)
+                        baseFeatures[i] = 0;
                 writer[i].write(baseFeatures[i] + "\n");
-                //     outputBuilder.append(baseFeatures[i]);
-//                if(i<baseFeatures.length-1)
-//                    outputBuilder.append(",");
-                //   }
             }
             outputBuilder.append("\n");
             writer[writer.length - 1].write(action + "\n");
-            //   writer1.write(outputBuilder.toString());
-            //writer2.write(action+"\n");
-
             beam = new ArrayList<Configuration>(options.beamWidth);
             beam.add(bestScoringOracle);
         }
-        //writer1.flush();
-        // writer2.flush();
     }
 
 
