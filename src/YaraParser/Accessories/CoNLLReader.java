@@ -160,6 +160,8 @@ public class CoNLLReader {
             }
         }
 
+        HashSet<Integer> rareWords = new HashSet<>();
+
         // todo indexing may be false
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
@@ -169,6 +171,7 @@ public class CoNLLReader {
                 if (lowercased)
                     word = word.toLowerCase();
                 if (wordCount.get(word) > rareMaxWordCount && !stringMap.containsKey(word)) {
+
                     stringMap.put(word, wi++);
                 }
             }
@@ -183,6 +186,8 @@ public class CoNLLReader {
                 if (lowercased)
                     word = word.toLowerCase();
                 if (wordCount.get(word) > rareMaxWordCount && !wordMap.containsKey(stringMap.get(word))) {
+                    if(wordCount.get(word)==1)
+                        rareWords.add(wc);
                     wordMap.put(stringMap.get(word), wc++);
                 }
             }
@@ -195,7 +200,7 @@ public class CoNLLReader {
         System.out.println("#rare_types: " + rare + " out of " + wordCount.size());
 
         return new IndexMaps(stringMap, labelMap, rootString,
-                wordMap, posMap, depRelationMap, cluster4Map, cluster6Map, clusterMap);
+                wordMap, posMap, depRelationMap, cluster4Map, cluster6Map, clusterMap,rareWords);
     }
 
 

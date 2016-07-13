@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class IndexMaps implements Serializable {
     public final String rootString;
@@ -25,12 +26,14 @@ public class IndexMaps implements Serializable {
     private HashMap<Integer, Integer> posMap;
     private HashMap<Integer, Integer> depRelationMap;
     private HashMap<Integer, double[]> embeddingsDictionary;
+    public final HashSet<Integer> rareWords;
+
 
     public IndexMaps(HashMap<String, Integer> stringMap, HashMap<Integer, Integer> labelMap, String rootString,
                      HashMap<Integer, Integer> wordMap, HashMap<Integer, Integer> posMap, HashMap<Integer, Integer>
                              depRelationMap,
                      HashMap<Integer, Integer> brown4Clusters, HashMap<Integer, Integer> brown6Clusters,
-                     HashMap<String, Integer> brownFullClusters) {
+                     HashMap<String, Integer> brownFullClusters, HashSet<Integer> rareWords) {
         this.stringMap = stringMap;
         this.wordMap = wordMap;
         this.posMap = posMap;
@@ -48,6 +51,7 @@ public class IndexMaps implements Serializable {
         this.brownFullClusters = brownFullClusters;
         this.rootString = rootString;
         embeddingsDictionary = new HashMap<>();
+        this.rareWords = rareWords;
     }
 
     public Sentence makeSentence(String[] words, String[] posTags, boolean rootFirst, boolean lowerCased) {
@@ -170,14 +174,7 @@ public class IndexMaps implements Serializable {
         String line;
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split(" ");
-            if (spl[0].equals("_UNK_")) {
-                double[] e = new double[spl.length - 1];
-                for (int i = 0; i < e.length; i++) {
-                    e[i] = Double.parseDouble(spl[i + 1]);
-                }
-                // adding 2 for unknown and null
-                embeddingsDictionary.put(0, e);
-            } else if (stringMap.containsKey(spl[0])) {
+            if (stringMap.containsKey(spl[0])) {
                 double[] e = new double[spl.length - 1];
                 eDim = e.length;
                 int wordIndex = stringMap.get(spl[0]);
@@ -190,6 +187,7 @@ public class IndexMaps implements Serializable {
         }
         return eDim;
     }
+
 
     public double[] embeddings(int wordIndex) {
         return embeddingsDictionary.get(wordIndex);
