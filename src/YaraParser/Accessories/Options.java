@@ -31,6 +31,7 @@ public class Options implements Serializable {
     public double learningRate;
     public int batchSize;
     public double decayStep;
+    public boolean dropout;
 
     public String modelFile;
     public boolean lowercase;
@@ -57,11 +58,12 @@ public class Options implements Serializable {
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
+        dropout = false;
         beamWidth = 64;
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
         learningRate = 0.05;
-        batchSize = 1000;
+        batchSize = 256;
         decayStep = 0.2;
         rootFirst = false;
         modelFile = "";
@@ -148,6 +150,7 @@ public class Options implements Serializable {
         output.append("\t \t -lr [learning-rate] \n");
         output.append("\t \t -ds [decay-step] \n");
         output.append("\t \t -batch [batch-size] \n");
+        output.append("\t \t drop [put if want dropout] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:20)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
