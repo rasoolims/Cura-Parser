@@ -145,10 +145,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
             MultiDataSet t = new org.nd4j.linalg.dataset.MultiDataSet(features, null);
 
-            INDArray[] predicted = nn.output(false, features);
+            INDArray predicted = nn.output(false, features)[0];
             double[] logVals = new double[2 * (1 + dependencyRelations.size())];
             for (int i = 0; i < logVals.length; i++) {
-                logVals[i] = Math.log(predicted[0].getDouble(i));
+                logVals[i] = Math.log(predicted.getDouble(i));
             }
 
             State currentState = configuration.state;
@@ -210,8 +210,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
     }
 
-    public static void parseNNConllFileNoParallel(NNInfStruct nnInfStruct, String inputFile, String outputFile, int
-            beamWidth, int numOfThreads, boolean partial, String scorePath) throws Exception {
+    public static void parseNNConllFileNoParallel(final NNInfStruct nnInfStruct, String inputFile, String outputFile,
+                                                  int beamWidth, int numOfThreads, boolean partial, String scorePath)
+            throws Exception {
         Options options = nnInfStruct.options;
         CoNLLReader reader = new CoNLLReader(inputFile);
         boolean addScore = false;
@@ -235,7 +236,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             for (GoldConfiguration goldConfiguration : data) {
                 dataCount++;
                 if (dataCount % 100 == 0)
-                    System.err.print(dataCount + " ... ");
+                    System.out.print(dataCount + " ... ");
                 Configuration bestParse;
                 // if (partial) //todo
                 //    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst,
@@ -270,7 +271,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
         }
 
-        System.err.print("\n");
+        System.out.print("\n");
         long end = System.currentTimeMillis();
         double each = (1.0 * (end - start)) / size;
         double eacharc = (1.0 * (end - start)) / allArcs;
@@ -280,8 +281,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
         DecimalFormat format = new DecimalFormat("##.00");
 
-        System.err.print(format.format(eacharc) + " ms for each arc!\n");
-        System.err.print(format.format(each) + " ms for each sentence!\n\n");
+        System.out.print(format.format(eacharc) + " ms for each arc!\n");
+        System.out.print(format.format(each) + " ms for each sentence!\n\n");
 
         BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
         BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
