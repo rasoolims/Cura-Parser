@@ -1735,7 +1735,6 @@ public class FeatureExtractor {
         baseFeatureIds[index++] = s0llw;
         baseFeatureIds[index++] = s0rrw;
 
-
         baseFeatureIds[index++] = s0p;
         baseFeatureIds[index++] = s1p;
         baseFeatureIds[index++] = s2p;
