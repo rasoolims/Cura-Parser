@@ -33,12 +33,13 @@ public class YaraParser {
             options.inputFile = "/Users/msr/Desktop/data/train_smal.conll";
             options.devPath = "/Users/msr/Desktop/data/dev_smal.conll";
             options.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
-           // options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
+          //  options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.trainingIter = 50;
+            options.trainingIter = 100;
             options.beamWidth = 1;
+            options.useDynamicOracle = false;
         }
 
         if (options.showHelp) {
@@ -52,13 +53,14 @@ public class YaraParser {
                 GZIPInputStream gz = new GZIPInputStream(fos);
                 ObjectInput reader = new ObjectInputStream(gz);
                 NNInfStruct nnInfStruct = (NNInfStruct) reader.readObject();
+                nnInfStruct.loadModel();
+
                 KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.devPath, "/tmp/output",
                         options.beamWidth, 1, false, "");
                 Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);
                 KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.inputFile, "/tmp/output",
                         options.beamWidth, 1, false, "");
                 Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
-
             } else if (options.parseTaggedFile || options.parseConllFile || options.parsePartialConll) {
                 parseNN(options);
                 // parse(options);
@@ -118,6 +120,7 @@ public class YaraParser {
         GZIPInputStream gz = new GZIPInputStream(fos);
         ObjectInput reader = new ObjectInputStream(gz);
         NNInfStruct nnInfStruct = (NNInfStruct) reader.readObject();
+        nnInfStruct.loadModel();
         KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.inputFile, options.outputFile,
                 options.beamWidth, 1, false, "");
     }

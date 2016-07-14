@@ -59,11 +59,11 @@ public class Options implements Serializable {
         parseConllFile = false;
         parseTaggedFile = false;
         dropout = false;
-        beamWidth = 64;
+        beamWidth = 1;
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
         learningRate = 0.05;
-        batchSize = 256;
+        batchSize = 1024;
         decayStep = 0.2;
         rootFirst = false;
         modelFile = "";

@@ -25,6 +25,7 @@ import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.params.DefaultParamInitializer;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
@@ -35,10 +36,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.zip.GZIPOutputStream;
 
 public class StaticNeuralTrainer {
@@ -86,8 +83,7 @@ public class StaticNeuralTrainer {
         dataSize/= batchSize;
 
         Collections.shuffle(trainDataSet);
-        String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv",
-                -1);
+        String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", -1);
         MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
 
         MultiDataSetIterator devIter = null;
@@ -101,63 +97,80 @@ public class StaticNeuralTrainer {
         }
 
         ComputationGraph net = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
-                wordDimension, posDimension, depDimension, possibleOutputs, maps);
+                wordDimension, posDimension, depDimension, possibleOutputs, options.dropout,maps);
         ComputationGraph avgNet = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
-                wordDimension,posDimension, depDimension, possibleOutputs, maps); ;
+                wordDimension, posDimension, depDimension, possibleOutputs, options.dropout,maps);
 
         int step = 0;
         int decayStep = (int)(options.decayStep*dataSize);
         decayStep = decayStep==0? 1: decayStep;
         System.out.println("decay step is "+decayStep);
+        int noImprovement = 0;
         for (int iter = 0; iter < options.trainingIter; iter++) {
             System.out.println(iter + "th iteration");
             trainIter.reset();
             while (trainIter.hasNext()) {
                 INDArray wArrBefore = net.getLayer(0).getParam("W").mul(18);
-                INDArray bArrBefore = net.getLayer(0).getParam("b").mul(18);
                 INDArray wArr2Before = net.getLayer(19).getParam("W").mul(18);
-                INDArray bArr2Before = net.getLayer(19).getParam("b").mul(18);
                 INDArray wArr3Before = net.getLayer(38).getParam("W").mul(11);
-                INDArray bArr3Before = net.getLayer(38).getParam("b").mul(11);
+
+                // making sure that we don't learn bias for embeddings
+                for(int i=0;i<49;i++)
+                    (net.getLayer(i)).conf().setLearningRateByParam("b",0.0);
 
                 net.fit(trainIter.next());
 
-                shareEmbedding(wArrBefore, bArrBefore, net, 0, 19);
-                shareEmbedding(wArr2Before, bArr2Before, net, 19, 38);
-                shareEmbedding(wArr3Before, bArr3Before, net, 38, 49);
-
-                double ratio = Math.min(0.9999, (double) step / (9 + step));
-                for (int i = 0; i < 51; i++) {
-                    avgNet.getLayer(i).getParam("W").muli(ratio).addi(net.getLayer(i).getParam("W").mul(1 - ratio));
-                    avgNet.getLayer(i).getParam("b").muli(ratio).addi(net.getLayer(i).getParam("b").mul(1 - ratio));
-                }
+                shareEmbedding(wArrBefore, net, 0, 19);
+                shareEmbedding(wArr2Before, net, 19, 38);
+                shareEmbedding(wArr3Before, net, 38, 49);
 
                 step++;
+                double ratio = Math.min(0.9999, (double) step / (9 + step));
+                for (int i = 0; i < 51; i++) {
+                    if(step>1) {
+                        avgNet.getLayer(i).getParam("W").muli(ratio).addi(net.getLayer(i).getParam("W").mul(1 - ratio));
+                        if (i > 48)
+                            avgNet.getLayer(i).getParam("b").muli(ratio).addi(net.getLayer(i).getParam("b").mul(1 - ratio));
+                    }else {
+                        avgNet.getLayer(i).getParam("W").muli(0).addi(net.getLayer(i).getParam("W").mul(1 - ratio));
+                        if (i > 48)
+                            avgNet.getLayer(i).getParam("b").muli(0).addi(net.getLayer(i).getParam("b").mul(1 - ratio));
+                    }
+                }
+
+
                 if (step % decayStep == 0) {
                     for (int i = 0; i < 51; i++) {
                         double lr = (net.getLayer(i)).conf().getLearningRateByParam("W");
                         (net.getLayer(i)).conf().setLearningRateByParam("W", lr * 0.96);
-                        lr = (net.getLayer(i)).conf().getLearningRateByParam("b");
-                        (net.getLayer(i)).conf().setLearningRateByParam("b", lr * 0.96);
+                        if(i>48) {
+                            lr = (net.getLayer(i)).conf().getLearningRateByParam("b");
+                            (net.getLayer(i)).conf().setLearningRateByParam("b", lr * 0.96);
+                        }
                     }
                     double lr = (net.getLayer(0)).conf().getLearningRateByParam("W");
                     System.out.println("learning rate:" + lr);
                     System.out.println("avg decay:" + Math.min(0.9999, (double) step / (9 + step)));
                 }
+
             }
 
             System.out.println("Reshuffling the data!");
             Collections.shuffle(trainDataSet);
-            trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv",
-                    -1);
+            trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", 0.1);
             trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
 
             if (devIter != null) {
                 System.out.println("\nevaluate of dev");
-                evaluate(net, devIter, maps, dependencyRelations, options, true);
+                noImprovement = evaluate(net, devIter, maps, dependencyRelations, options, true, noImprovement);
 
                 System.out.println("\nevaluate of dev avg");
-                evaluate(avgNet, devIter, maps, dependencyRelations, options, true);
+                evaluate(avgNet, devIter, maps, dependencyRelations, options, true, noImprovement);
+
+                if(noImprovement>=10) {
+                    System.out.println("\nEarly stop...!");
+                    break;
+                }
             }
         }
 
@@ -172,7 +185,8 @@ public class StaticNeuralTrainer {
         FileOutputStream fos = new FileOutputStream(options.modelFile);
         GZIPOutputStream gz = new GZIPOutputStream(fos);
         ObjectOutput writer = new ObjectOutputStream(gz);
-        writer.writeObject(new NNInfStruct(net, dependencyRelations.size(), maps, dependencyRelations, options));
+        ModelSerializer.writeModel(net, options.modelFile+".net",false);
+        writer.writeObject(new NNInfStruct(options.modelFile+".net", dependencyRelations.size(), maps, dependencyRelations, options));
         writer.writeObject(net);
         writer.close();
     }
@@ -303,8 +317,8 @@ public class StaticNeuralTrainer {
 
     private static ComputationGraph constructNetwork(Options options, double learningRate, int vocab1Size,
                                                      int vocab2Size, int vocab3Size, int wordDimension,
-                                                     int posDimension, int depDimension, int possibleOutputs,
-                                                     IndexMaps maps) {
+                                                     int posDimension, int depDimension, int possibleOutputs, boolean
+                                                             dropout, IndexMaps maps) {
         Map<Integer, Double> momentumSchedule = new HashedMap();
         double m = .96;
         for (int i = 1; i < 100000; i++) {
@@ -312,16 +326,21 @@ public class StaticNeuralTrainer {
             m *= 0.96;
         }
 
+        /*
+        NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
+                .updater(Updater.ADAM).iterations(1).regularization(true).learningRate(learningRate).l2(0.0001);
+        */
         NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true).iterations(1)
                 .learningRate(learningRate).updater(Updater.NESTEROVS)
                 .momentum(0.9).regularization(true).l2(0.0001).stepFunction(new NegativeDefaultStepFunction());
 
+
         String[] embeddingLayerNames = new String[49];
         for (int e = 0; e < embeddingLayerNames.length; e++) {
             embeddingLayerNames[e] = "L" + (e + 1);
         }
-
+        double dropoutProb = dropout?0.5:0;
 
         int lIndex = 0;
         int vIndex = 0;
@@ -401,6 +420,7 @@ public class StaticNeuralTrainer {
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++])
                 .addLayer("h1", new DenseLayer.Builder().nIn(19 * (wordDimension + posDimension) + 11 * depDimension)
                         .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0, 0.01)).biasInit(0.2)
+                     //  .dropOut(dropoutProb)
                         .nOut(options.hiddenLayer1Size).activation("relu").build(), "concat")
                 //   .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
                 //          .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
@@ -412,8 +432,12 @@ public class StaticNeuralTrainer {
 
 
         ComputationGraph net = new ComputationGraph(confComplex);
+
         net.init();
         net.setListeners(new ScoreIterationListener(10));
+        // making sure that we don't learn bias for embeddings
+        for(int i=0;i<49;i++)
+            (net.getLayer(i)).conf().setLearningRateByParam("b",0.0);
 
         if (maps.hasEmbeddings()) {
             System.out.println("Initializing with pre-trained word vectors");
@@ -446,20 +470,142 @@ public class StaticNeuralTrainer {
 
     private static EmbeddingLayer embeddingLayerBuilder(int inDim, int outDim) {
         return new EmbeddingLayer.Builder().nIn(inDim).nOut(outDim).activation("identity")
-                .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0, 0.01)).build();
+                .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0, 0.01)).biasInit(0.0).build();
     }
 
-    private static void evaluate(final ComputationGraph net, final MultiDataSetIterator iter, final IndexMaps maps,
-                                 final ArrayList<Integer> dependencyRelations, final Options options, boolean save)
+    private static int evaluate(final ComputationGraph net, MultiDataSetIterator iter, final IndexMaps maps,
+                                 final ArrayList<Integer> dependencyRelations, final Options options, boolean save,
+                                 int noImprovement)
             throws Exception {
         iter.reset();
         Evaluation evaluation = new Evaluation(2 * (dependencyRelations.size() + 1));
+
+       /**
+        INDArray wEArr = net.getLayer(0).getParam("W");
+        double[][] E_W = new double[wEArr.rows()][wEArr.columns()];
+        for(int i=0;i<E_W.length;i++){
+            for(int j=0;j<E_W[i].length;j++)
+                E_W[i][j] = wEArr.getRow(i).getColumn(j).getDouble(0);
+        }
+
+        INDArray eWB = net.getLayer(0).getParam("b");
+        double[] E_W_B = new double[eWB.columns()];
+        for(int i=0;i<E_W_B.length;i++){
+            E_W_B[i] = eWB.getColumn(i).getDouble(0);
+        }
+
+        INDArray pEArr = net.getLayer(20).getParam("W");
+        double[][] E_P = new double[pEArr.rows()][pEArr.columns()];
+        for(int i=0;i<E_P.length;i++){
+            for(int j=0;j<E_P[i].length;j++)
+                E_P[i][j] = pEArr.getRow(i).getColumn(j).getDouble(0);
+        }
+
+        INDArray ePB = net.getLayer(20).getParam("b");
+        double[] E_P_B = new double[ePB.columns()];
+        for(int i=0;i<E_P_B.length;i++){
+            E_P_B[i] = ePB.getColumn(i).getDouble(0);
+        }
+
+        INDArray lEArr = net.getLayer(39).getParam("W");
+        double[][] E_L = new double[lEArr.rows()][lEArr.columns()];
+        for(int i=0;i<E_L.length;i++){
+            for(int j=0;j<E_L[i].length;j++)
+                E_L[i][j] = lEArr.getRow(i).getColumn(j).getDouble(0);
+        }
+
+        INDArray eLB = net.getLayer(49).getParam("b");
+        double[] E_L_B = new double[eLB.columns()];
+        for(int i=0;i<E_L_B.length;i++){
+            E_L_B[i] = eLB.getColumn(i).getDouble(0);
+        }
+
+       INDArray hW = net.getLayer(49).getParam("W");
+        double[][] H_W = new double[hW.rows()][hW.columns()];
+        for(int i=0;i<H_W.length;i++){
+            for(int j=0;j<H_W[i].length;j++)
+                H_W[i][j] = hW.getRow(i).getColumn(j).getDouble(0);
+        }
+
+        INDArray hB = net.getLayer(49).getParam("b");
+        double[] H_B = new double[hB.columns()];
+        for(int i=0;i<H_B.length;i++){
+            H_B[i] = hB.getColumn(i).getDouble(0);
+        }
+
+        INDArray sW = net.getLayer(50).getParam("W");
+        double[][] S_W = new double[sW.rows()][sW.columns()];
+        for(int i=0;i<S_W.length;i++){
+            for(int j=0;j<S_W[i].length;j++)
+                S_W[i][j] = sW.getRow(i).getColumn(j).getDouble(0);
+        }
+
+        INDArray sB = net.getLayer(50).getParam("b");
+        double[] S_B = new double[sB.columns()];
+        for(int i=0;i<S_B.length;i++){
+            S_B[i] = sB.getColumn(i).getDouble(0);
+        }
+        **/
+
         while (iter.hasNext()) {
             MultiDataSet t = iter.next();
             INDArray[] features = t.getFeatures();
             INDArray labels = t.getLabels()[0];
             INDArray predicted = net.output(false, features)[0];
             evaluation.eval(labels, predicted);
+
+            /**
+             * get actual vals
+             */
+            /**
+                int[] feats = new int[features.length];
+                for(int i=0;i<feats.length;i++)
+                    feats[i]=features[i].getInt(0);
+
+                double[] hidden = new double[H_W[0].length];
+
+                int offset = 0;
+                for(int j=0;j<feats.length;j++){
+                    int tok = feats[j];
+                    double[][] embedding = null;
+                    if(j<19)
+                        embedding = E_W;
+                    else if(j<38)
+                        embedding = E_P;
+                    else embedding = E_L;
+
+                    for(int i=0;i<hidden.length;i++){
+                        for(int k=0;k<embedding[0].length;k++){
+                            hidden[i]+= H_W[offset+k][i]*embedding[tok][k];
+                        }
+                    }
+                    offset+= embedding[0].length;
+                }
+
+                for(int i=0;i<hidden.length;i++){
+                    hidden[i]+= H_B[i];
+                    //relu
+                    hidden[i] = Math.max(0,hidden[i]);
+                }
+
+                double[] probs = new double[S_B.length];
+                double sum = 0;
+                for(int i=0;i<probs.length;i++){
+                    for(int j=0;j<hidden.length;j++){
+                        probs[i]+=S_W[j][i]* hidden[j];
+                    }
+                    probs[i]+= S_B[i];
+                    probs[i] = Math.exp(probs[i]);
+                    sum+= probs[i];
+                }
+
+                for(int i=0;i<probs.length;i++){
+                   probs[i]/=sum;
+                }
+                double[] nd4jP = new double[predicted.columns()];
+                for(int i=0;i<nd4jP.length;i++)
+                    nd4jP[i]=predicted.getColumn(i).getDouble(0);
+                **/
         }
         System.out.println("acc: " + evaluation.accuracy());
         System.out.println("precision: " + evaluation.precision());
@@ -470,32 +616,24 @@ public class StaticNeuralTrainer {
             double acc = evaluation.accuracy();
             if (acc > bestAcc) {
                 bestAcc = acc;
+                noImprovement = 0;
                 System.out.println("Saving the new model for iteration \n\n");
                 saveModel(maps, dependencyRelations, options, net);
+            } else {
+                noImprovement++;
             }
-        } else {
-            System.out.println("Saving the new trained (overfit) model for iteration \n\n");
-            FileOutputStream fos = new FileOutputStream(options.modelFile + ".overfit");
-            GZIPOutputStream gz = new GZIPOutputStream(fos);
-            ObjectOutput writer = new ObjectOutputStream(gz);
-            writer.writeObject(new NNInfStruct(net, dependencyRelations.size(), maps, dependencyRelations, options));
-            writer.writeObject(net);
-            writer.close();
         }
+        return noImprovement;
     }
 
-    private static void shareEmbedding(INDArray wArrBefore, INDArray bArrBefore, ComputationGraph net, int s, int e){
+    private static void shareEmbedding(INDArray wArrBefore, ComputationGraph net, int s, int e){
         INDArray wArr = net.getLayer(s).getParam("W");
-        INDArray bArr = net.getLayer(s).getParam("b");
         for (int i = s + 1; i < e; i++) {
             wArr.addi(net.getLayer(i).getParam("W"));
-            bArr.addi(net.getLayer(i).getParam("b"));
         }
         wArr = wArr.subi(wArrBefore);
-        bArr = bArr.subi(bArrBefore);
         for (int i = s; i < e; i++) {
             net.getLayer(i).setParam("W", wArr);
-            net.getLayer(i).setParam("b", bArr);
         }
     }
 }
