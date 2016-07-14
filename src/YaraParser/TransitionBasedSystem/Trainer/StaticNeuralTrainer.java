@@ -5,7 +5,6 @@ import YaraParser.Accessories.Options;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.NNInfStruct;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
-import org.apache.commons.collections.map.HashedMap;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
@@ -35,7 +34,6 @@ import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 public class StaticNeuralTrainer {
@@ -155,9 +153,11 @@ public class StaticNeuralTrainer {
 
             }
 
+
             System.out.println("Reshuffling the data!");
             Collections.shuffle(trainDataSet);
             trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", 0.1);
+
             trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
 
             if (devIter != null) {
@@ -319,21 +319,10 @@ public class StaticNeuralTrainer {
                                                      int vocab2Size, int vocab3Size, int wordDimension,
                                                      int posDimension, int depDimension, int possibleOutputs, boolean
                                                              dropout, IndexMaps maps) {
-        Map<Integer, Double> momentumSchedule = new HashedMap();
-        double m = .96;
-        for (int i = 1; i < 100000; i++) {
-            momentumSchedule.put(i, m);
-            m *= 0.96;
-        }
-
-        /*
-        NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
-                .updater(Updater.ADAM).iterations(1).regularization(true).learningRate(learningRate).l2(0.0001);
-        */
         NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true).iterations(1)
                 .learningRate(learningRate).updater(Updater.NESTEROVS)
-                .momentum(0.9).regularization(true).l2(0.0001).stepFunction(new NegativeDefaultStepFunction());
+                .momentum(0.9).regularization(true).l2(0.0001);
 
 
         String[] embeddingLayerNames = new String[49];
