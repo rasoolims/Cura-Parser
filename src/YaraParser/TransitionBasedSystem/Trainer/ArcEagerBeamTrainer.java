@@ -64,7 +64,7 @@ public class ArcEagerBeamTrainer {
     }
 
     public String createStaticTrainingDataForNeuralNet(ArrayList<GoldConfiguration> trainData, String outputPath,
-                                                         double dropOutProb) throws Exception {
+                                                       double dropOutProb) throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath + ".lab"));
         int dataCount = 0;
         for (GoldConfiguration goldConfiguration : trainData) {
@@ -130,7 +130,7 @@ public class ArcEagerBeamTrainer {
                 if (i < 19 && maps.rareWords.contains(baseFeatures[i]))
                     if (randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)
                         baseFeatures[i] = 0;
-                outputBuilder.append(","+baseFeatures[i]);
+                outputBuilder.append("," + baseFeatures[i]);
             }
             outputBuilder.append("\n");
             writer.write(outputBuilder.toString());

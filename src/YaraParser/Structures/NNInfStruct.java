@@ -18,11 +18,11 @@ import java.util.ArrayList;
 
 public class NNInfStruct implements Serializable {
     public final String netPath;
-    public ComputationGraph net;
     public final int dependencySize;
     public final IndexMaps maps;
     public final ArrayList<Integer> dependencyLabels;
     public final Options options;
+    public ComputationGraph net;
 
     public NNInfStruct(String netPath, int dependencySize, IndexMaps maps, ArrayList<Integer> dependencyLabels,
                        Options options) throws IOException {
@@ -34,7 +34,7 @@ public class NNInfStruct implements Serializable {
         this.net = null;
     }
 
-    public void loadModel() throws  IOException{
+    public void loadModel() throws IOException {
         this.net = ModelSerializer.restoreComputationGraph(netPath);
     }
 }

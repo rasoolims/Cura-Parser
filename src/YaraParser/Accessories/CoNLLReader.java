@@ -133,7 +133,7 @@ public class CoNLLReader {
 
                     if (!stringMap.containsKey(cluster)) {
                         clusterMap.put(word, wi);
-                        wordMap.put(wi,wc++);
+                        wordMap.put(wi, wc++);
                         stringMap.put(cluster, wi++);
                     } else {
                         clusterNum = stringMap.get(cluster);
@@ -186,7 +186,7 @@ public class CoNLLReader {
                 if (lowercased)
                     word = word.toLowerCase();
                 if (wordCount.get(word) > rareMaxWordCount && !wordMap.containsKey(stringMap.get(word))) {
-                    if(wordCount.get(word)==1)
+                    if (wordCount.get(word) == 1)
                         rareWords.add(wc);
                     wordMap.put(stringMap.get(word), wc++);
                 }
@@ -200,7 +200,7 @@ public class CoNLLReader {
         System.out.println("#rare_types: " + rare + " out of " + wordCount.size());
 
         return new IndexMaps(stringMap, labelMap, rootString,
-                wordMap, posMap, depRelationMap, cluster4Map, cluster6Map, clusterMap,rareWords);
+                wordMap, posMap, depRelationMap, cluster4Map, cluster6Map, clusterMap, rareWords);
     }
 
 
@@ -280,14 +280,14 @@ public class CoNLLReader {
 //                        wi = -1;
 //                        oovTypes.add(word);
 //                    }
-                } else if(maps.hasClusters()) {
+                } else if (maps.hasClusters()) {
                     int[] ids = maps.clusterId(word);
-                    if(ids[0]>0){
-                      wi = ids[0];
+                    if (ids[0] > 0) {
+                        wi = ids[0];
                     } else {
                         oovTypes.add(word);
                     }
-                } else{
+                } else {
                     oovTypes.add(word);
                 }
 

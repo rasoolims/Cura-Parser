@@ -14,19 +14,18 @@ import java.util.HashSet;
 
 public class IndexMaps implements Serializable {
     public final String rootString;
+    public final HashSet<Integer> rareWords;
     public String[] revStrings;
     private HashMap<String, Integer> stringMap;
     private HashMap<Integer, Integer> labelMap;
     private HashMap<Integer, Integer> brown4Clusters;
     private HashMap<Integer, Integer> brown6Clusters;
     private HashMap<String, Integer> brownFullClusters;
-
     // for neural net
     private HashMap<Integer, Integer> wordMap;
     private HashMap<Integer, Integer> posMap;
     private HashMap<Integer, Integer> depRelationMap;
     private HashMap<Integer, double[]> embeddingsDictionary;
-    public final HashSet<Integer> rareWords;
 
 
     public IndexMaps(HashMap<String, Integer> stringMap, HashMap<Integer, Integer> labelMap, String rootString,
