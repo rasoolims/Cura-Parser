@@ -15,6 +15,7 @@ import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.conf.distribution.GaussianDistribution;
+import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
 import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.EmbeddingLayer;
@@ -32,8 +33,11 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
 import java.io.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorService;
 import java.util.zip.GZIPOutputStream;
 
 public class StaticNeuralTrainer {
@@ -99,6 +103,7 @@ public class StaticNeuralTrainer {
         ComputationGraph avgNet = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
                 wordDimension, posDimension, depDimension, possibleOutputs, options.dropout,maps);
 
+
         int step = 0;
         int decayStep = (int)(options.decayStep*dataSize);
         decayStep = decayStep==0? 1: decayStep;
@@ -113,8 +118,9 @@ public class StaticNeuralTrainer {
                 INDArray wArr3Before = net.getLayer(38).getParam("W").mul(11);
 
                 // making sure that we don't learn bias for embeddings
-                for(int i=0;i<49;i++)
-                    (net.getLayer(i)).conf().setLearningRateByParam("b",0.0);
+                for (int i = 0; i < 49; i++)
+                    (net.getLayer(i)).conf().setLearningRateByParam("b", 0.0);
+
 
                 net.fit(trainIter.next());
 
@@ -125,23 +131,22 @@ public class StaticNeuralTrainer {
                 step++;
                 double ratio = Math.min(0.9999, (double) step / (9 + step));
                 for (int i = 0; i < 51; i++) {
-                    if(step>1) {
+                    if (step > 1) {
                         avgNet.getLayer(i).getParam("W").muli(ratio).addi(net.getLayer(i).getParam("W").mul(1 - ratio));
                         if (i > 48)
                             avgNet.getLayer(i).getParam("b").muli(ratio).addi(net.getLayer(i).getParam("b").mul(1 - ratio));
-                    }else {
+                    } else {
                         avgNet.getLayer(i).getParam("W").muli(0).addi(net.getLayer(i).getParam("W").mul(1 - ratio));
                         if (i > 48)
                             avgNet.getLayer(i).getParam("b").muli(0).addi(net.getLayer(i).getParam("b").mul(1 - ratio));
                     }
                 }
 
-
                 if (step % decayStep == 0) {
                     for (int i = 0; i < 51; i++) {
                         double lr = (net.getLayer(i)).conf().getLearningRateByParam("W");
                         (net.getLayer(i)).conf().setLearningRateByParam("W", lr * 0.96);
-                        if(i>48) {
+                        if (i > 48) {
                             lr = (net.getLayer(i)).conf().getLearningRateByParam("b");
                             (net.getLayer(i)).conf().setLearningRateByParam("b", lr * 0.96);
                         }
@@ -149,8 +154,16 @@ public class StaticNeuralTrainer {
                     double lr = (net.getLayer(0)).conf().getLearningRateByParam("W");
                     System.out.println("learning rate:" + lr);
                     System.out.println("avg decay:" + Math.min(0.9999, (double) step / (9 + step)));
-                }
 
+                    if (devIter != null) {
+                        System.out.println("\nevaluate of dev");
+                        evaluate(net, devIter, maps, dependencyRelations, options, true, noImprovement);
+
+                        System.out.println("\nevaluate of dev avg");
+                        evaluate(avgNet, devIter, maps, dependencyRelations, options, true, noImprovement);
+                    }
+                }
+                System.gc();
             }
 
 
@@ -167,7 +180,7 @@ public class StaticNeuralTrainer {
                 System.out.println("\nevaluate of dev avg");
                 evaluate(avgNet, devIter, maps, dependencyRelations, options, true, noImprovement);
 
-                if(noImprovement>=10) {
+                if(noImprovement>=20) {
                     System.out.println("\nEarly stop...!");
                     break;
                 }
@@ -322,14 +335,13 @@ public class StaticNeuralTrainer {
         NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true).iterations(1)
                 .learningRate(learningRate).updater(Updater.NESTEROVS)
-                .momentum(0.9).regularization(true).l2(0.0001);
+                .momentum(0.9).regularization(true).l2(0.0001).l1(0);
 
 
         String[] embeddingLayerNames = new String[49];
         for (int e = 0; e < embeddingLayerNames.length; e++) {
             embeddingLayerNames[e] = "L" + (e + 1);
         }
-        double dropoutProb = dropout?0.5:0;
 
         int lIndex = 0;
         int vIndex = 0;
@@ -408,13 +420,14 @@ public class StaticNeuralTrainer {
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++],
                         embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++], embeddingLayerNames[vIndex++])
                 .addLayer("h1", new DenseLayer.Builder().nIn(19 * (wordDimension + posDimension) + 11 * depDimension)
-                        .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0, 0.01)).biasInit(0.2)
+                        .weightInit(WeightInit.DISTRIBUTION).dist(new NormalDistribution(0, 0.01)).biasInit(0.2)
                      //  .dropOut(dropoutProb)
                         .nOut(options.hiddenLayer1Size).activation("relu").build(), "concat")
                 //   .addLayer("h2", new DenseLayer.Builder().nIn(options.hiddenLayer1Size)
                 //          .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0,0.01)).biasInit(0.2)
                 //             .nOut(options.hiddenLayer2Size).activation("relu").build(), "h1")
                 .addLayer("out", new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .weightInit(WeightInit.DISTRIBUTION).dist(new NormalDistribution(0, 0.01)).biasInit(0)
                         .nIn(options.hiddenLayer1Size).nOut(possibleOutputs).activation("softmax").build(), "h1")
                 .setOutputs("out")
                 .backprop(true).build();
@@ -458,8 +471,9 @@ public class StaticNeuralTrainer {
     }
 
     private static EmbeddingLayer embeddingLayerBuilder(int inDim, int outDim) {
+        double stdDev = 1.0 / Math.pow(outDim,0.5);
         return new EmbeddingLayer.Builder().nIn(inDim).nOut(outDim).activation("identity")
-                .weightInit(WeightInit.DISTRIBUTION).dist(new GaussianDistribution(0, 0.01)).biasInit(0.0).build();
+                .weightInit(WeightInit.DISTRIBUTION).dist(new NormalDistribution(0, stdDev)).biasInit(0.0).build();
     }
 
     private static int evaluate(final ComputationGraph net, MultiDataSetIterator iter, final IndexMaps maps,
