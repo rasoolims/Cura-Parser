@@ -8,6 +8,7 @@ import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
+import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.datasets.canova.RecordReaderMultiDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
@@ -22,12 +23,14 @@ import org.deeplearning4j.nn.conf.layers.EmbeddingLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.stepfunctions.NegativeDefaultStepFunction;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.nn.graph.util.ComputationGraphUtil;
 import org.deeplearning4j.nn.params.DefaultParamInitializer;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
+import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
@@ -85,8 +88,8 @@ public class StaticNeuralTrainer {
         dataSize/= batchSize;
 
         Collections.shuffle(trainDataSet);
-        String[] trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", -1);
-        MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
+        String trainFile = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", -1);
+        MultiDataSetIterator trainIter = readMultiDataSetIterator(trainFile, batchSize, possibleOutputs);
 
         MultiDataSetIterator devIter = null;
         ArrayList<GoldConfiguration> devDataSet = null;
@@ -94,15 +97,14 @@ public class StaticNeuralTrainer {
             CoNLLReader devReader = new CoNLLReader(options.devPath);
             devDataSet = devReader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options
                     .lowercase, maps);
-            String[] devFiles = trainer.createStaticTrainingDataForNeuralNet(devDataSet, options.devPath + ".csv", -1);
-            devIter = readMultiDataSetIterator(devFiles, batchSize, possibleOutputs);
+            String devFile = trainer.createStaticTrainingDataForNeuralNet(devDataSet, options.devPath + ".csv", -1);
+            devIter = readMultiDataSetIterator(devFile, batchSize, possibleOutputs);
         }
 
         ComputationGraph net = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
                 wordDimension, posDimension, depDimension, possibleOutputs, options.dropout,maps);
         ComputationGraph avgNet = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
                 wordDimension, posDimension, depDimension, possibleOutputs, options.dropout,maps);
-
 
         int step = 0;
         int decayStep = (int)(options.decayStep*dataSize);
@@ -120,7 +122,6 @@ public class StaticNeuralTrainer {
                 // making sure that we don't learn bias for embeddings
                 for (int i = 0; i < 49; i++)
                     (net.getLayer(i)).conf().setLearningRateByParam("b", 0.0);
-
 
                 net.fit(trainIter.next());
 
@@ -169,9 +170,9 @@ public class StaticNeuralTrainer {
 
             System.out.println("Reshuffling the data!");
             Collections.shuffle(trainDataSet);
-            trainFiles = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", 0.1);
+            trainFile = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", 0.1);
 
-            trainIter = readMultiDataSetIterator(trainFiles, batchSize, possibleOutputs);
+            trainIter = readMultiDataSetIterator(trainFile, batchSize, possibleOutputs);
 
             if (devIter != null) {
                 System.out.println("\nevaluate of dev");
@@ -204,126 +205,63 @@ public class StaticNeuralTrainer {
         writer.close();
     }
 
-    private static MultiDataSetIterator readMultiDataSetIterator(String[] path, int batchSize, int possibleOutputs)
+    private static MultiDataSetIterator readMultiDataSetIterator(String path, int batchSize, int possibleOutputs)
             throws IOException, InterruptedException {
-        int numLinesToSkip = 0;
-        String fileDelimiter = ",";
-        RecordReader[] featuresReader = new RecordReader[path.length - 1];
-        for (int i = 0; i < featuresReader.length; i++) {
-            featuresReader[i] = new CSVRecordReader(numLinesToSkip, fileDelimiter);
-            featuresReader[i].initialize(new FileSplit(new File(path[i])));
-        }
-
-        RecordReader labelsReader = new CSVRecordReader(numLinesToSkip, fileDelimiter);
-        String labelsCsvPath = path[path.length - 1];
-        labelsReader.initialize(new FileSplit(new File(labelsCsvPath)));
-
-        int ind = 0;
+        RecordReader rr = new CSVRecordReader(0, ",");
+        rr.initialize(new FileSplit(new File(path)));
+        int index = 1;
         MultiDataSetIterator iterator = new RecordReaderMultiDataSetIterator.Builder(batchSize)
-                .addReader("s0w", featuresReader[ind++])
-                .addReader("s1w", featuresReader[ind++])
-                .addReader("s2w", featuresReader[ind++])
-                .addReader("s3w", featuresReader[ind++])
-                .addReader("b0w", featuresReader[ind++])
-                .addReader("b1w", featuresReader[ind++])
-                .addReader("b2w", featuresReader[ind++])
-                .addReader("b3w", featuresReader[ind++])
-                .addReader("b0l1w", featuresReader[ind++])
-                .addReader("b0l2w", featuresReader[ind++])
-                .addReader("s0l1w", featuresReader[ind++])
-                .addReader("s0l2w", featuresReader[ind++])
-                .addReader("sr1w", featuresReader[ind++])
-                .addReader("s0r2w", featuresReader[ind++])
-                .addReader("sh0w", featuresReader[ind++])
-                .addReader("sh1w", featuresReader[ind++])
-                .addReader("b0llw", featuresReader[ind++])
-                .addReader("s0llw", featuresReader[ind++])
-                .addReader("s0rrw", featuresReader[ind++])
-
-                .addReader("s0p", featuresReader[ind++])
-                .addReader("s1p", featuresReader[ind++])
-                .addReader("s2p", featuresReader[ind++])
-                .addReader("s3p", featuresReader[ind++])
-                .addReader("b0p", featuresReader[ind++])
-                .addReader("b1p", featuresReader[ind++])
-                .addReader("b2p", featuresReader[ind++])
-                .addReader("b3p", featuresReader[ind++])
-                .addReader("b0l1p", featuresReader[ind++])
-                .addReader("b0l2p", featuresReader[ind++])
-                .addReader("s0l1p", featuresReader[ind++])
-                .addReader("s0l2p", featuresReader[ind++])
-                .addReader("sr1p", featuresReader[ind++])
-                .addReader("s0r2p", featuresReader[ind++])
-                .addReader("sh0p", featuresReader[ind++])
-                .addReader("sh1p", featuresReader[ind++])
-                .addReader("b0llp", featuresReader[ind++])
-                .addReader("s0llp", featuresReader[ind++])
-                .addReader("s0rrp", featuresReader[ind++])
-
-                .addReader("s0l", featuresReader[ind++])
-                .addReader("sh0l", featuresReader[ind++])
-                .addReader("s0l1l", featuresReader[ind++])
-                .addReader("sr1l", featuresReader[ind++])
-                .addReader("s0l2l", featuresReader[ind++])
-                .addReader("s0r2l", featuresReader[ind++])
-                .addReader("b0l1l", featuresReader[ind++])
-                .addReader("b0l2l", featuresReader[ind++])
-                .addReader("b0lll", featuresReader[ind++])
-                .addReader("s0lll", featuresReader[ind++])
-                .addReader("s0rrl", featuresReader[ind++])
-                .addReader("csvLabels", labelsReader)
-                .addInput("s0w")
-                .addInput("s1w")
-                .addInput("s2w")
-                .addInput("s3w")
-                .addInput("b0w")
-                .addInput("b1w")
-                .addInput("b2w")
-                .addInput("b3w")
-                .addInput("b0l1w")
-                .addInput("b0l2w")
-                .addInput("s0l1w")
-                .addInput("s0l2w")
-                .addInput("sr1w")
-                .addInput("s0r2w")
-                .addInput("sh0w")
-                .addInput("sh1w")
-                .addInput("b0llw")
-                .addInput("s0llw")
-                .addInput("s0rrw")
-
-                .addInput("s0p")
-                .addInput("s1p")
-                .addInput("s2p")
-                .addInput("s3p")
-                .addInput("b0p")
-                .addInput("b1p")
-                .addInput("b2p")
-                .addInput("b3p")
-                .addInput("b0l1p")
-                .addInput("b0l2p")
-                .addInput("s0l1p")
-                .addInput("s0l2p")
-                .addInput("sr1p")
-                .addInput("s0r2p")
-                .addInput("sh0p")
-                .addInput("sh1p")
-                .addInput("b0llp")
-                .addInput("s0llp")
-                .addInput("s0rrp")
-
-                .addInput("s0l")
-                .addInput("sh0l")
-                .addInput("s0l1l")
-                .addInput("sr1l")
-                .addInput("s0l2l")
-                .addInput("s0r2l")
-                .addInput("b0l1l")
-                .addInput("b0l2l")
-                .addInput("b0lll")
-                .addInput("s0lll")
-                .addInput("s0rrl")
-                .addOutputOneHot("csvLabels", 0, possibleOutputs)
+                .addReader("fields_labels", rr)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addInput("fields_labels", index, index++)
+                .addOutputOneHot("fields_labels", 0, possibleOutputs)
                 .build();
         return iterator;
     }

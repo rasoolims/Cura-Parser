@@ -63,30 +63,21 @@ public class ArcEagerBeamTrainer {
         this.maps = maps;
     }
 
-    public String[] createStaticTrainingDataForNeuralNet(ArrayList<GoldConfiguration> trainData, String outputPath,
+    public String createStaticTrainingDataForNeuralNet(ArrayList<GoldConfiguration> trainData, String outputPath,
                                                          double dropOutProb) throws Exception {
-        String[] files = new String[50];
-        BufferedWriter[] writer = new BufferedWriter[50];
-        for (int i = 0; i < 49; i++) {
-            files[i] = outputPath + ".feat" + i;
-            writer[i] = new BufferedWriter(new FileWriter(files[i]));
-        }
-
-        files[49] = outputPath + ".lab";
-        writer[49] = new BufferedWriter(new FileWriter(files[49]));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath + ".lab"));
         int dataCount = 0;
-
         for (GoldConfiguration goldConfiguration : trainData) {
             dataCount++;
             if (dataCount % 1000 == 0)
                 System.out.print(dataCount + "...");
             writeTrainingInstanceForSentence(goldConfiguration, writer, dropOutProb);
         }
-        for (int i = 0; i < 50; i++) writer[i].close();
-        return files;
+        writer.close();
+        return outputPath + ".lab";
     }
 
-    private void writeTrainingInstanceForSentence(GoldConfiguration goldConfiguration, BufferedWriter[] writer, double
+    private void writeTrainingInstanceForSentence(GoldConfiguration goldConfiguration, BufferedWriter writer, double
             dropoutProb) throws Exception {
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
@@ -134,14 +125,15 @@ public class ArcEagerBeamTrainer {
                 action -= 1;
 
             StringBuilder outputBuilder = new StringBuilder();
+            outputBuilder.append(action);
             for (int i = 0; i < baseFeatures.length; i++) {
                 if (i < 19 && maps.rareWords.contains(baseFeatures[i]))
                     if (randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)
                         baseFeatures[i] = 0;
-                writer[i].write(baseFeatures[i] + "\n");
+                outputBuilder.append(","+baseFeatures[i]);
             }
             outputBuilder.append("\n");
-            writer[writer.length - 1].write(action + "\n");
+            writer.write(outputBuilder.toString());
             beam = new ArrayList<Configuration>(options.beamWidth);
             beam.add(bestScoringOracle);
         }
