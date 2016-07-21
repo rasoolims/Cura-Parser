@@ -116,7 +116,7 @@ public class MLPNetwork {
             hidden[i] = Math.max(0, hidden[i]);
         }
 
-        double[] probs = new double[softmaxLayer.length];
+        double[] probs = new double[softmaxLayerBias.length];
         double sum = 0;
         for (int i = 0; i < probs.length; i++) {
             for (int j = 0; j < hidden.length; j++) {
