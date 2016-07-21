@@ -12,7 +12,6 @@ import org.deeplearning4j.datasets.canova.RecordReaderMultiDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
-import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
@@ -69,7 +68,6 @@ public class StaticNeuralTrainer {
         int vocab3Size = maps.relSize() + 2;
 
         double learningRate = options.learningRate;
-        // Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
         int batchSize = options.batchSize;
 
         CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -95,15 +93,16 @@ public class StaticNeuralTrainer {
         }
 
         ComputationGraph net = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
-                wordDimension, posDimension, depDimension, possibleOutputs, options.dropout, maps);
+                wordDimension, posDimension, depDimension, possibleOutputs, maps);
         ComputationGraph avgNet = constructNetwork(options, learningRate, vocab1Size, vocab2Size, vocab3Size,
-                wordDimension, posDimension, depDimension, possibleOutputs, options.dropout, maps);
+                wordDimension, posDimension, depDimension, possibleOutputs, maps);
 
         int step = 0;
         int decayStep = (int) (options.decayStep * dataSize);
         decayStep = decayStep == 0 ? 1 : decayStep;
         System.out.println("decay step is " + decayStep);
         int noImprovement = 0;
+
         for (int iter = 0; iter < options.trainingIter; iter++) {
             System.out.println(iter + "th iteration");
             trainIter.reset();
@@ -151,35 +150,21 @@ public class StaticNeuralTrainer {
                     System.out.println("avg decay:" + Math.min(0.9999, (double) step / (9 + step)));
 
                     if (devIter != null) {
-                        System.out.println("\nevaluate of dev");
-                        evaluate(net, devIter, maps, dependencyRelations, options, true, noImprovement);
-
                         System.out.println("\nevaluate of dev avg");
-                        evaluate(avgNet, devIter, maps, dependencyRelations, options, true, noImprovement);
+                        noImprovement = evaluate(avgNet, devIter, maps, dependencyRelations, options, true,
+                                noImprovement);
+                        if (noImprovement >= 10) {
+                            System.out.println("\nEarly stop...!");
+                            break;
+                        }
                     }
                 }
-                System.gc();
             }
-
-
             System.out.println("Reshuffling the data!");
             Collections.shuffle(trainDataSet);
             trainFile = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", 0.1);
-
             trainIter = readMultiDataSetIterator(trainFile, batchSize, possibleOutputs);
-
-            if (devIter != null) {
-                System.out.println("\nevaluate of dev");
-                noImprovement = evaluate(net, devIter, maps, dependencyRelations, options, true, noImprovement);
-
-                System.out.println("\nevaluate of dev avg");
-                evaluate(avgNet, devIter, maps, dependencyRelations, options, true, noImprovement);
-
-                if (noImprovement >= 20) {
-                    System.out.println("\nEarly stop...!");
-                    break;
-                }
-            }
+            System.gc();
         }
 
         if (devIter == null) {
@@ -263,8 +248,8 @@ public class StaticNeuralTrainer {
 
     private static ComputationGraph constructNetwork(Options options, double learningRate, int vocab1Size,
                                                      int vocab2Size, int vocab3Size, int wordDimension,
-                                                     int posDimension, int depDimension, int possibleOutputs, boolean
-                                                             dropout, IndexMaps maps) {
+                                                     int posDimension, int depDimension, int possibleOutputs,
+                                                     IndexMaps maps) {
         NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).iterations(1)
                 .learningRate(learningRate).updater(Updater.NESTEROVS)
