@@ -15,6 +15,7 @@ import java.util.HashSet;
 public class IndexMaps implements Serializable {
     public final String rootString;
     public final HashSet<Integer> rareWords;
+    public final HashMap<Integer, Integer> preComputeMap;
     public String[] revStrings;
     private HashMap<String, Integer> stringMap;
     private HashMap<Integer, Integer> labelMap;
@@ -32,7 +33,8 @@ public class IndexMaps implements Serializable {
                      HashMap<Integer, Integer> wordMap, HashMap<Integer, Integer> posMap, HashMap<Integer, Integer>
                              depRelationMap,
                      HashMap<Integer, Integer> brown4Clusters, HashMap<Integer, Integer> brown6Clusters,
-                     HashMap<String, Integer> brownFullClusters, HashSet<Integer> rareWords) {
+                     HashMap<String, Integer> brownFullClusters, HashSet<Integer> rareWords, HashMap<Integer,
+            Integer> preComputeMap) {
         this.stringMap = stringMap;
         this.wordMap = wordMap;
         this.posMap = posMap;
@@ -51,6 +53,7 @@ public class IndexMaps implements Serializable {
         this.rootString = rootString;
         embeddingsDictionary = new HashMap<>();
         this.rareWords = rareWords;
+        this.preComputeMap = preComputeMap;
     }
 
     public Sentence makeSentence(String[] words, String[] posTags, boolean rootFirst, boolean lowerCased) {

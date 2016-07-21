@@ -20,19 +20,16 @@ import java.util.ArrayList;
  * Manual MLP model
  */
 public class MLPNetwork {
-    double[][] wordEmbeddings;
-    double[][] posEmbeddings;
-    double[][] labelEmbeddings;
-
-    double[][] hiddenLayer;
-    double[] hiddenLayerBias;
-
-    double[][] softmaxLayer;
-    double[] softmaxLayerBias;
-
     final public IndexMaps maps;
     final public Options options;
     final public ArrayList<Integer> dependencyLabels;
+    double[][] wordEmbeddings;
+    double[][] posEmbeddings;
+    double[][] labelEmbeddings;
+    double[][] hiddenLayer;
+    double[] hiddenLayerBias;
+    double[][] softmaxLayer;
+    double[] softmaxLayerBias;
 
     public MLPNetwork(final NNInfStruct nnInfStruct) {
 

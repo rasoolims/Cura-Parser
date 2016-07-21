@@ -21,7 +21,6 @@ import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.BufferedReader;
@@ -138,7 +137,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
 
             double[] logVals = new double[2 * (1 + dependencyRelations.size())];
-            if(nn instanceof ComputationGraph) {
+            if (nn instanceof ComputationGraph) {
                 INDArray[] features = new INDArray[baseFeatures.length];
                 for (int i = 0; i < baseFeatures.length; i++) {
                     INDArray inEmbedding = Nd4j.create(1, 1);
@@ -146,12 +145,12 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
                     features[i] = inEmbedding;
                 }
-                INDArray predicted = ((ComputationGraph)nn).output(false, features)[0];
+                INDArray predicted = ((ComputationGraph) nn).output(false, features)[0];
                 for (int i = 0; i < logVals.length; i++) {
                     logVals[i] = Math.log(predicted.getDouble(i));
                 }
-            } else{
-                logVals = ((MLPNetwork)nn).output(baseFeatures);
+            } else {
+                logVals = ((MLPNetwork) nn).output(baseFeatures);
             }
 
             State currentState = configuration.state;
@@ -218,10 +217,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             throws Exception {
 
 
-        Options options = (nnInf instanceof  NNInfStruct)?  ((NNInfStruct)nnInf).options:((MLPNetwork)nnInf).options;
-        IndexMaps maps =   (nnInf instanceof  NNInfStruct)?  ((NNInfStruct)nnInf).maps:((MLPNetwork)nnInf).maps;
-        ArrayList<Integer> dependencyLabels =   (nnInf instanceof  NNInfStruct)?  ((NNInfStruct)nnInf)
-                .dependencyLabels:((MLPNetwork)nnInf).dependencyLabels;
+        Options options = (nnInf instanceof NNInfStruct) ? ((NNInfStruct) nnInf).options : ((MLPNetwork) nnInf).options;
+        IndexMaps maps = (nnInf instanceof NNInfStruct) ? ((NNInfStruct) nnInf).maps : ((MLPNetwork) nnInf).maps;
+        ArrayList<Integer> dependencyLabels = (nnInf instanceof NNInfStruct) ? ((NNInfStruct) nnInf)
+                .dependencyLabels : ((MLPNetwork) nnInf).dependencyLabels;
         CoNLLReader reader = new CoNLLReader(inputFile);
         boolean addScore = false;
         if (scorePath.trim().length() > 0)
@@ -251,7 +250,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 // beamWidth, numOfThreads);
                 //  else
 
-                bestParse = parseNeural((nnInf instanceof  NNInfStruct)? ((NNInfStruct)nnInf).net:nnInf,
+                bestParse = parseNeural((nnInf instanceof NNInfStruct) ? ((NNInfStruct) nnInf).net : nnInf,
                         goldConfiguration.getSentence(), options.rootFirst, maps, dependencyLabels, beamWidth);
 
                 int[] words = goldConfiguration.getSentence().getWords();
