@@ -8,8 +8,13 @@ package YaraParser.Learning;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
+import YaraParser.Accessories.Options;
+import YaraParser.Structures.IndexMaps;
+import YaraParser.Structures.NNInfStruct;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.nd4j.linalg.api.ndarray.INDArray;
+
+import java.util.ArrayList;
 
 /**
  * Manual MLP model
@@ -25,7 +30,17 @@ public class MLPNetwork {
     double[][] softmaxLayer;
     double[] softmaxLayerBias;
 
-    public MLPNetwork(final ComputationGraph net) {
+    final public IndexMaps maps;
+    final public Options options;
+    final public ArrayList<Integer> dependencyLabels;
+
+    public MLPNetwork(final NNInfStruct nnInfStruct) {
+
+        ComputationGraph net = nnInfStruct.net;
+        dependencyLabels = nnInfStruct.dependencyLabels;
+        options = nnInfStruct.options;
+        maps = nnInfStruct.maps;
+
         INDArray wEArr = net.getLayer(0).getParam("W");
         wordEmbeddings = new double[wEArr.rows()][wEArr.columns()];
         for (int i = 0; i < wordEmbeddings.length; i++) {
