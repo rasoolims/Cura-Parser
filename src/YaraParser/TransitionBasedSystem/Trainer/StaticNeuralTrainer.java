@@ -407,59 +407,6 @@ public class StaticNeuralTrainer {
             INDArray labels = t.getLabels()[0];
             INDArray predicted = net.output(false, features)[0];
             evaluation.eval(labels, predicted);
-
-            /**
-             * get actual vals
-             */
-            /**
-             int[] feats = new int[features.length];
-             for(int i=0;i<feats.length;i++)
-             feats[i]=features[i].getInt(0);
-
-             double[] hidden = new double[H_W[0].length];
-
-             int offset = 0;
-             for(int j=0;j<feats.length;j++){
-             int tok = feats[j];
-             double[][] embedding = null;
-             if(j<19)
-             embedding = E_W;
-             else if(j<38)
-             embedding = E_P;
-             else embedding = E_L;
-
-             for(int i=0;i<hidden.length;i++){
-             for(int k=0;k<embedding[0].length;k++){
-             hidden[i]+= H_W[offset+k][i]*embedding[tok][k];
-             }
-             }
-             offset+= embedding[0].length;
-             }
-
-             for(int i=0;i<hidden.length;i++){
-             hidden[i]+= H_B[i];
-             //relu
-             hidden[i] = Math.max(0,hidden[i]);
-             }
-
-             double[] probs = new double[S_B.length];
-             double sum = 0;
-             for(int i=0;i<probs.length;i++){
-             for(int j=0;j<hidden.length;j++){
-             probs[i]+=S_W[j][i]* hidden[j];
-             }
-             probs[i]+= S_B[i];
-             probs[i] = Math.exp(probs[i]);
-             sum+= probs[i];
-             }
-
-             for(int i=0;i<probs.length;i++){
-             probs[i]/=sum;
-             }
-             double[] nd4jP = new double[predicted.columns()];
-             for(int i=0;i<nd4jP.length;i++)
-             nd4jP[i]=predicted.getColumn(i).getDouble(0);
-             **/
         }
         System.out.println("acc: " + evaluation.accuracy());
         System.out.println("precision: " + evaluation.precision());
