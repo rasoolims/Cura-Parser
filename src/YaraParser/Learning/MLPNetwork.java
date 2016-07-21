@@ -133,6 +133,7 @@ public class MLPNetwork {
 
         for (int i = 0; i < probs.length; i++) {
             probs[i] /= sum;
+            probs[i] = Math.log(probs[i]);
         }
         return probs;
     }
