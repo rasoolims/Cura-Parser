@@ -12,6 +12,7 @@ import org.deeplearning4j.datasets.canova.RecordReaderMultiDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
+import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
@@ -265,7 +266,7 @@ public class StaticNeuralTrainer {
                                                      int posDimension, int depDimension, int possibleOutputs, boolean
                                                              dropout, IndexMaps maps) {
         NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
-                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).miniBatch(true).iterations(1)
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).iterations(1)
                 .learningRate(learningRate).updater(Updater.NESTEROVS)
                 .momentum(0.9).regularization(true).l2(0.0001).l1(0);
 
