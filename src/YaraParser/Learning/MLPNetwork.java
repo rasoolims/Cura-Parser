@@ -89,11 +89,7 @@ public class MLPNetwork {
         }
     }
 
-    public double[] output(final INDArray[] features) {
-        int[] feats = new int[features.length];
-        for (int i = 0; i < feats.length; i++)
-            feats[i] = features[i].getInt(0);
-
+    public double[] output(final int[] feats) {
         double[] hidden = new double[hiddenLayer[0].length];
 
         int offset = 0;
