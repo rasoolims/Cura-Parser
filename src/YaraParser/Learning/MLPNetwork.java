@@ -25,51 +25,51 @@ public class MLPNetwork {
     double[][] softmaxLayer;
     double[] softmaxLayerBias;
 
-    public MLPNetwork(final ComputationGraph net){
+    public MLPNetwork(final ComputationGraph net) {
         INDArray wEArr = net.getLayer(0).getParam("W");
         wordEmbeddings = new double[wEArr.rows()][wEArr.columns()];
-        for(int i = 0; i< wordEmbeddings.length; i++){
-            for(int j = 0; j< wordEmbeddings[i].length; j++)
+        for (int i = 0; i < wordEmbeddings.length; i++) {
+            for (int j = 0; j < wordEmbeddings[i].length; j++)
                 wordEmbeddings[i][j] = wEArr.getRow(i).getColumn(j).getDouble(0);
         }
 
-       INDArray pEArr = net.getLayer(20).getParam("W");
+        INDArray pEArr = net.getLayer(20).getParam("W");
         posEmbeddings = new double[pEArr.rows()][pEArr.columns()];
-        for(int i=0;i<posEmbeddings.length;i++){
-            for(int j=0;j<posEmbeddings[i].length;j++)
+        for (int i = 0; i < posEmbeddings.length; i++) {
+            for (int j = 0; j < posEmbeddings[i].length; j++)
                 posEmbeddings[i][j] = pEArr.getRow(i).getColumn(j).getDouble(0);
         }
 
         INDArray lEArr = net.getLayer(39).getParam("W");
         labelEmbeddings = new double[lEArr.rows()][lEArr.columns()];
-        for(int i=0;i<labelEmbeddings.length;i++){
-            for(int j=0;j<labelEmbeddings[i].length;j++)
+        for (int i = 0; i < labelEmbeddings.length; i++) {
+            for (int j = 0; j < labelEmbeddings[i].length; j++)
                 labelEmbeddings[i][j] = lEArr.getRow(i).getColumn(j).getDouble(0);
         }
 
         INDArray hW = net.getLayer(49).getParam("W");
         hiddenLayer = new double[hW.rows()][hW.columns()];
-        for(int i=0;i<hiddenLayer.length;i++){
-            for(int j=0;j<hiddenLayer[i].length;j++)
+        for (int i = 0; i < hiddenLayer.length; i++) {
+            for (int j = 0; j < hiddenLayer[i].length; j++)
                 hiddenLayer[i][j] = hW.getRow(i).getColumn(j).getDouble(0);
         }
 
         INDArray hB = net.getLayer(49).getParam("b");
         hiddenLayerBias = new double[hB.columns()];
-        for(int i=0;i<hiddenLayerBias.length;i++){
+        for (int i = 0; i < hiddenLayerBias.length; i++) {
             hiddenLayerBias[i] = hB.getColumn(i).getDouble(0);
         }
 
         INDArray sW = net.getLayer(50).getParam("W");
-        softmaxLayer= new double[sW.rows()][sW.columns()];
-        for(int i=0;i<softmaxLayer.length;i++){
-            for(int j=0;j<softmaxLayer[i].length;j++)
+        softmaxLayer = new double[sW.rows()][sW.columns()];
+        for (int i = 0; i < softmaxLayer.length; i++) {
+            for (int j = 0; j < softmaxLayer[i].length; j++)
                 softmaxLayer[i][j] = sW.getRow(i).getColumn(j).getDouble(0);
         }
 
         INDArray sB = net.getLayer(50).getParam("b");
         softmaxLayerBias = new double[sB.columns()];
-        for(int i=0;i<softmaxLayerBias.length;i++){
+        for (int i = 0; i < softmaxLayerBias.length; i++) {
             softmaxLayerBias[i] = sB.getColumn(i).getDouble(0);
         }
     }
