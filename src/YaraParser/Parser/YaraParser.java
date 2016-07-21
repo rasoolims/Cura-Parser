@@ -9,6 +9,7 @@ import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Evaluator;
 import YaraParser.Accessories.Options;
 import YaraParser.Learning.AveragedPerceptron;
+import YaraParser.Learning.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
 import YaraParser.Structures.NNInfStruct;
@@ -37,7 +38,7 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.trainingIter = 100;
+            options.trainingIter = 10;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
         }
@@ -61,6 +62,15 @@ public class YaraParser {
                 KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.inputFile, "/tmp/output",
                         options.beamWidth, 1, false, "");
                 Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
+
+                MLPNetwork mlpNetwork = new MLPNetwork(nnInfStruct);
+                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, "/tmp/output",
+                        options.beamWidth, 1, false, "");
+                Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);
+                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.inputFile, "/tmp/output",
+                        options.beamWidth, 1, false, "");
+                Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
+
             } else if (options.parseTaggedFile || options.parseConllFile || options.parsePartialConll) {
                 parseNN(options);
                 // parse(options);

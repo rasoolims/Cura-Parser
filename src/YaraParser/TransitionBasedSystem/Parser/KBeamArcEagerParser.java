@@ -9,6 +9,7 @@ import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Options;
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.AveragedPerceptron;
+import YaraParser.Learning.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
 import YaraParser.Structures.NNInfStruct;
@@ -72,7 +73,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
     }
 
-    public static Configuration parseNeural(final ComputationGraph nn, Sentence sentence, boolean rootFirst,
+    public static Configuration parseNeural(final Object nn, Sentence sentence, boolean rootFirst,
                                             IndexMaps maps, ArrayList<Integer> dependencyRelations, int beamWidth)
             throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
@@ -129,26 +130,28 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         return bestConfiguration;
     }
 
-    private static void parseNeuralWithOneThread(ComputationGraph nn, ArrayList<Configuration> beam,
+    private static void parseNeuralWithOneThread(final Object nn, ArrayList<Configuration> beam,
                                                  TreeSet<BeamElement> beamPreserver, int beamWidth, IndexMaps maps,
                                                  ArrayList<Integer> dependencyRelations) throws Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
 
-            INDArray[] features = new INDArray[baseFeatures.length];
-            for (int i = 0; i < baseFeatures.length; i++) {
-                INDArray inEmbedding = Nd4j.create(1, 1);
-                inEmbedding.putScalar(0, 0, baseFeatures[i]);
-
-                features[i] = inEmbedding;
-            }
-            MultiDataSet t = new org.nd4j.linalg.dataset.MultiDataSet(features, null);
-
-            INDArray predicted = nn.output(false, features)[0];
             double[] logVals = new double[2 * (1 + dependencyRelations.size())];
-            for (int i = 0; i < logVals.length; i++) {
-                logVals[i] = Math.log(predicted.getDouble(i));
+            if(nn instanceof ComputationGraph) {
+                INDArray[] features = new INDArray[baseFeatures.length];
+                for (int i = 0; i < baseFeatures.length; i++) {
+                    INDArray inEmbedding = Nd4j.create(1, 1);
+                    inEmbedding.putScalar(0, 0, baseFeatures[i]);
+
+                    features[i] = inEmbedding;
+                }
+                INDArray predicted = ((ComputationGraph)nn).output(false, features)[0];
+                for (int i = 0; i < logVals.length; i++) {
+                    logVals[i] = Math.log(predicted.getDouble(i));
+                }
+            } else{
+                logVals = ((MLPNetwork)nn).output(baseFeatures);
             }
 
             State currentState = configuration.state;
@@ -210,10 +213,15 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
     }
 
-    public static void parseNNConllFileNoParallel(final NNInfStruct nnInfStruct, String inputFile, String outputFile,
+    public static void parseNNConllFileNoParallel(final Object nnInf, String inputFile, String outputFile,
                                                   int beamWidth, int numOfThreads, boolean partial, String scorePath)
             throws Exception {
-        Options options = nnInfStruct.options;
+
+
+        Options options = (nnInf instanceof  NNInfStruct)?  ((NNInfStruct)nnInf).options:((MLPNetwork)nnInf).options;
+        IndexMaps maps =   (nnInf instanceof  NNInfStruct)?  ((NNInfStruct)nnInf).maps:((MLPNetwork)nnInf).maps;
+        ArrayList<Integer> dependencyLabels =   (nnInf instanceof  NNInfStruct)?  ((NNInfStruct)nnInf)
+                .dependencyLabels:((MLPNetwork)nnInf).dependencyLabels;
         CoNLLReader reader = new CoNLLReader(inputFile);
         boolean addScore = false;
         if (scorePath.trim().length() > 0)
@@ -228,7 +236,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
         while (true) {
             ArrayList<GoldConfiguration> data = reader.readData(15000, true, options.labeled, options.rootFirst,
-                    options.lowercase, nnInfStruct.maps);
+                    options.lowercase, maps);
             size += data.size();
             if (data.size() == 0)
                 break;
@@ -242,8 +250,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 //    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst,
                 // beamWidth, numOfThreads);
                 //  else
-                bestParse = parseNeural(nnInfStruct.net, goldConfiguration.getSentence(), options.rootFirst,
-                        nnInfStruct.maps, nnInfStruct.dependencyLabels, beamWidth);
+
+                bestParse = parseNeural((nnInf instanceof  NNInfStruct)? ((NNInfStruct)nnInf).net:nnInf,
+                        goldConfiguration.getSentence(), options.rootFirst, maps, dependencyLabels, beamWidth);
 
                 int[] words = goldConfiguration.getSentence().getWords();
                 allArcs += words.length - 1;
@@ -262,7 +271,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (head == bestParse.state.rootIndex)
                         head = 0;
 
-                    String label = head == 0 ? nnInfStruct.maps.rootString : nnInfStruct.maps.revStrings[dep];
+                    String label = head == 0 ? maps.rootString : maps.revStrings[dep];
                     String output = head + "\t" + label + "\n";
                     finalOutput.append(output);
                 }
