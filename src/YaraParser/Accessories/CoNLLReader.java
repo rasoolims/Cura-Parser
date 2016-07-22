@@ -222,7 +222,7 @@ public class CoNLLReader {
             for (int id : ids) {
                 if (id > 2)
                     preComputeMap.put(id, wCount++);
-                if (wCount >= 10000)
+                if (wCount >= 1000)
                     break;
             }
         }

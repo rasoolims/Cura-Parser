@@ -55,15 +55,28 @@ public class YaraParser {
                 ObjectInput reader = new ObjectInputStream(gz);
                 NNInfStruct nnInfStruct = (NNInfStruct) reader.readObject();
                 nnInfStruct.loadModel();
-
                 KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.devPath, "/tmp/output",
                         options.beamWidth, 1, false, "");
                 Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);
                 KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.inputFile, "/tmp/output",
                         options.beamWidth, 1, false, "");
                 Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
-
                 MLPNetwork mlpNetwork = new MLPNetwork(nnInfStruct);
+                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, "/tmp/output",
+                        options.beamWidth, 1, false, "");
+                Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);
+                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.inputFile, "/tmp/output",
+                        options.beamWidth, 1, false, "");
+                Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
+                mlpNetwork.preCompute();
+                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, "/tmp/output",
+                        options.beamWidth, 1, false, "");
+                Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);
+                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.inputFile, "/tmp/output",
+                        options.beamWidth, 1, false, "");
+                Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
+
+                mlpNetwork.makeNull();
                 KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, "/tmp/output",
                         options.beamWidth, 1, false, "");
                 Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);

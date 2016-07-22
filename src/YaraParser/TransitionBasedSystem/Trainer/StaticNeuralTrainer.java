@@ -153,10 +153,7 @@ public class StaticNeuralTrainer {
                         System.out.println("\nevaluate of dev avg");
                         noImprovement = evaluate(avgNet, devIter, maps, dependencyRelations, options, true,
                                 noImprovement);
-                        if (noImprovement >= 10) {
-                            System.out.println("\nEarly stop...!");
-                            break;
-                        }
+
                     }
                 }
             }
@@ -165,6 +162,11 @@ public class StaticNeuralTrainer {
             trainFile = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", 0.1);
             trainIter = readMultiDataSetIterator(trainFile, batchSize, possibleOutputs);
             System.gc();
+
+            if (noImprovement >= 10) {
+                System.out.println("\nEarly stop...!");
+                break;
+            }
         }
 
         if (devIter == null) {
