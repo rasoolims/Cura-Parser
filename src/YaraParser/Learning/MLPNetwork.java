@@ -14,12 +14,13 @@ import YaraParser.Structures.NNInfStruct;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * Manual MLP model
  */
-public class MLPNetwork {
+public class MLPNetwork implements Serializable {
     final public IndexMaps maps;
     final public Options options;
     final public ArrayList<Integer> dependencyLabels;

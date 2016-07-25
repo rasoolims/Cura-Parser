@@ -1,15 +1,18 @@
 package YaraParser.TransitionBasedSystem.Trainer;
 
 import YaraParser.Accessories.CoNLLReader;
+import YaraParser.Accessories.Evaluator;
 import YaraParser.Accessories.Options;
+import YaraParser.Accessories.Pair;
+import YaraParser.Learning.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.NNInfStruct;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
+import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderMultiDataSetIterator;
-import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -23,9 +26,7 @@ import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.params.DefaultParamInitializer;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
@@ -123,18 +124,12 @@ public class StaticNeuralTrainer {
 
                 step++;
                 double ratio = Math.min(0.9999, (double) step / (9 + step));
-                for (int i = 0; i < 51; i++) {
-                    if (step > 1) {
-                        avgNet.getLayer(i).getParam("W").muli(ratio).addi(net.getLayer(i).getParam("W").mul(1 - ratio));
-                        if (i > 48)
-                            avgNet.getLayer(i).getParam("b").muli(ratio).addi(net.getLayer(i).getParam("b").mul(1 -
-                                    ratio));
-                    } else {
-                        avgNet.getLayer(i).getParam("W").muli(0).addi(net.getLayer(i).getParam("W").mul(1 - ratio));
-                        if (i > 48)
-                            avgNet.getLayer(i).getParam("b").muli(0).addi(net.getLayer(i).getParam("b").mul(1 - ratio));
-                    }
-                }
+
+                averageLayers(avgNet, net, step, ratio, 0, 19);
+                averageLayers(avgNet, net, step, ratio, 19, 38);
+                averageLayers(avgNet, net, step, ratio, 38, 49);
+                averageLayers(avgNet, net, step, ratio, 49, 50);
+                averageLayers(avgNet, net, step, ratio, 50, 51);
 
                 if (step % decayStep == 0) {
                     for (int i = 0; i < 51; i++) {
@@ -151,12 +146,12 @@ public class StaticNeuralTrainer {
 
                     if (devIter != null) {
                         System.out.println("\nevaluate of dev avg");
-                        noImprovement = evaluate(avgNet, devIter, maps, dependencyRelations, options, true,
-                                noImprovement);
+                        noImprovement = evaluate(avgNet, maps, dependencyRelations, options, true, noImprovement);
 
                     }
                 }
             }
+
             System.out.println("Reshuffling the data!");
             Collections.shuffle(trainDataSet);
             trainFile = trainer.createStaticTrainingDataForNeuralNet(trainDataSet, options.inputFile + ".csv", 0.1);
@@ -171,19 +166,20 @@ public class StaticNeuralTrainer {
 
         if (devIter == null) {
             System.out.println("Saving the new model for the final iteration ");
-            saveModel(maps, dependencyRelations, options, net);
+            MLPNetwork mlpNetwork = new MLPNetwork(new NNInfStruct(net, dependencyRelations.size(), maps,
+                    dependencyRelations,
+                    options));
+            mlpNetwork.preCompute();
+            saveModel(mlpNetwork, options.modelFile);
         }
     }
 
-    private static void saveModel(IndexMaps maps, ArrayList<Integer> dependencyRelations, Options options,
-                                  ComputationGraph net) throws IOException {
-        FileOutputStream fos = new FileOutputStream(options.modelFile);
+    private static void saveModel(MLPNetwork network, String modelPath) throws IOException {
+        network.preCompute();
+        FileOutputStream fos = new FileOutputStream(modelPath);
         GZIPOutputStream gz = new GZIPOutputStream(fos);
         ObjectOutput writer = new ObjectOutputStream(gz);
-        ModelSerializer.writeModel(net, options.modelFile + ".net", false);
-        writer.writeObject(new NNInfStruct(options.modelFile + ".net", dependencyRelations.size(), maps,
-                dependencyRelations, options));
-        writer.writeObject(net);
+        writer.writeObject(network);
         writer.close();
     }
 
@@ -396,32 +392,27 @@ public class StaticNeuralTrainer {
                 .weightInit(WeightInit.DISTRIBUTION).dist(new NormalDistribution(0, stdDev)).biasInit(0.0).build();
     }
 
-    private static int evaluate(final ComputationGraph net, MultiDataSetIterator iter, final IndexMaps maps,
+    private static int evaluate(final ComputationGraph net, final IndexMaps maps,
                                 final ArrayList<Integer> dependencyRelations, final Options options, boolean save,
                                 int noImprovement)
             throws Exception {
-        iter.reset();
-        Evaluation evaluation = new Evaluation(2 * (dependencyRelations.size() + 1));
+        MLPNetwork mlpNetwork = new MLPNetwork(new NNInfStruct(net, dependencyRelations.size(), maps,
+                dependencyRelations,
+                options));
+        mlpNetwork.preCompute();
 
-        while (iter.hasNext()) {
-            MultiDataSet t = iter.next();
-            INDArray[] features = t.getFeatures();
-            INDArray labels = t.getLabels()[0];
-            INDArray predicted = net.output(false, features)[0];
-            evaluation.eval(labels, predicted);
-        }
-        System.out.println("acc: " + evaluation.accuracy());
-        System.out.println("precision: " + evaluation.precision());
-        System.out.println("recall: " + evaluation.recall());
-        System.out.println("f1 score: " + evaluation.f1() + "\n");
+        KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile + ".tmp",
+                options.beamWidth, 1, false, "");
+        Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options
+                .punctuations);
 
         if (save) {
-            double acc = evaluation.accuracy();
+            double acc = eval.first;
             if (acc > bestAcc) {
                 bestAcc = acc;
                 noImprovement = 0;
                 System.out.println("Saving the new model for iteration \n\n");
-                saveModel(maps, dependencyRelations, options, net);
+                saveModel(mlpNetwork, options.modelFile);
             } else {
                 noImprovement++;
             }
@@ -437,6 +428,27 @@ public class StaticNeuralTrainer {
         wArr = wArr.subi(wArrBefore);
         for (int i = s; i < e; i++) {
             net.getLayer(i).setParam("W", wArr);
+        }
+    }
+
+    private static void averageLayers(ComputationGraph avgNet, ComputationGraph net, int step, double ratio, int s,
+                                      int e) {
+        if (step > 1) {
+            avgNet.getLayer(s).getParam("W").muli(ratio).addi(net.getLayer(s).getParam("W").mul(1 - ratio));
+            if (s > 48)
+                avgNet.getLayer(s).getParam("b").muli(ratio).addi(net.getLayer(s).getParam("b").mul(1 -
+                        ratio));
+        } else {
+            avgNet.getLayer(s).getParam("W").muli(0).addi(net.getLayer(s).getParam("W").mul(1 - ratio));
+            if (s > 48)
+                avgNet.getLayer(s).getParam("b").muli(0).addi(net.getLayer(s).getParam("b").mul(1 - ratio));
+        }
+
+        // all other layers
+        for (int i = s + 1; i < e; i++) {
+            avgNet.getLayer(i).setParam("W", avgNet.getLayer(s).getParam("W"));
+            if (s > 48)
+                avgNet.getLayer(i).setParam("b", avgNet.getLayer(s).getParam("b"));
         }
     }
 }

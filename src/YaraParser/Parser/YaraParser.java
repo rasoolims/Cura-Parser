@@ -12,7 +12,6 @@ import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Learning.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
-import YaraParser.Structures.NNInfStruct;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
@@ -38,7 +37,7 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.trainingIter = 10;
+            options.trainingIter = 100;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
         }
@@ -50,40 +49,6 @@ public class YaraParser {
             if (options.train) {
                 // train(options);
                 createTrainData(options);
-                FileInputStream fos = new FileInputStream(options.modelFile);
-                GZIPInputStream gz = new GZIPInputStream(fos);
-                ObjectInput reader = new ObjectInputStream(gz);
-                NNInfStruct nnInfStruct = (NNInfStruct) reader.readObject();
-                nnInfStruct.loadModel();
-                KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.devPath, "/tmp/output",
-                        options.beamWidth, 1, false, "");
-                Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);
-                KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.inputFile, "/tmp/output",
-                        options.beamWidth, 1, false, "");
-                Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
-                MLPNetwork mlpNetwork = new MLPNetwork(nnInfStruct);
-                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, "/tmp/output",
-                        options.beamWidth, 1, false, "");
-                Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);
-                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.inputFile, "/tmp/output",
-                        options.beamWidth, 1, false, "");
-                Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
-                mlpNetwork.preCompute();
-                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, "/tmp/output",
-                        options.beamWidth, 1, false, "");
-                Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);
-                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.inputFile, "/tmp/output",
-                        options.beamWidth, 1, false, "");
-                Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
-
-                mlpNetwork.makeNull();
-                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, "/tmp/output",
-                        options.beamWidth, 1, false, "");
-                Evaluator.evaluate(options.devPath, "/tmp/output", options.punctuations);
-                KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.inputFile, "/tmp/output",
-                        options.beamWidth, 1, false, "");
-                Evaluator.evaluate(options.inputFile, "/tmp/output", options.punctuations);
-
             } else if (options.parseTaggedFile || options.parseConllFile || options.parsePartialConll) {
                 parseNN(options);
                 // parse(options);
@@ -142,9 +107,8 @@ public class YaraParser {
         FileInputStream fos = new FileInputStream(options.modelFile);
         GZIPInputStream gz = new GZIPInputStream(fos);
         ObjectInput reader = new ObjectInputStream(gz);
-        NNInfStruct nnInfStruct = (NNInfStruct) reader.readObject();
-        nnInfStruct.loadModel();
-        KBeamArcEagerParser.parseNNConllFileNoParallel(nnInfStruct, options.inputFile, options.outputFile,
+        MLPNetwork mlpNetwork = (MLPNetwork) reader.readObject();
+        KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.inputFile, options.outputFile,
                 options.beamWidth, 1, false, "");
     }
 

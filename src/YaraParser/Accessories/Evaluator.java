@@ -13,7 +13,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class Evaluator {
-    public static void evaluate(String testPath, String predictedPath, HashSet<String> puncTags) throws Exception {
+    public static Pair<Double, Double> evaluate(String testPath, String predictedPath, HashSet<String> puncTags) throws
+            Exception {
         CoNLLReader goldReader = new CoNLLReader(testPath);
         CoNLLReader predictedReader = new CoNLLReader(predictedPath);
 
@@ -75,5 +76,7 @@ public class Evaluator {
         double ulabExact = 100.0 * fullULabMatch / numTree;
         System.out.println("Labeled exact match:  " + format.format(labExact));
         System.out.println("Unlabeled exact match:  " + format.format(ulabExact) + " \n");
+
+        return new Pair<>(unlabaledAccuracy, labeledAccuracy);
     }
 }
