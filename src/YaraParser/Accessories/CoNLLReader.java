@@ -202,7 +202,7 @@ public class CoNLLReader {
 
         TreeMap<Integer, HashSet<Integer>> sortedCounts = new TreeMap<>();
         for (String word : wordCount.keySet()) {
-            if (stringMap.containsKey(word)) {
+            if (stringMap.containsKey(word) && wordMap.containsKey(stringMap.get(word))) {
                 int id = wordMap.get(stringMap.get(word));
                 int count = wordCount.get(word);
                 if (!sortedCounts.containsKey(count))
