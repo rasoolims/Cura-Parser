@@ -9,6 +9,7 @@ package YaraParser.Learning;
  */
 
 import YaraParser.Accessories.Options;
+import YaraParser.Accessories.Pair;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.NNInfStruct;
 import org.deeplearning4j.nn.graph.ComputationGraph;
@@ -24,6 +25,7 @@ public class MLPNetwork implements Serializable {
     final public IndexMaps maps;
     final public Options options;
     final public ArrayList<Integer> dependencyLabels;
+    //todo make them private.
     double[][] wordEmbeddings;
     double[][] posEmbeddings;
     double[][] labelEmbeddings;
@@ -31,6 +33,10 @@ public class MLPNetwork implements Serializable {
     double[] hiddenLayerBias;
     double[][] softmaxLayer;
     double[] softmaxLayerBias;
+
+    final int numberOfWordEmbeddingLayers = 19;
+    final int numberOfPosEmbeddingLayers = 19;
+    final int numberOfLabelEmbeddingLayers = 11;
 
     double[][][] saved;
 
@@ -48,60 +54,61 @@ public class MLPNetwork implements Serializable {
                 wordEmbeddings[i][j] = wEArr.getRow(i).getColumn(j).getDouble(0);
         }
 
-        INDArray pEArr = net.getLayer(20).getParam("W");
+        INDArray pEArr = net.getLayer(numberOfWordEmbeddingLayers).getParam("W");
         posEmbeddings = new double[pEArr.rows()][pEArr.columns()];
         for (int i = 0; i < posEmbeddings.length; i++) {
             for (int j = 0; j < posEmbeddings[i].length; j++)
                 posEmbeddings[i][j] = pEArr.getRow(i).getColumn(j).getDouble(0);
         }
 
-        INDArray lEArr = net.getLayer(39).getParam("W");
+        INDArray lEArr = net.getLayer(numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers).getParam("W");
         labelEmbeddings = new double[lEArr.rows()][lEArr.columns()];
         for (int i = 0; i < labelEmbeddings.length; i++) {
             for (int j = 0; j < labelEmbeddings[i].length; j++)
                 labelEmbeddings[i][j] = lEArr.getRow(i).getColumn(j).getDouble(0);
         }
 
-        INDArray hW = net.getLayer(49).getParam("W");
+        INDArray hW = net.getLayer(numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers + numberOfLabelEmbeddingLayers).getParam("W");
         hiddenLayer = new double[hW.rows()][hW.columns()];
         for (int i = 0; i < hiddenLayer.length; i++) {
             for (int j = 0; j < hiddenLayer[i].length; j++)
                 hiddenLayer[i][j] = hW.getRow(i).getColumn(j).getDouble(0);
         }
 
-        INDArray hB = net.getLayer(49).getParam("b");
+        INDArray hB = net.getLayer(numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers + numberOfLabelEmbeddingLayers).getParam("b");
         hiddenLayerBias = new double[hB.columns()];
         for (int i = 0; i < hiddenLayerBias.length; i++) {
             hiddenLayerBias[i] = hB.getColumn(i).getDouble(0);
         }
 
-        INDArray sW = net.getLayer(50).getParam("W");
+        INDArray sW = net.getLayer(numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers +
+                numberOfLabelEmbeddingLayers + 1).getParam("W");
         softmaxLayer = new double[sW.rows()][sW.columns()];
         for (int i = 0; i < softmaxLayer.length; i++) {
             for (int j = 0; j < softmaxLayer[i].length; j++)
                 softmaxLayer[i][j] = sW.getRow(i).getColumn(j).getDouble(0);
         }
 
-        INDArray sB = net.getLayer(50).getParam("b");
+        INDArray sB = net.getLayer(numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers +
+                numberOfLabelEmbeddingLayers + 1).getParam("b");
         softmaxLayerBias = new double[sB.columns()];
         for (int i = 0; i < softmaxLayerBias.length; i++) {
             softmaxLayerBias[i] = sB.getColumn(i).getDouble(0);
         }
+        preCompute();
     }
 
-    public void makeNull() {
-        saved = null;
-    }
-
-    public void preCompute() {
-        saved = new double[49][][];
-        for (int pos = 0; pos < 19; pos++) {
+    private void preCompute() {
+        saved = new double[numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers +
+                numberOfLabelEmbeddingLayers][][];
+        for (int pos = 0; pos < numberOfWordEmbeddingLayers; pos++) {
             saved[pos] = new double[maps.preComputeMap.size()][hiddenLayer[0].length];
         }
-        for (int pos = 19; pos < 38; pos++) {
+        for (int pos = numberOfWordEmbeddingLayers; pos < numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers; pos++) {
             saved[pos] = new double[posEmbeddings.length][hiddenLayer[0].length];
         }
-        for (int pos = 38; pos < 49; pos++) {
+        for (int pos = numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers; pos < numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers +
+                numberOfLabelEmbeddingLayers; pos++) {
             saved[pos] = new double[labelEmbeddings.length][hiddenLayer[0].length];
         }
 
@@ -111,7 +118,7 @@ public class MLPNetwork implements Serializable {
         for (int id : maps.preComputeMap.keySet()) {
             int v = maps.preComputeMap.get(id);
             int offset = 0;
-            for (int pos = 0; pos < 19; pos++) {
+            for (int pos = 0; pos < numberOfWordEmbeddingLayers; pos++) {
                 for (int j = 0; j < hiddenLayer[0].length; j++) {
                     for (int k = 0; k < wordEmbeddingSize; k++) {
                         saved[pos][v][j] += hiddenLayer[offset + k][j] * wordEmbeddings[id][k];
@@ -122,11 +129,11 @@ public class MLPNetwork implements Serializable {
         }
 
         for (int id = 0; id < posEmbeddings.length; id++) {
-            int offset = 19 * wordEmbeddingSize;
-            for (int pos = 0; pos < 19; pos++) {
+            int offset = numberOfWordEmbeddingLayers * wordEmbeddingSize;
+            for (int pos = 0; pos < numberOfPosEmbeddingLayers; pos++) {
                 for (int j = 0; j < hiddenLayer[0].length; j++) {
                     for (int k = 0; k < posEmbeddingSize; k++) {
-                        saved[pos + 19][id][j] += hiddenLayer[offset + k][j] * posEmbeddings[id][k];
+                        saved[pos + numberOfWordEmbeddingLayers][id][j] += hiddenLayer[offset + k][j] * posEmbeddings[id][k];
                     }
                 }
                 offset += posEmbeddingSize;
@@ -134,11 +141,12 @@ public class MLPNetwork implements Serializable {
         }
 
         for (int id = 0; id < labelEmbeddings.length; id++) {
-            int offset = 19 * (wordEmbeddingSize + posEmbeddingSize);
-            for (int pos = 0; pos < 11; pos++) {
+            int offset = numberOfWordEmbeddingLayers * wordEmbeddingSize + numberOfPosEmbeddingLayers *posEmbeddingSize;
+            for (int pos = 0; pos < numberOfLabelEmbeddingLayers; pos++) {
                 for (int j = 0; j < hiddenLayer[0].length; j++) {
                     for (int k = 0; k < labelEmbeddingSize; k++) {
-                        saved[pos + 38][id][j] += hiddenLayer[offset + k][j] * labelEmbeddings[id][k];
+                        saved[pos + numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers][id][j] += hiddenLayer[offset + k][j] *
+                                labelEmbeddings[id][k];
                     }
                 }
                 offset += labelEmbeddingSize;
@@ -153,15 +161,15 @@ public class MLPNetwork implements Serializable {
         for (int j = 0; j < feats.length; j++) {
             int tok = feats[j];
             double[][] embedding;
-            if (j < 19)
+            if (j < numberOfWordEmbeddingLayers)
                 embedding = wordEmbeddings;
-            else if (j < 38)
+            else if (j < numberOfWordEmbeddingLayers + numberOfWordEmbeddingLayers)
                 embedding = posEmbeddings;
             else embedding = labelEmbeddings;
 
-            if (saved != null && (j >= 19 || maps.preComputeMap.containsKey(tok))) {
+            if (saved != null && (j >= numberOfWordEmbeddingLayers || maps.preComputeMap.containsKey(tok))) {
                 int id = tok;
-                if (j < 19)
+                if (j < numberOfWordEmbeddingLayers)
                     id = maps.preComputeMap.get(tok);
                 for (int i = 0; i < hidden.length; ++i) {
                     hidden[i] += saved[j][id][i];
@@ -199,4 +207,6 @@ public class MLPNetwork implements Serializable {
         }
         return probs;
     }
+
+
 }

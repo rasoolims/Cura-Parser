@@ -167,15 +167,12 @@ public class StaticNeuralTrainer {
         if (devIter == null) {
             System.out.println("Saving the new model for the final iteration ");
             MLPNetwork mlpNetwork = new MLPNetwork(new NNInfStruct(net, dependencyRelations.size(), maps,
-                    dependencyRelations,
-                    options));
-            mlpNetwork.preCompute();
+                    dependencyRelations, options));
             saveModel(mlpNetwork, options.modelFile);
         }
     }
 
     private static void saveModel(MLPNetwork network, String modelPath) throws IOException {
-        network.preCompute();
         FileOutputStream fos = new FileOutputStream(modelPath);
         GZIPOutputStream gz = new GZIPOutputStream(fos);
         ObjectOutput writer = new ObjectOutputStream(gz);
@@ -397,9 +394,7 @@ public class StaticNeuralTrainer {
                                 int noImprovement)
             throws Exception {
         MLPNetwork mlpNetwork = new MLPNetwork(new NNInfStruct(net, dependencyRelations.size(), maps,
-                dependencyRelations,
-                options));
-        mlpNetwork.preCompute();
+                dependencyRelations, options));
 
         KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile + ".tmp",
                 options.beamWidth, 1, false, "");
