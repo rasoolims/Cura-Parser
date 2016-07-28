@@ -1,7 +1,6 @@
 package YaraParser.Learning;
 
 import YaraParser.Structures.NeuralTrainingInstance;
-import net.didion.jwnl.data.Exc;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -15,8 +14,13 @@ import java.util.ArrayList;
  */
 
 public class MLPClassifier {
+    public int[][] confusionMatrix;
     MLPNetwork mlpNetwork;
-
+    /**
+     * Keep track of loss function
+     */
+    double cost = 0.0;
+    double correct = 0.0;
     /**
      * Gradients
      */
@@ -27,7 +31,6 @@ public class MLPClassifier {
     private double[] hiddenLayerBiasGradient;
     private double[][] softmaxLayerGradient;
     private double[] softmaxLayerBiasGradient;
-
     /**
      * Gradient histories for momentum update
      */
@@ -38,27 +41,21 @@ public class MLPClassifier {
     private double[] hiddenLayerBiasGradientHistory;
     private double[][] softmaxLayerGradientHistory;
     private double[] softmaxLayerBiasGradientHistory;
-
-    /**
-     * Keep track of loss function
-     */
-    double cost = 0.0;
-    double correct = 0.0;
-
     private double momentum;
     private double learningRate;
     private double regularizerCoefficient;
 
-
-    public MLPClassifier(MLPNetwork mlpNetwork, double momentum, double learningRate, double regularizerCoefficient){
+    public MLPClassifier(MLPNetwork mlpNetwork, double momentum, double learningRate, double regularizerCoefficient) {
         this.mlpNetwork = mlpNetwork;
         this.momentum = momentum;
         this.learningRate = learningRate;
         this.regularizerCoefficient = regularizerCoefficient;
 
-        wordEmbeddingGradientHistory =  new double[mlpNetwork.wordEmbeddings.length][mlpNetwork.wordEmbeddings[0].length];
-        posEmbeddingGradientHistory =  new double[mlpNetwork.posEmbeddings.length][mlpNetwork.posEmbeddings[0].length];
-        labelEmbeddingGradientHistory =  new double[mlpNetwork.labelEmbeddings.length][mlpNetwork.labelEmbeddings[0].length];
+        wordEmbeddingGradientHistory = new double[mlpNetwork.wordEmbeddings.length][mlpNetwork.wordEmbeddings[0]
+                .length];
+        posEmbeddingGradientHistory = new double[mlpNetwork.posEmbeddings.length][mlpNetwork.posEmbeddings[0].length];
+        labelEmbeddingGradientHistory = new double[mlpNetwork.labelEmbeddings.length][mlpNetwork.labelEmbeddings[0]
+                .length];
         hiddenLayerGradientHistory = new double[mlpNetwork.hiddenLayer.length][];
         for (int i = 0; i < hiddenLayerGradientHistory.length; i++) {
             hiddenLayerGradientHistory[i] = new double[mlpNetwork.hiddenLayer[i].length];
@@ -99,7 +96,7 @@ public class MLPClassifier {
                     embedding = mlpNetwork.posEmbeddings;
                 else embedding = mlpNetwork.labelEmbeddings;
 
-                if (mlpNetwork.saved!= null && (j >= mlpNetwork.numberOfWordEmbeddingLayers || mlpNetwork.maps
+                if (mlpNetwork.saved != null && (j >= mlpNetwork.numberOfWordEmbeddingLayers || mlpNetwork.maps
                         .preComputeMap.containsKey(tok))) {
                     int id = tok;
                     if (j < mlpNetwork.numberOfWordEmbeddingLayers)
@@ -146,31 +143,30 @@ public class MLPClassifier {
             }
 
             for (int i = 0; i < scores.length; i++) {
-               scores[i] /= sum;
+                scores[i] /= sum;
             }
 
             cost += -Math.log(scores[gold]) / batchSize;
             if (argmax == gold)
                 correct += 1.0 / batchSize;
+            confusionMatrix[gold][argmax] += 1;
 
             double[] reluGradW = new double[reluHidden.length];
-            double[] reluGradB = new double[reluHidden.length];
             for (int i = 0; i < scores.length; i++) {
                 if (label[i] >= 0) {
                     double delta = (-label[i] + scores[i]) / batchSize;
                     softmaxLayerBiasGradient[i] += delta;
                     for (int h = 0; h < reluHidden.length; h++) {
                         softmaxLayerGradient[i][h] += delta * reluHidden[i];
-                         reluGradW[h] += delta * mlpNetwork.softmaxLayer[i][h];
-                        reluGradB[h] += delta;
+                        reluGradW[h] += delta * mlpNetwork.softmaxLayer[i][h];
+                        hiddenLayerBiasGradient[h] += (reluHidden[h] == 0. ? 0 : delta);
                     }
                 }
             }
 
             double[] hiddenGrad = new double[hidden.length];
             for (int h = 0; h < reluHidden.length; h++) {
-                hiddenGrad[h] = reluGradW[h] * (reluHidden[h] == 0 ? 0 : 1);
-                hiddenLayerBiasGradient[h] += reluGradB[h]*(reluHidden[h] == 0 ? 0 : 1);
+                hiddenGrad[h] = (reluHidden[h] == 0. ? 0 : reluGradW[h]);
             }
 
             offset = 0;
@@ -184,7 +180,7 @@ public class MLPClassifier {
              */
 
             for (int index = 0; index < mlpNetwork.numberOfWordEmbeddingLayers; index++) {
-                int id=features[index];
+                int id = features[index];
                 for (int h = 0; h < reluHidden.length; h++) {
                     for (int k = 0; k < mlpNetwork.wordEmbeddings[0].length; k++) {
                         hiddenLayerGradient[h][offset + k] += hiddenGrad[h] * mlpNetwork.wordEmbeddings[id][k];
@@ -243,53 +239,61 @@ public class MLPClassifier {
         long end = System.currentTimeMillis();
 
         double time = (1.0 * (end - start)) / 1000;
-        System.out.println("Time " + format.format(time) +" --- size "+ instances.size() + " --- Correct " + format.format(100.*correct) +
+        System.out.println("Time " + format.format(time) + " --- size " + instances.size() + " --- Correct " + format
+                .format(100. * correct) +
                 " --- cost: " + format.format(cost));
     }
 
     private void update() {
         for (int i = 0; i < mlpNetwork.wordEmbeddings.length; i++) {
             for (int j = 0; j < mlpNetwork.wordEmbeddings[i].length; j++) {
-                wordEmbeddingGradientHistory[i][j] = momentum * wordEmbeddingGradientHistory[i][j] - wordEmbeddingGradient[i][j];
+                wordEmbeddingGradientHistory[i][j] = momentum * wordEmbeddingGradientHistory[i][j] -
+                        wordEmbeddingGradient[i][j];
                 mlpNetwork.wordEmbeddings[i][j] += learningRate * wordEmbeddingGradientHistory[i][j];
             }
         }
 
         for (int i = 0; i < mlpNetwork.posEmbeddings.length; i++) {
             for (int j = 0; j < mlpNetwork.posEmbeddings[i].length; j++) {
-                posEmbeddingGradientHistory[i][j] = momentum * posEmbeddingGradientHistory[i][j] - posEmbeddingGradient[i][j];
+                posEmbeddingGradientHistory[i][j] = momentum * posEmbeddingGradientHistory[i][j] -
+                        posEmbeddingGradient[i][j];
                 mlpNetwork.posEmbeddings[i][j] += learningRate * posEmbeddingGradientHistory[i][j];
             }
         }
 
         for (int i = 0; i < mlpNetwork.labelEmbeddings.length; i++) {
             for (int j = 0; j < mlpNetwork.labelEmbeddings[i].length; j++) {
-                labelEmbeddingGradientHistory[i][j] = momentum * labelEmbeddingGradientHistory[i][j] - labelEmbeddingGradient[i][j];
+                labelEmbeddingGradientHistory[i][j] = momentum * labelEmbeddingGradientHistory[i][j] -
+                        labelEmbeddingGradient[i][j];
                 mlpNetwork.labelEmbeddings[i][j] += learningRate * labelEmbeddingGradientHistory[i][j];
             }
         }
 
         for (int i = 0; i < mlpNetwork.hiddenLayer.length; i++) {
             for (int j = 0; j < mlpNetwork.hiddenLayer[i].length; j++) {
-                hiddenLayerGradientHistory[i][j] = momentum * hiddenLayerGradientHistory[i][j] - hiddenLayerGradient[i][j];
+                hiddenLayerGradientHistory[i][j] = momentum * hiddenLayerGradientHistory[i][j] -
+                        hiddenLayerGradient[i][j];
                 mlpNetwork.hiddenLayer[i][j] += learningRate * hiddenLayerGradientHistory[i][j];
             }
         }
 
         for (int i = 0; i < mlpNetwork.hiddenLayerBias.length; i++) {
-            hiddenLayerBiasGradientHistory[i] = momentum * hiddenLayerBiasGradientHistory[i] - hiddenLayerBiasGradient[i];
+            hiddenLayerBiasGradientHistory[i] = momentum * hiddenLayerBiasGradientHistory[i] -
+                    hiddenLayerBiasGradient[i];
             mlpNetwork.hiddenLayerBias[i] += learningRate * hiddenLayerBiasGradientHistory[i];
         }
 
         for (int i = 0; i < mlpNetwork.softmaxLayer.length; i++) {
             for (int j = 0; j < mlpNetwork.softmaxLayer[i].length; j++) {
-                softmaxLayerGradientHistory[i][j] = momentum * softmaxLayerGradientHistory[i][j] - softmaxLayerGradient[i][j];
+                softmaxLayerGradientHistory[i][j] = momentum * softmaxLayerGradientHistory[i][j] -
+                        softmaxLayerGradient[i][j];
                 mlpNetwork.softmaxLayer[i][j] += learningRate * softmaxLayerGradientHistory[i][j];
             }
         }
 
         for (int i = 0; i < mlpNetwork.softmaxLayerBias.length; i++) {
-            softmaxLayerBiasGradientHistory[i] = momentum * softmaxLayerBiasGradientHistory[i] - softmaxLayerBiasGradient[i];
+            softmaxLayerBiasGradientHistory[i] = momentum * softmaxLayerBiasGradientHistory[i] -
+                    softmaxLayerBiasGradient[i];
             mlpNetwork.softmaxLayerBias[i] += learningRate * softmaxLayerBiasGradientHistory[i];
         }
     }

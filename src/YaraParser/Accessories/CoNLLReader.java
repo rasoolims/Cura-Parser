@@ -63,7 +63,6 @@ public class CoNLLReader {
             labelCount = 2;
         }
 
-
         HashMap<String, Integer> wordCount = new HashMap<>();
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
         String line;

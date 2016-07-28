@@ -14,20 +14,16 @@ import YaraParser.Learning.MLPClassifier;
 import YaraParser.Learning.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
-import YaraParser.Structures.NNInfStruct;
 import YaraParser.Structures.NeuralTrainingInstance;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
-import YaraParser.TransitionBasedSystem.Trainer.StaticNeuralTrainer;
 
 import java.io.FileInputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 public class YaraParser {
@@ -43,6 +39,8 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
+            options.learningRate = 0.1;
+            options.batchSize = 3;
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
@@ -54,7 +52,7 @@ public class YaraParser {
             System.out.println(options);
             if (options.train) {
                 // train(options);
-              //  createTrainData(options);
+                //  createTrainData(options);
                 trainWithNN(options);
             } else if (options.parseTaggedFile || options.parseConllFile || options.parsePartialConll) {
                 parseNN(options);
@@ -163,55 +161,6 @@ public class YaraParser {
         }
     }
 
-    public static void createTrainData(Options options) throws Exception {
-        if (options.inputFile.equals("") || options.modelFile.equals("")) {
-            Options.showHelp();
-        } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options
-                    .clusterFile, 1);
-            int wDim = 64;
-            if (options.wordEmbeddingFile.length() > 0)
-                wDim = maps.readEmbeddings(options.wordEmbeddingFile);
-
-            CoNLLReader reader = new CoNLLReader(options.inputFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
-                    .rootFirst, options.lowercase, maps);
-            System.out.println("CoNLL data reading done!");
-
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab : maps.getLabelMap().keySet())
-                dependencyLabels.add(lab);
-
-            int featureLength = options.useExtendedFeatures ? 72 : 26;
-            if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
-                featureLength = 153;
-
-            System.out.println("size of training data (#sens): " + dataSet.size());
-
-            HashMap<String, Integer> labels = new HashMap<String, Integer>();
-            int labIndex = 0;
-            labels.put("sh", labIndex++);
-            labels.put("rd", labIndex++);
-            labels.put("us", labIndex++);
-            for (int label : dependencyLabels) {
-                if (options.labeled) {
-                    labels.put("ra_" + label, 3 + label);
-                    labels.put("la_" + label, 3 + dependencyLabels.size() + label);
-                } else {
-                    labels.put("ra_" + label, 3);
-                    labels.put("la_" + label, 4);
-                }
-            }
-
-            System.out.println("Embedding dimension " + wDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(featureLength, dependencyLabels.size()),
-                    options, dependencyLabels, featureLength, maps);
-            StaticNeuralTrainer.trainStaticNeural(trainer, maps, wDim, 32, 32, labels.size() - 1, dependencyLabels,
-                    options);
-        }
-    }
-
     public static void trainWithNN(Options options) throws Exception {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
@@ -257,16 +206,19 @@ public class YaraParser {
                     AveragedPerceptron(featureLength, dependencyLabels.size()),
                     options, dependencyLabels, featureLength, maps);
 
-            MLPNetwork mlpNetwork = new MLPNetwork(maps,options,dependencyLabels,wDim);
+            MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim);
             MLPClassifier classifier = new MLPClassifier(mlpNetwork, 0.9, options.learningRate, 0.0001);
 
-            int decayStep = (int) (options.decayStep * dataSet.size()/options.batchSize);
+            int decayStep = (int) (options.decayStep * dataSet.size() / options.batchSize);
             decayStep = decayStep == 0 ? 1 : decayStep;
 
             int step = 0;
-            for(int i=0; i<options.trainingIter;i++) {
-                System.out.println("reshuffling data iteration "+ i);
-                Collections.shuffle(dataSet);
+            for (int i = 0; i < options.trainingIter; i++) {
+                classifier.confusionMatrix = new int[2 * (dependencyLabels.size() + 1)][2 * (dependencyLabels.size()
+                        + 1)];
+
+                System.out.println("reshuffling data iteration " + i);
+                // Collections.shuffle(dataSet);
                 int s = 0;
                 int e = Math.min(dataSet.size(), options.batchSize);
 
@@ -282,11 +234,13 @@ public class YaraParser {
                         classifier.setLearningRate(0.96 * classifier.getLearningRate());
                     }
 
-                    if(step%100==0){
-                        KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile + ".tmp",
+                    if (step % 100 == 0) {
+                        KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile
+                                        + ".tmp",
                                 options.beamWidth, 1, false, "");
-                        Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options
-                                .punctuations);
+                        Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp",
+                                options
+                                        .punctuations);
                     }
 
                     // todo avg
@@ -294,6 +248,16 @@ public class YaraParser {
                     if (s >= dataSet.size())
                         break;
                 }
+
+                StringBuilder output = new StringBuilder();
+                for (int c = 0; c < classifier.confusionMatrix.length; c++) {
+                    for (int j = 0; j < classifier.confusionMatrix.length; j++) {
+                        output.append(classifier.confusionMatrix[c][j] + "\t");
+                    }
+                    output.append("\n");
+                }
+                System.out.print(output.toString());
+
             }
 
         }

@@ -79,10 +79,10 @@ public class ArcEagerBeamTrainer {
     }
 
     public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int
-            end, double dropoutProb)  throws Exception {
+            end, double dropoutProb) throws Exception {
         ArrayList<NeuralTrainingInstance> instances = new ArrayList<>();
         for (int i = start; i < end; i++) {
-            addInstance(trainData.get(i),instances,dropoutProb);
+            addInstance(trainData.get(i), instances, dropoutProb);
         }
         return instances;
     }
@@ -150,7 +150,7 @@ public class ArcEagerBeamTrainer {
     }
 
     private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances,
-                             double dropoutProb)  throws Exception {
+                             double dropoutProb) throws Exception {
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
         ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
@@ -176,7 +176,8 @@ public class ArcEagerBeamTrainer {
             }
 
             int[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, maps);
-            int[] label = new int[2*(dependencyRelations.size()+1)];
+            int[] label = new int[2 * (dependencyRelations.size() + 1)];
+            /*
             if(!ArcEager.canDo(Actions.LeftArc, currentConfig.state)){
                 for(int i=2;i<2+dependencyRelations.size();i++)
                     label[i+dependencyRelations.size()] = -1;
@@ -191,6 +192,7 @@ public class ArcEagerBeamTrainer {
             if(!ArcEager.canDo(Actions.Reduce, currentConfig.state)){
                 label[1] = -1;
             }
+            */
 
             /*
             if (options.useDynamicOracle) {
@@ -222,7 +224,7 @@ public class ArcEagerBeamTrainer {
 
 
             label[action] = 1;
-            instances.add(new NeuralTrainingInstance(baseFeatures,label));
+            instances.add(new NeuralTrainingInstance(baseFeatures, label));
 
             beam = new ArrayList<Configuration>(options.beamWidth);
             beam.add(bestScoringOracle);
