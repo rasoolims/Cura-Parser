@@ -84,12 +84,15 @@ public class MLPNetwork implements Serializable {
             }
         }
 
+        int numOfPretrained = 0;
         for (int i = 0; i < maps.vocabSize() + 2; i++) {
             double[] embeddings = maps.embeddings(i);
             if (embeddings != null) {
                 wordEmbeddings[i] = embeddings;
+                numOfPretrained++;
             }
         }
+        System.out.println("num of pre-trained embedding "+numOfPretrained +" out of "+maps.vocabSize()+2);
     }
 
     public void preCompute() {

@@ -239,7 +239,7 @@ public class MLPClassifier {
 
         if (print) {
             System.out.println("Time " + getCurrentTimeStamp() + " ---  iteration " + iteration + " --- size " +
-                    instances.size() + " --- Correct " + format.format(100. * correct/samples) + " --- cost: " + format
+                    samples + " --- Correct " + format.format(100. * correct/samples) + " --- cost: " + format
                     .format(cost/samples));
             cost = 0;
             samples = 0;
