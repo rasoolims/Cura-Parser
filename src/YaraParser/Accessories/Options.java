@@ -63,7 +63,7 @@ public class Options implements Serializable {
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
         learningRate = 0.05;
-        batchSize = 1024;
+        batchSize = 32;
         decayStep = 0.2;
         rootFirst = false;
         modelFile = "";
@@ -80,7 +80,7 @@ public class Options implements Serializable {
         useMaxViol = true;
         useDynamicOracle = true;
         useRandomOracleSelection = false;
-        trainingIter = 20;
+        trainingIter = 3000;
         evaluate = false;
         numOfThreads = 8;
         useExtendedWithBrownClusterFeatures = false;

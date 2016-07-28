@@ -11,6 +11,7 @@ import YaraParser.Accessories.Pair;
 import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
+import YaraParser.Structures.NeuralTrainingInstance;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -77,6 +78,15 @@ public class ArcEagerBeamTrainer {
         return outputPath + ".lab";
     }
 
+    public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int
+            end, double dropoutProb)  throws Exception {
+        ArrayList<NeuralTrainingInstance> instances = new ArrayList<>();
+        for (int i = start; i < end; i++) {
+            addInstance(trainData.get(i),instances,dropoutProb);
+        }
+        return instances;
+    }
+
     private void writeTrainingInstanceForSentence(GoldConfiguration goldConfiguration, BufferedWriter writer, double
             dropoutProb) throws Exception {
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
@@ -134,6 +144,86 @@ public class ArcEagerBeamTrainer {
             }
             outputBuilder.append("\n");
             writer.write(outputBuilder.toString());
+            beam = new ArrayList<Configuration>(options.beamWidth);
+            beam.add(bestScoringOracle);
+        }
+    }
+
+    private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances,
+                             double dropoutProb)  throws Exception {
+        Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
+        Configuration firstOracle = initialConfiguration.clone();
+        ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
+        beam.add(initialConfiguration);
+
+        HashMap<Configuration, Double> oracles = new HashMap<Configuration, Double>();
+
+        oracles.put(firstOracle, 0.0);
+
+        Configuration bestScoringOracle = null;
+
+        while (!ArcEager.isTerminal(beam) && beam.size() > 0) {
+            /**
+             *  generating new oracles
+             *  it keeps the oracles which are in the terminal state
+             */
+            HashMap<Configuration, Double> newOracles = new HashMap<Configuration, Double>();
+
+            Configuration currentConfig = null;
+            for (Configuration conf : oracles.keySet()) {
+                currentConfig = conf;
+                break;
+            }
+
+            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, maps);
+            int[] label = new int[2*(dependencyRelations.size()+1)];
+            if(!ArcEager.canDo(Actions.LeftArc, currentConfig.state)){
+                for(int i=2;i<2+dependencyRelations.size();i++)
+                    label[i+dependencyRelations.size()] = -1;
+            }
+            if(!ArcEager.canDo(Actions.RightArc, currentConfig.state)){
+                for(int i=2;i<2+dependencyRelations.size();i++)
+                    label[i] = -1;
+            }
+            if(!ArcEager.canDo(Actions.Shift, currentConfig.state)){
+                label[0] = -1;
+            }
+            if(!ArcEager.canDo(Actions.Reduce, currentConfig.state)){
+                label[1] = -1;
+            }
+
+            /*
+            if (options.useDynamicOracle) {
+                bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
+
+                // pick random oracle each time
+                List<Configuration> keys = new ArrayList<Configuration>(newOracles.keySet());
+                Configuration randomKey = keys.get(randGen.nextInt(keys.size()));
+                oracles = new HashMap<Configuration, Double>();
+                oracles.put(randomKey, 0.0);
+                bestScoringOracle = randomKey;
+
+            } else {
+              */
+
+            bestScoringOracle = staticOracle(goldConfiguration, oracles, newOracles);
+            oracles = newOracles;
+            /*}*/
+            int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size() - 1);
+
+            if (action >= 2)
+                action -= 1;
+
+            for (int i = 0; i < baseFeatures.length; i++) {
+                if (i < 19 && maps.rareWords.contains(baseFeatures[i]))
+                    if (randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)
+                        baseFeatures[i] = 0;
+            }
+
+
+            label[action] = 1;
+            instances.add(new NeuralTrainingInstance(baseFeatures,label));
+
             beam = new ArrayList<Configuration>(options.beamWidth);
             beam.add(bestScoringOracle);
         }
