@@ -149,7 +149,7 @@ public class MLPClassifier {
                 scores[i] /= sum;
             }
 
-            cost += -Math.log(scores[gold]);
+            cost -= Math.log(scores[gold]);
             if (argmax == gold)
                 correct += 1.0;
             confusionMatrix[gold][argmax] += 1;
