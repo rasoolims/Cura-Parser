@@ -410,6 +410,9 @@ public class Options implements Serializable {
             builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
             builder.append("h1-size: " + hiddenLayer1Size + "\n");
             builder.append("h2-size: " + hiddenLayer2Size + "\n");
+            builder.append("learning rate: " + learningRate + "\n");
+            builder.append("decay step: " + decayStep + "\n");
+            builder.append("batch size: " + batchSize + "\n");
             return builder.toString();
         } else if (parseConllFile) {
             StringBuilder builder = new StringBuilder();

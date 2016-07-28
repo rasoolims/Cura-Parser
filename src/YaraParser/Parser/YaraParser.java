@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 
@@ -217,14 +218,14 @@ public class YaraParser {
                 classifier.confusionMatrix = new int[2 * (dependencyLabels.size() + 1)][2 * (dependencyLabels.size()
                         + 1)];
 
-                System.out.println("reshuffling data iteration " + i);
-                // Collections.shuffle(dataSet);
+                System.out.println("reshuffling data for round " + i);
+                Collections.shuffle(dataSet);
                 int s = 0;
                 int e = Math.min(dataSet.size(), options.batchSize);
 
                 while (true) {
                     ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, s, e, 0);
-                    classifier.fit(instances);
+                    classifier.fit(instances, step, step % 10 == 0 ? true : false);
 
                     s = e;
                     e = Math.min(dataSet.size(), options.batchSize + e);
@@ -236,11 +237,9 @@ public class YaraParser {
 
                     if (step % 100 == 0) {
                         KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile
-                                        + ".tmp",
-                                options.beamWidth, 1, false, "");
+                                + ".tmp", options.beamWidth, 1, false, "");
                         Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp",
-                                options
-                                        .punctuations);
+                                options.punctuations);
                     }
 
                     // todo avg
@@ -249,6 +248,7 @@ public class YaraParser {
                         break;
                 }
 
+                /*
                 StringBuilder output = new StringBuilder();
                 for (int c = 0; c < classifier.confusionMatrix.length; c++) {
                     for (int j = 0; j < classifier.confusionMatrix.length; j++) {
@@ -257,7 +257,7 @@ public class YaraParser {
                     output.append("\n");
                 }
                 System.out.print(output.toString());
-
+                */
             }
 
         }

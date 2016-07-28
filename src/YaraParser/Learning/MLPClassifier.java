@@ -3,7 +3,9 @@ package YaraParser.Learning;
 import YaraParser.Structures.NeuralTrainingInstance;
 
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -16,11 +18,14 @@ import java.util.ArrayList;
 public class MLPClassifier {
     public int[][] confusionMatrix;
     MLPNetwork mlpNetwork;
+
     /**
      * Keep track of loss function
      */
     double cost = 0.0;
     double correct = 0.0;
+    int samples = 0;
+
     /**
      * Gradients
      */
@@ -66,6 +71,7 @@ public class MLPClassifier {
     }
 
     public void cost(ArrayList<NeuralTrainingInstance> instances, int batchSize) {
+        samples+= batchSize;
         wordEmbeddingGradient = new double[mlpNetwork.wordEmbeddings.length][mlpNetwork.wordEmbeddings[0].length];
         posEmbeddingGradient = new double[mlpNetwork.posEmbeddings.length][mlpNetwork.posEmbeddings[0].length];
         labelEmbeddingGradient = new double[mlpNetwork.labelEmbeddings.length][mlpNetwork.labelEmbeddings[0].length];
@@ -76,9 +82,6 @@ public class MLPClassifier {
         hiddenLayerBiasGradient = new double[mlpNetwork.hiddenLayerBias.length];
         softmaxLayerGradient = new double[mlpNetwork.softmaxLayer.length][mlpNetwork.softmaxLayer[0].length];
         softmaxLayerBiasGradient = new double[mlpNetwork.softmaxLayerBias.length];
-
-        cost = 0.0;
-        correct = 0.0;
 
         for (NeuralTrainingInstance instance : instances) {
             int[] features = instance.getFeatures();
@@ -146,9 +149,9 @@ public class MLPClassifier {
                 scores[i] /= sum;
             }
 
-            cost += -Math.log(scores[gold]) / batchSize;
+            cost += -Math.log(scores[gold]);
             if (argmax == gold)
-                correct += 1.0 / batchSize;
+                correct += 1.0 ;
             confusionMatrix[gold][argmax] += 1;
 
             double[] reluGradW = new double[reluHidden.length];
@@ -225,23 +228,23 @@ public class MLPClassifier {
         cost += regularizerCoefficient * regCost;
     }
 
-    public void fit(ArrayList<NeuralTrainingInstance> instances) {
+    public void fit(ArrayList<NeuralTrainingInstance> instances, int iteration, boolean print) {
         // todo grad saved
         // todo multithread
         DecimalFormat format = new DecimalFormat("##.00");
-        long start = System.currentTimeMillis();
 
         cost(instances, instances.size());
-
         update();
-
         mlpNetwork.preCompute();
-        long end = System.currentTimeMillis();
 
-        double time = (1.0 * (end - start)) / 1000;
-        System.out.println("Time " + format.format(time) + " --- size " + instances.size() + " --- Correct " + format
-                .format(100. * correct) +
-                " --- cost: " + format.format(cost));
+        if (print) {
+            System.out.println("Time " + getCurrentTimeStamp() + " ---  iteration " + iteration + " --- size " +
+                    instances.size() + " --- Correct " + format.format(100. * correct/samples) + " --- cost: " + format
+                    .format(cost/samples));
+            cost = 0;
+            samples = 0;
+            correct = 0;
+        }
     }
 
     private void update() {
@@ -304,5 +307,9 @@ public class MLPClassifier {
 
     public void setLearningRate(double learningRate) {
         this.learningRate = learningRate;
+    }
+
+    public String getCurrentTimeStamp() {
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
     }
 }
