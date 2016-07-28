@@ -71,7 +71,7 @@ public class MLPClassifier {
     }
 
     public void cost(ArrayList<NeuralTrainingInstance> instances, int batchSize) {
-        samples+= batchSize;
+        samples += batchSize;
         wordEmbeddingGradient = new double[mlpNetwork.wordEmbeddings.length][mlpNetwork.wordEmbeddings[0].length];
         posEmbeddingGradient = new double[mlpNetwork.posEmbeddings.length][mlpNetwork.posEmbeddings[0].length];
         labelEmbeddingGradient = new double[mlpNetwork.labelEmbeddings.length][mlpNetwork.labelEmbeddings[0].length];
@@ -151,7 +151,7 @@ public class MLPClassifier {
 
             cost += -Math.log(scores[gold]);
             if (argmax == gold)
-                correct += 1.0 ;
+                correct += 1.0;
             confusionMatrix[gold][argmax] += 1;
 
             double[] reluGradW = new double[reluHidden.length];
@@ -239,8 +239,8 @@ public class MLPClassifier {
 
         if (print) {
             System.out.println("Time " + getCurrentTimeStamp() + " ---  iteration " + iteration + " --- size " +
-                    samples + " --- Correct " + format.format(100. * correct/samples) + " --- cost: " + format
-                    .format(cost/samples));
+                    samples + " --- Correct " + format.format(100. * correct / samples) + " --- cost: " + format
+                    .format(cost / samples));
             cost = 0;
             samples = 0;
             correct = 0;

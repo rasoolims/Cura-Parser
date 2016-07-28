@@ -92,7 +92,7 @@ public class MLPNetwork implements Serializable {
                 numOfPretrained++;
             }
         }
-        System.out.println("num of pre-trained embedding "+numOfPretrained +" out of "+maps.vocabSize()+2);
+        System.out.println("num of pre-trained embedding " + numOfPretrained + " out of " + maps.vocabSize());
     }
 
     public void preCompute() {
