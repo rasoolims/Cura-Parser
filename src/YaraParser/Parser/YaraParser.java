@@ -41,7 +41,7 @@ public class YaraParser {
             options.labeled = false;
             options.hiddenLayer1Size = 200;
             options.learningRate = 0.1;
-            options.batchSize = 3;
+            options.batchSize = 32;
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;

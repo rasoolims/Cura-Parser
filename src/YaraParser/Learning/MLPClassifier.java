@@ -97,7 +97,8 @@ public class MLPClassifier {
                     embedding = mlpNetwork.wordEmbeddings;
                 else if (j < mlpNetwork.numberOfWordEmbeddingLayers + mlpNetwork.numberOfPosEmbeddingLayers)
                     embedding = mlpNetwork.posEmbeddings;
-                else embedding = mlpNetwork.labelEmbeddings;
+                else
+                    embedding = mlpNetwork.labelEmbeddings;
 
                 if (mlpNetwork.saved != null && (j >= mlpNetwork.numberOfWordEmbeddingLayers || mlpNetwork.maps
                         .preComputeMap.containsKey(tok))) {

@@ -96,19 +96,7 @@ public class MLPNetwork implements Serializable {
     }
 
     public void preCompute() {
-        saved = new double[numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers + numberOfLabelEmbeddingLayers][][];
-        for (int pos = 0; pos < numberOfWordEmbeddingLayers; pos++) {
-            saved[pos] = new double[maps.preComputeMap.size()][hiddenLayer.length];
-        }
-        for (int pos = numberOfWordEmbeddingLayers; pos < numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers;
-             pos++) {
-            saved[pos] = new double[posEmbeddings.length][hiddenLayer.length];
-        }
-        for (int pos = numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers; pos < numberOfWordEmbeddingLayers +
-                numberOfPosEmbeddingLayers +
-                numberOfLabelEmbeddingLayers; pos++) {
-            saved[pos] = new double[labelEmbeddings.length][hiddenLayer.length];
-        }
+        saved = new double[numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers + numberOfLabelEmbeddingLayers][maps.preComputeMap.size()][hiddenLayer.length];
 
         int wordEmbeddingSize = wordEmbeddings[0].length;
         int posEmbeddingSize = posEmbeddings[0].length;
