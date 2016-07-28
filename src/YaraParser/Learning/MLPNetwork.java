@@ -209,5 +209,42 @@ public class MLPNetwork implements Serializable {
         return probs;
     }
 
+    public ArrayList<double[][]> getAllMatrices(){
+        ArrayList<double[][]> matrices = new ArrayList<>();
+        matrices.add(wordEmbeddings);
+        matrices.add(posEmbeddings);
+        matrices.add(labelEmbeddings);
+        matrices.add(hiddenLayer);
+        matrices.add(softmaxLayer);
+        return matrices;
+    }
+
+    public ArrayList<double[]> getAllVectors(){
+        ArrayList<double[]> vectors = new ArrayList<>();
+        vectors.add(hiddenLayerBias);
+        vectors.add(softmaxLayerBias);
+        return vectors;
+    }
+
+
+    public static void averageNetworks (MLPNetwork toAverageFrom, MLPNetwork averaged, double r1, double r2) {
+        ArrayList<double[][]> matrices1 = toAverageFrom.getAllMatrices();
+        ArrayList<double[][]> matrices2 = averaged.getAllMatrices();
+        for (int m = 0; m < matrices1.size(); m++) {
+            for (int i = 0; i < matrices1.get(m).length; i++) {
+                for (int j = 0; j < matrices1.get(m)[i].length; j++) {
+                    matrices2.get(m)[i][j] = r1 * matrices1.get(m)[i][j] + r2 * matrices2.get(m)[i][j];
+                }
+            }
+        }
+
+        ArrayList<double[]> vectors1 = toAverageFrom.getAllVectors();
+        ArrayList<double[]> vectors2 = averaged.getAllVectors();
+        for (int m = 0; m < vectors1.size(); m++) {
+            for (int i = 0; i < vectors1.get(m).length; i++) {
+                vectors2.get(m)[i] = r1 * vectors1.get(m)[i] + r2 * vectors2.get(m)[i];
+            }
+        }
+    }
 
 }

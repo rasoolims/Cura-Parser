@@ -208,15 +208,17 @@ public class YaraParser {
                     options, dependencyLabels, featureLength, maps);
 
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim);
+            MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim);
+
             MLPClassifier classifier = new MLPClassifier(mlpNetwork, 0.9, options.learningRate, 0.0001);
 
             int decayStep = (int) (options.decayStep * dataSet.size() / options.batchSize);
             decayStep = decayStep == 0 ? 1 : decayStep;
+            System.out.println("Decay after every "+decayStep +" batches");
 
             int step = 0;
             for (int i = 0; i < options.trainingIter; i++) {
-                classifier.confusionMatrix = new int[2 * (dependencyLabels.size() + 1)][2 * (dependencyLabels.size()
-                        + 1)];
+                classifier.confusionMatrix = new int[2 * (dependencyLabels.size() + 1)][2 * (dependencyLabels.size() + 1)];
 
                 System.out.println("reshuffling data for round " + i);
                 Collections.shuffle(dataSet);
@@ -235,32 +237,27 @@ public class YaraParser {
                         classifier.setLearningRate(0.96 * classifier.getLearningRate());
                     }
 
+                    // averaging
+                    double ratio = Math.min(0.9999, (double) step / (9 + step));
+                    MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
+
                     if (step % 100 == 0) {
                         KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile
                                 + ".tmp", options.beamWidth, 1, false, "");
                         Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp",
                                 options.punctuations);
-                    }
 
-                    // todo avg
+                        avgMlpNetwork.preCompute();
+                        KBeamArcEagerParser.parseNNConllFileNoParallel(avgMlpNetwork, options.devPath, options.modelFile
+                                + ".tmp", options.beamWidth, 1, false, "");
+                        eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp",
+                                options.punctuations);
+                    }
 
                     if (s >= dataSet.size())
                         break;
                 }
-
-                /*
-                StringBuilder output = new StringBuilder();
-                for (int c = 0; c < classifier.confusionMatrix.length; c++) {
-                    for (int j = 0; j < classifier.confusionMatrix.length; j++) {
-                        output.append(classifier.confusionMatrix[c][j] + "\t");
-                    }
-                    output.append("\n");
-                }
-                System.out.print(output.toString());
-                */
             }
-
         }
     }
-
 }
