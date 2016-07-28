@@ -54,33 +54,33 @@ public class MLPNetwork implements Serializable {
         Random random = new Random();
         for (int i = 0; i < wordEmbeddings.length; i++) {
             for (int j = 0; j < wordEmbeddings[i].length; j++) {
-                wordEmbeddings[i][j] = random.nextDouble() * 0.02 - 0.01;
+                wordEmbeddings[i][j] = random.nextGaussian() * 0.01;
             }
         }
 
         for (int i = 0; i < posEmbeddings.length; i++) {
             for (int j = 0; j < posEmbeddings[i].length; j++) {
-                posEmbeddings[i][j] = random.nextDouble() * 0.02 - 0.01;
+                posEmbeddings[i][j] = random.nextGaussian() * 0.01;
             }
         }
 
         for (int i = 0; i < labelEmbeddings.length; i++) {
             for (int j = 0; j < labelEmbeddings[i].length; j++) {
-                labelEmbeddings[i][j] = random.nextDouble() * 0.02 - 0.01;
+                labelEmbeddings[i][j] = random.nextGaussian() * 0.01;
             }
         }
 
         for (int i = 0; i < hiddenLayer.length; i++) {
             hiddenLayerBias[i] = 0.2;
             for (int j = 0; j < hiddenLayer[i].length; j++) {
-                hiddenLayer[i][j] = random.nextDouble() * 0.02 - 0.01;
+                hiddenLayer[i][j] = random.nextGaussian() * 0.01;
             }
         }
 
         for (int i = 0; i < softmaxLayer.length; i++) {
             softmaxLayerBias[i] = 0;
             for (int j = 0; j < softmaxLayer[i].length; j++) {
-                softmaxLayer[i][j] = random.nextDouble() * 0.02 - 0.01;
+                softmaxLayer[i][j] = random.nextGaussian() * 0.01;
             }
         }
 
