@@ -119,8 +119,7 @@ public class MLPNetwork implements Serializable {
             for (int pos = 0; pos < numberOfPosEmbeddingLayers; pos++) {
                 for (int j = 0; j < hiddenLayer.length; j++) {
                     for (int k = 0; k < posEmbeddingSize; k++) {
-                        saved[pos + numberOfWordEmbeddingLayers][id][j] += hiddenLayer[j][offset + k] *
-                                posEmbeddings[id][k];
+                        saved[pos + numberOfWordEmbeddingLayers][id][j] += hiddenLayer[j][offset + k] * posEmbeddings[id][k];
                     }
                 }
                 offset += posEmbeddingSize;
@@ -128,14 +127,11 @@ public class MLPNetwork implements Serializable {
         }
 
         for (int id = 0; id < labelEmbeddings.length; id++) {
-            int offset = numberOfWordEmbeddingLayers * wordEmbeddingSize + numberOfPosEmbeddingLayers *
-                    posEmbeddingSize;
+            int offset = numberOfWordEmbeddingLayers * wordEmbeddingSize + numberOfPosEmbeddingLayers * posEmbeddingSize;
             for (int pos = 0; pos < numberOfLabelEmbeddingLayers; pos++) {
                 for (int j = 0; j < hiddenLayer.length; j++) {
                     for (int k = 0; k < labelEmbeddingSize; k++) {
-                        saved[pos + numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers][id][j] +=
-                                hiddenLayer[j][offset + k] *
-                                        labelEmbeddings[id][k];
+                        saved[pos + numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers][id][j] += hiddenLayer[j][offset + k] * labelEmbeddings[id][k];
                     }
                 }
                 offset += labelEmbeddingSize;
@@ -213,7 +209,6 @@ public class MLPNetwork implements Serializable {
         vectors.add(softmaxLayerBias);
         return vectors;
     }
-
 
     public static void averageNetworks (MLPNetwork toAverageFrom, MLPNetwork averaged, double r1, double r2) {
         ArrayList<double[][]> matrices1 = toAverageFrom.getAllMatrices();

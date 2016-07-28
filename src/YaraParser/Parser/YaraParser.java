@@ -33,14 +33,14 @@ public class YaraParser {
 
         if (args.length < 2) {
             options.train = true;
-            options.inputFile = "/Users/msr/Desktop/data/train_smal.conll";
+            options.inputFile = "/Users/msr/Desktop/data/dev.conll";
             options.devPath = "/Users/msr/Desktop/data/dev_smal.conll";
             options.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
             //  options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.learningRate = 0.1;
+            options.learningRate = 1;
             options.batchSize = 32;
             options.trainingIter = 3000;
             options.beamWidth = 1;
