@@ -235,7 +235,7 @@ public class YaraParser {
                     step++;
                     if (step % decayStep == 0) {
                         classifier.setLearningRate(0.96 * classifier.getLearningRate());
-                        System.out.println("New learning rate: "+classifier.getLearningRate());
+                        System.out.println("The new learning rate: "+classifier.getLearningRate());
                     }
 
                     // averaging
