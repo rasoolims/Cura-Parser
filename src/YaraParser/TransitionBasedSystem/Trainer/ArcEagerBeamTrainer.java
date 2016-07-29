@@ -177,7 +177,6 @@ public class ArcEagerBeamTrainer {
 
             int[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, maps);
             int[] label = new int[2 * (dependencyRelations.size() + 1)];
-            /*
             if(!ArcEager.canDo(Actions.LeftArc, currentConfig.state)){
                 for(int i=2;i<2+dependencyRelations.size();i++)
                     label[i+dependencyRelations.size()] = -1;
@@ -192,7 +191,6 @@ public class ArcEagerBeamTrainer {
             if(!ArcEager.canDo(Actions.Reduce, currentConfig.state)){
                 label[1] = -1;
             }
-            */
 
             /*
             if (options.useDynamicOracle) {

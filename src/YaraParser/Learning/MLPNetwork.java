@@ -42,11 +42,9 @@ public class MLPNetwork implements Serializable {
         wordEmbeddings = new double[maps.vocabSize() + 2][wDim];
         posEmbeddings = new double[maps.posSize() + 2][32];
         labelEmbeddings = new double[maps.relSize() + 2][32];
-        hiddenLayer = new double[options.hiddenLayer1Size][];
-        for (int i = 0; i < hiddenLayer.length; i++) {
-            hiddenLayer[i] = new double[wordEmbeddings.length * wordEmbeddings[0].length + posEmbeddings.length *
-                    posEmbeddings[0].length + labelEmbeddings.length * labelEmbeddings[0].length];
-        }
+        hiddenLayer = new double[options.hiddenLayer1Size][numberOfPosEmbeddingLayers * wordEmbeddings[0].length +
+               numberOfPosEmbeddingLayers * posEmbeddings[0].length + numberOfLabelEmbeddingLayers * labelEmbeddings[0].length];
+
         hiddenLayerBias = new double[options.hiddenLayer1Size];
         softmaxLayer = new double[2 * (dependencyLabels.size() + 1)][options.hiddenLayer1Size];
         softmaxLayerBias = new double[2 * (dependencyLabels.size() + 1)];
@@ -96,7 +94,15 @@ public class MLPNetwork implements Serializable {
     }
 
     public void preCompute() {
-        saved = new double[numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers + numberOfLabelEmbeddingLayers][maps.preComputeMap.size()][hiddenLayer.length];
+        saved = new double[numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers + numberOfLabelEmbeddingLayers][][];
+        for(int i=0; i<numberOfWordEmbeddingLayers;i++)
+            saved[i] = new double[maps.preComputeMap.size()][hiddenLayer.length];
+        for(int i=numberOfWordEmbeddingLayers; i<numberOfWordEmbeddingLayers+numberOfPosEmbeddingLayers;i++)
+            saved[i] = new double[posEmbeddings.length][hiddenLayer.length];
+        for(int i=numberOfWordEmbeddingLayers+numberOfPosEmbeddingLayers;
+            i<numberOfWordEmbeddingLayers+numberOfPosEmbeddingLayers+numberOfLabelEmbeddingLayers;i++)
+            saved[i] = new double[labelEmbeddings.length][hiddenLayer.length];
+
 
         int wordEmbeddingSize = wordEmbeddings[0].length;
         int posEmbeddingSize = posEmbeddings[0].length;
