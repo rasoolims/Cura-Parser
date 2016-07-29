@@ -230,9 +230,8 @@ public class MLPClassifier {
         mlpNetwork.preCompute();
 
         if (print) {
-            System.out.println("Time " + getCurrentTimeStamp() + " ---  iteration " + iteration + " --- size " +
-                    samples + " --- Correct " + format.format(100. * correct / samples) + " --- cost: " + format
-                    .format(cost / samples));
+            System.out.println(getCurrentTimeStamp() + " ---  iteration " + iteration + " --- size " +
+                    samples + " --- Correct " + format.format(100. * correct / samples) + " --- cost: " + format.format(cost / samples));
             cost = 0;
             samples = 0;
             correct = 0;
