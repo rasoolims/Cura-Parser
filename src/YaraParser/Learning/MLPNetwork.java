@@ -91,6 +91,8 @@ public class MLPNetwork implements Serializable {
             }
         }
         System.out.println("num of pre-trained embedding " + numOfPretrained + " out of " + maps.vocabSize());
+
+        preCompute();
     }
 
     public static void averageNetworks(MLPNetwork toAverageFrom, MLPNetwork averaged, double r1, double r2) {
