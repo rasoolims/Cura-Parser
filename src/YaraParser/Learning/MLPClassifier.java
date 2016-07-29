@@ -36,6 +36,7 @@ public class MLPClassifier {
     private double[] hiddenLayerBiasGradient;
     private double[][] softmaxLayerGradient;
     private double[] softmaxLayerBiasGradient;
+
     /**
      * Gradient histories for momentum update
      */
@@ -209,7 +210,9 @@ public class MLPClassifier {
                 offset += embeddings.length;
             }
         }
+    }
 
+    private void regularizeWithL2() {
         double regCost = 0.0;
         for (int i = 0; i < mlpNetwork.hiddenLayer.length; i++) {
             for (int j = 0; j < mlpNetwork.hiddenLayer[i].length; j++) {
@@ -221,11 +224,10 @@ public class MLPClassifier {
     }
 
     public void fit(ArrayList<NeuralTrainingInstance> instances, int iteration, boolean print) {
-        // todo grad saved
-        // todo multithread
         DecimalFormat format = new DecimalFormat("##.00");
 
         cost(instances, instances.size());
+        regularizeWithL2();
         update();
         mlpNetwork.preCompute();
 
