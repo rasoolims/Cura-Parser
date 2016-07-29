@@ -214,7 +214,7 @@ public class YaraParser {
 
             int decayStep = (int) (options.decayStep * dataSet.size() / options.batchSize);
             decayStep = decayStep == 0 ? 1 : decayStep;
-            System.out.println("Decay after every "+decayStep +" batches");
+            System.out.println("Decay after every " + decayStep + " batches");
 
             int step = 0;
             double bestModelUAS = 0;
@@ -246,7 +246,7 @@ public class YaraParser {
                         KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile
                                 + ".tmp", options.beamWidth, 1, false, "");
                         Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
-                        if(eval.first>bestModelUAS){
+                        if (eval.first > bestModelUAS) {
                             bestModelUAS = eval.first;
                             System.out.print("Saving the new model...");
                             FileOutputStream fos = new FileOutputStream(options.modelFile);
@@ -261,7 +261,7 @@ public class YaraParser {
                         KBeamArcEagerParser.parseNNConllFileNoParallel(avgMlpNetwork, options.devPath, options.modelFile + ".tmp",
                                 options.beamWidth, 1, false, "");
                         eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
-                        if(eval.first>bestModelUAS){
+                        if (eval.first > bestModelUAS) {
                             bestModelUAS = eval.first;
                             System.out.print("Saving the new model...");
                             FileOutputStream fos = new FileOutputStream(options.modelFile);

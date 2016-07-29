@@ -90,7 +90,7 @@ public class MLPClassifier {
             int offset = 0;
             for (int j = 0; j < features.length; j++) {
                 int tok = features[j];
-               final double[] embedding;
+                final double[] embedding;
                 if (j < mlpNetwork.numberOfWordEmbeddingLayers)
                     embedding = mlpNetwork.wordEmbeddings[tok];
                 else if (j < mlpNetwork.numberOfWordEmbeddingLayers + mlpNetwork.numberOfPosEmbeddingLayers)
@@ -167,7 +167,7 @@ public class MLPClassifier {
             double[] hiddenGrad = new double[hidden.length];
             for (int h = 0; h < reluHidden.length; h++) {
                 hiddenGrad[h] = (reluHidden[h] == 0. ? 0 : reluGradW[h]);
-                hiddenLayerBiasGradient[h] +=  hiddenGrad[h];
+                hiddenLayerBiasGradient[h] += hiddenGrad[h];
             }
 
             offset = 0;
