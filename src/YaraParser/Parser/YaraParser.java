@@ -227,13 +227,12 @@ public class YaraParser {
                 int e = Math.min(dataSet.size(), options.batchSize);
 
                 while (true) {
+                    step++;
                     ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, s, e, 0);
                     classifier.fit(instances, step, step % 10 == 0 ? true : false);
-
                     s = e;
                     e = Math.min(dataSet.size(), options.batchSize + e);
 
-                    step++;
                     if (step % decayStep == 0) {
                         classifier.setLearningRate(0.96 * classifier.getLearningRate());
                         System.out.println("The new learning rate: " + classifier.getLearningRate());
@@ -243,7 +242,7 @@ public class YaraParser {
                     double ratio = Math.min(0.9999, (double) step / (9 + step));
                     MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
 
-                    if (step % 10 == 0) {
+                    if (step % 100 == 0) {
                         KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile
                                 + ".tmp", options.beamWidth, 1, false, "");
                         Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
