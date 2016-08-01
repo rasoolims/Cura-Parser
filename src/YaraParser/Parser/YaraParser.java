@@ -39,7 +39,7 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 64;
-            options.learningRate = 0.2;
+            options.learningRate = 0.1;
             options.batchSize = 32;
             options.trainingIter = 3000;
             options.beamWidth = 1;
@@ -228,7 +228,7 @@ public class YaraParser {
                 while (true) {
                     step++;
                     ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, s, e, 0);
-                    classifier.fit(instances, step, step % 10 == 0 ? true : false);
+                    classifier.fit(instances, step, step % 100 == 0 ? true : false);
                     s = e;
                     e = Math.min(dataSet.size(), options.batchSize + e);
 
@@ -242,24 +242,10 @@ public class YaraParser {
                     MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
 
                     if (step % 100 == 0) {
-                        KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile
-                                + ".tmp", options.beamWidth, 1, false, "");
-                        Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
-                        if (eval.first > bestModelUAS) {
-                            bestModelUAS = eval.first;
-                            System.out.print("Saving the new model...");
-                            FileOutputStream fos = new FileOutputStream(options.modelFile);
-                            GZIPOutputStream gz = new GZIPOutputStream(fos);
-                            ObjectOutput writer = new ObjectOutputStream(gz);
-                            writer.writeObject(mlpNetwork);
-                            writer.close();
-                            System.out.print("done!\n");
-                        }
-
                         avgMlpNetwork.preCompute();
                         KBeamArcEagerParser.parseNNConllFileNoParallel(avgMlpNetwork, options.devPath, options.modelFile + ".tmp",
                                 options.beamWidth, 1, false, "");
-                        eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
+                        Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
                         if (eval.first > bestModelUAS) {
                             bestModelUAS = eval.first;
                             System.out.print("Saving the new model...");
@@ -275,16 +261,6 @@ public class YaraParser {
                     if (s >= dataSet.size())
                         break;
                 }
-               /*
-                StringBuilder output = new StringBuilder();
-                for (int c = 0; c < classifier.confusionMatrix.length; c++) {
-                    for (int j = 0; j < classifier.confusionMatrix.length; j++) {
-                        output.append(classifier.confusionMatrix[c][j] + "\t");
-                    }
-                    output.append("\n");
-                }
-                System.out.print(output.toString());
-                */
             }
             classifier.shutDownLiveThreads();
         }
