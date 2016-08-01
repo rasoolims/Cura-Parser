@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
-public class NetworkMatrices implements Serializable{
+public class NetworkMatrices implements Serializable {
     private double[][] wordEmbedding;
     private double[][] posEmbedding;
     private double[][] labelEmbedding;
@@ -102,5 +102,41 @@ public class NetworkMatrices implements Serializable{
         vectors.add(hiddenLayerBias);
         vectors.add(softmaxLayerBias);
         return vectors;
+    }
+
+
+    /**
+     * Merges the values by summation and puts everything to the first layer
+     *
+     * @param matrices
+     */
+    public void mergeMatricesInPlace(NetworkMatrices matrices) {
+        //todo check details
+
+        ArrayList<double[][]> allMatrices = getAllMatrices();
+        ArrayList<double[]> allVectors = getAllVectors();
+
+        ArrayList<double[][]> allMatrices2 = matrices.getAllMatrices();
+        ArrayList<double[]> allVectors2 = matrices.getAllVectors();
+
+        for (int m = 0; m < allMatrices.size(); m++) {
+            double[][] m1 = allMatrices.get(m);
+            double[][] m2 = allMatrices2.get(m);
+
+            for (int s1 = 0; s1 < m1.length; s1++) {
+                for (int s2 = 0; s2 < m1[s1].length; s2++) {
+                    m1[s1][s2] += m2[s1][s2];
+                }
+            }
+        }
+
+        for (int v = 0; v < allVectors.size(); v++) {
+            double[] v1 = allVectors.get(v);
+            double[] v2 = allVectors2.get(v);
+
+            for (int s1 = 0; s1 < v1.length; s1++) {
+                v1[s1] += v2[s1];
+            }
+        }
     }
 }

@@ -45,6 +45,7 @@ public class YaraParser {
             options.beamWidth = 1;
             options.decayStep = 3;
             options.useDynamicOracle = false;
+            options.numOfThreads = 4;
         }
 
         if (options.showHelp) {
@@ -210,7 +211,7 @@ public class YaraParser {
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim);
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim);
 
-            MLPClassifier classifier = new MLPClassifier(mlpNetwork, 0.9, options.learningRate, 0.0001);
+            MLPClassifier classifier = new MLPClassifier(mlpNetwork, 0.9, options.learningRate, 0.0001, options.numOfThreads);
 
             int decayStep = (int) (options.decayStep * dataSet.size() / options.batchSize);
             decayStep = decayStep == 0 ? 1 : decayStep;
