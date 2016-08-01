@@ -277,8 +277,8 @@ public class MLPClassifier {
                     if (label[i] >= 0) {
                         if (label[i] == 1)
                             gold = i;
-                        for (int j = 0; j < reluHidden.length; j++) {
-                            probs[i] += softmaxLayer[i][j] * reluHidden[j];
+                        for (int h = 0; h < reluHidden.length; h++) {
+                            probs[i] += softmaxLayer[i][h] * reluHidden[h];
                         }
 
                         probs[i] += softmaxLayerBias[i];
