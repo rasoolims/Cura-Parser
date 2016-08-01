@@ -122,9 +122,8 @@ public class MLPNetwork implements Serializable {
         }
 
         for (int i = 0; i < softmaxLayerSize; i++) {
-            matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, 0.2);
             for (int j = 0; j < hiddenLayerSize; j++) {
-                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * 0.01);
+                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * 0.01);
             }
         }
     }
