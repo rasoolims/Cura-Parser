@@ -114,43 +114,26 @@ public class ArcEagerBeamTrainer {
                 label[1] = -1;
             }
 
-            /*
-            if (options.useDynamicOracle) {
-                bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
-
-                // pick random oracle each time
-                List<Configuration> keys = new ArrayList<Configuration>(newOracles.keySet());
-                Configuration randomKey = keys.get(randGen.nextInt(keys.size()));
-                oracles = new HashMap<Configuration, Double>();
-                oracles.put(randomKey, 0.0);
-                bestScoringOracle = randomKey;
-
-            } else {
-              */
-
             bestScoringOracle = staticOracle(goldConfiguration, oracles, newOracles);
             oracles = newOracles;
-            /*}*/
             int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size() - 1);
-
             if (action >= 2)
                 action -= 1;
 
-            for (int i = 0; i < baseFeatures.length; i++) {
-                if (i < 19 && maps.rareWords.contains(baseFeatures[i]))
-                    if (randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)
-                        baseFeatures[i] = 0;
-            }
-
+            /** todo
+             for (int i = 0; i < baseFeatures.length; i++) {
+             if (i < 19 && maps.rareWords.contains(baseFeatures[i]))
+             if (randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)
+             baseFeatures[i] = 0;
+             }
+             **/
 
             label[action] = 1;
             instances.add(new NeuralTrainingInstance(baseFeatures, label));
-
-            beam = new ArrayList<Configuration>(options.beamWidth);
+            beam = new ArrayList<>(options.beamWidth);
             beam.add(bestScoringOracle);
         }
     }
-
 
     public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath,
                       boolean lowerCased, HashSet<String> punctuations, int partialTreeIter) throws Exception {

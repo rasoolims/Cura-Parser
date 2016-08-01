@@ -1648,7 +1648,6 @@ public class FeatureExtractor {
                     }
                     state.push(top2);
                 }
-
                 state.push(top1);
             }
 
@@ -1678,7 +1677,6 @@ public class FeatureExtractor {
                     s0rrw = maps.getNeuralWordKey(words[secondRightMost - 1]);
                     s0rrl = maps.getNeuralDepRelationKey(state.getDependency(secondRightMost));
                 }
-
             }
 
             int headIndex = state.getHead(s0Position);

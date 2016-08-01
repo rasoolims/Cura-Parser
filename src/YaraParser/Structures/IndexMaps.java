@@ -139,19 +139,14 @@ public class IndexMaps implements Serializable {
     }
 
     public int getNeuralPOSKey(int posId) {
-        int key = 0;
-        if (posMap.containsKey(posId))
-            key = posMap.get(posId);
-        return key;
+        // should never have unknown POS
+        return posMap.get(posId);
     }
 
     public int getNeuralDepRelationKey(int labelId) {
-        int key = 0;
-        if (depRelationMap.containsKey(labelId))
-            key = depRelationMap.get(labelId);
         if (labelId == -1)
-            key = 1; // null
-        return key;
+            return 1; // null
+        return depRelationMap.get(labelId);
     }
 
     public int vocabSize() {
