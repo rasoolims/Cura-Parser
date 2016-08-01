@@ -288,6 +288,7 @@ public class YaraParser {
                 System.out.print(output.toString());
                 */
             }
+            classifier.shutDownLiveThreads();
         }
     }
 }

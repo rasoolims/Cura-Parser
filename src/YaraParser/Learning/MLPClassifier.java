@@ -192,4 +192,12 @@ public class MLPClassifier {
     public String getCurrentTimeStamp() {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
     }
+
+    public void shutDownLiveThreads() {
+        boolean isTerminated = executor.isTerminated();
+        while (!isTerminated) {
+            executor.shutdownNow();
+            isTerminated = executor.isTerminated();
+        }
+    }
 }
