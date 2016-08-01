@@ -139,8 +139,10 @@ public class IndexMaps implements Serializable {
     }
 
     public int getNeuralPOSKey(int posId) {
-        // should never have unknown POS
-        return posMap.get(posId);
+        int key = 0;
+        if (posMap.containsKey(posId))
+            key = posMap.get(posId);
+        return key;
     }
 
     public int getNeuralDepRelationKey(int labelId) {
