@@ -45,7 +45,7 @@ public class YaraParser {
             options.beamWidth = 1;
             options.decayStep = 3;
             options.useDynamicOracle = false;
-            options.numOfThreads = 4;
+            options.numOfThreads = 2;
         }
 
         if (options.showHelp) {
