@@ -97,7 +97,7 @@ public class MLPClassifier {
         int s = 0;
         int e = Math.min(instances.size(), chunkSize);
         for (int i = 0; i < Math.min(instances.size(), numOfThreads); i++) {
-            pool.submit(new CostThread(instances, instances.size(),s,e));
+            pool.submit(new CostThread(instances, instances.size(), s, e));
             s = e;
             e = Math.min(instances.size(), e + chunkSize);
         }

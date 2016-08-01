@@ -152,9 +152,9 @@ public class MLPNetwork implements Serializable {
             int v = maps.preComputeMap.get(id);
             int offset = 0;
             for (int pos = 0; pos < numberOfWordEmbeddingLayers; pos++) {
-                for (int j = 0; j < hiddenLayerSize; j++) {
+                for (int h = 0; h < hiddenLayerSize; h++) {
                     for (int k = 0; k < wordEmbeddingSize; k++) {
-                        saved[pos][v][j] += hiddenLayer[j][offset + k] * wordEmbeddings[id][k];
+                        saved[pos][v][h] += hiddenLayer[h][offset + k] * wordEmbeddings[id][k];
                     }
                 }
                 offset += wordEmbeddingSize;
@@ -164,9 +164,9 @@ public class MLPNetwork implements Serializable {
         for (int id = 0; id < numOfPos; id++) {
             int offset = numberOfWordEmbeddingLayers * wordEmbeddingSize;
             for (int pos = 0; pos < numberOfPosEmbeddingLayers; pos++) {
-                for (int j = 0; j < hiddenLayerSize; j++) {
+                for (int h = 0; h < hiddenLayerSize; h++) {
                     for (int k = 0; k < posEmbeddingSize; k++) {
-                        saved[pos + numberOfWordEmbeddingLayers][id][j] += hiddenLayer[j][offset + k] * posEmbeddings[id][k];
+                        saved[pos + numberOfWordEmbeddingLayers][id][h] += hiddenLayer[h][offset + k] * posEmbeddings[id][k];
                     }
                 }
                 offset += posEmbeddingSize;
@@ -176,9 +176,9 @@ public class MLPNetwork implements Serializable {
         for (int id = 0; id < numOfDependencyLabels; id++) {
             int offset = numberOfWordEmbeddingLayers * wordEmbeddingSize + numberOfPosEmbeddingLayers * posEmbeddingSize;
             for (int pos = 0; pos < numberOfLabelEmbeddingLayers; pos++) {
-                for (int j = 0; j < hiddenLayerSize; j++) {
+                for (int h = 0; h < hiddenLayerSize; h++) {
                     for (int k = 0; k < labelEmbeddingSize; k++) {
-                        saved[pos + numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers][id][j] += hiddenLayer[j][offset + k] *
+                        saved[pos + numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers][id][h] += hiddenLayer[h][offset + k] *
                                 labelEmbeddings[id][k];
                     }
                 }
