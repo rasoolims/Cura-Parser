@@ -86,13 +86,13 @@ public class MLPClassifier {
                     int id = tok;
                     if (j < mlpNetwork.numberOfWordEmbeddingLayers)
                         id = mlpNetwork.maps.preComputeMap.get(tok);
-                    for (int i = 0; i < hidden.length; i++) {
-                        hidden[i] += mlpNetwork.saved[j][id][i];
+                    for (int h = 0; h < hidden.length; h++) {
+                        hidden[h] += mlpNetwork.saved[j][id][h];
                     }
                 } else {
-                    for (int i = 0; i < hidden.length; i++) {
+                    for (int h = 0; h < hidden.length; h++) {
                         for (int k = 0; k < embedding.length; k++) {
-                            hidden[i] += hiddenLayer[i][offset + k] * embedding[k];
+                            hidden[h] += hiddenLayer[h][offset + k] * embedding[k];
                         }
                     }
                 }
@@ -100,10 +100,10 @@ public class MLPClassifier {
             }
 
             double[] reluHidden = new double[hidden.length];
-            for (int i = 0; i < hidden.length; i++) {
-                hidden[i] += hiddenLayerBias[i];
+            for (int h = 0; h < hidden.length; h++) {
+                hidden[h] += hiddenLayerBias[h];
                 //relu
-                reluHidden[i] = Math.max(0, hidden[i]);
+                reluHidden[h] = Math.max(0, hidden[h]);
             }
 
             int argmax = -1;
