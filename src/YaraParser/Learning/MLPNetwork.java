@@ -96,7 +96,7 @@ public class MLPNetwork implements Serializable {
 
     private void initializeLayers() throws Exception {
         Random random = new Random();
-        double wEmbedStdDev = Math.pow(1.0/wordEmbeddingSize, 0.5);
+        double wEmbedStdDev = Math.pow(1.0 / wordEmbeddingSize, 0.5);
         for (int i = 0; i < numOfWords; i++) {
             for (int j = 0; j < wordEmbeddingSize; j++) {
                 matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * wEmbedStdDev);

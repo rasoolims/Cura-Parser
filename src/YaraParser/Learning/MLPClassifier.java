@@ -19,7 +19,6 @@ import java.util.concurrent.*;
  */
 
 public class MLPClassifier {
-    public int[][] confusionMatrix;
     MLPNetwork mlpNetwork;
 
     /**

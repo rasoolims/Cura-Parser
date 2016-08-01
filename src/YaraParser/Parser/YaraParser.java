@@ -220,8 +220,6 @@ public class YaraParser {
             int step = 0;
             double bestModelUAS = 0;
             for (int i = 0; i < options.trainingIter; i++) {
-                classifier.confusionMatrix = new int[2 * (dependencyLabels.size() + 1)][2 * (dependencyLabels.size() + 1)];
-
                 System.out.println("reshuffling data for round " + i);
                 Collections.shuffle(dataSet);
                 int s = 0;
