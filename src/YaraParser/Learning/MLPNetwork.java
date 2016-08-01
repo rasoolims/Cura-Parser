@@ -52,10 +52,29 @@ public class MLPNetwork implements Serializable {
         numOfPos = maps.posSize() + 2;
         posEmbeddingSize = 32;
 
-        hiddenLayerIntSize = numberOfPosEmbeddingLayers * wDim + numberOfPosEmbeddingLayers * 32 + numberOfLabelEmbeddingLayers * 32;
-        matrices = new NetworkMatrices(numOfWords, wDim, numOfPos, 32, numOfDependencyLabels, 32, hiddenLayerSize, hiddenLayerIntSize,
-                softmaxLayerSize);
+        hiddenLayerIntSize =
+                numberOfPosEmbeddingLayers * wDim + numberOfPosEmbeddingLayers * posEmbeddingSize + numberOfLabelEmbeddingLayers * labelEmbeddingSize;
+        matrices = new NetworkMatrices(numOfWords, wDim, numOfPos, posEmbeddingSize, numOfDependencyLabels, labelEmbeddingSize, hiddenLayerSize,
+                                       hiddenLayerIntSize, softmaxLayerSize);
 
+        initializeLayers();
+        addPretrainedWordEmbeddings(maps);
+        preCompute();
+    }
+
+    private void addPretrainedWordEmbeddings(IndexMaps maps) {
+        int numOfPretrained = 0;
+        for (int i = 0; i < numOfWords; i++) {
+            double[] embeddings = maps.embeddings(i);
+            if (embeddings != null) {
+                matrices.resetToPretrainedWordEmbeddings(i, embeddings);
+                numOfPretrained++;
+            }
+        }
+        System.out.println("num of pre-trained embedding " + numOfPretrained + " out of " + maps.vocabSize());
+    }
+
+    private void initializeLayers() throws Exception {
         Random random = new Random();
         for (int i = 0; i < numOfWords; i++) {
             for (int j = 0; j < wordEmbeddingSize; j++) {
@@ -88,18 +107,6 @@ public class MLPNetwork implements Serializable {
                 matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * 0.01);
             }
         }
-
-        int numOfPretrained = 0;
-        for (int i = 0; i < numOfWords; i++) {
-            double[] embeddings = maps.embeddings(i);
-            if (embeddings != null) {
-                matrices.resetToPretrainedWordEmbeddings(i, embeddings);
-                numOfPretrained++;
-            }
-        }
-        System.out.println("num of pre-trained embedding " + numOfPretrained + " out of " + maps.vocabSize());
-
-        preCompute();
     }
 
     public static void averageNetworks(MLPNetwork toAverageFrom, MLPNetwork averaged, double r1, double r2) {
