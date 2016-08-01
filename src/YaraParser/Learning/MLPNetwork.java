@@ -96,9 +96,10 @@ public class MLPNetwork implements Serializable {
 
     private void initializeLayers() throws Exception {
         Random random = new Random();
+        double wEmbedStdDev = Math.pow(1.0/wordEmbeddingSize, 0.5);
         for (int i = 0; i < numOfWords; i++) {
             for (int j = 0; j < wordEmbeddingSize; j++) {
-                matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * 0.01);
+                matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * wEmbedStdDev);
             }
         }
 
@@ -148,38 +149,39 @@ public class MLPNetwork implements Serializable {
             saved[i] = new double[numOfDependencyLabels][hiddenLayerSize];
 
 
-        for (int id : maps.preComputeMap.keySet()) {
-            int v = maps.preComputeMap.get(id);
+        for (int tok : maps.preComputeMap.keySet()) {
+            int id = maps.preComputeMap.get(tok);
             int offset = 0;
             for (int pos = 0; pos < numberOfWordEmbeddingLayers; pos++) {
                 for (int h = 0; h < hiddenLayerSize; h++) {
                     for (int k = 0; k < wordEmbeddingSize; k++) {
-                        saved[pos][v][h] += hiddenLayer[h][offset + k] * wordEmbeddings[id][k];
+                        saved[pos][id][h] += hiddenLayer[h][offset + k] * wordEmbeddings[tok][k];
                     }
                 }
                 offset += wordEmbeddingSize;
             }
         }
 
-        for (int id = 0; id < numOfPos; id++) {
+        for (int tok = 0; tok < numOfPos; tok++) {
             int offset = numberOfWordEmbeddingLayers * wordEmbeddingSize;
+            int indOffset = numberOfWordEmbeddingLayers;
             for (int pos = 0; pos < numberOfPosEmbeddingLayers; pos++) {
                 for (int h = 0; h < hiddenLayerSize; h++) {
                     for (int k = 0; k < posEmbeddingSize; k++) {
-                        saved[pos + numberOfWordEmbeddingLayers][id][h] += hiddenLayer[h][offset + k] * posEmbeddings[id][k];
+                        saved[pos + indOffset][tok][h] += hiddenLayer[h][offset + k] * posEmbeddings[tok][k];
                     }
                 }
                 offset += posEmbeddingSize;
             }
         }
 
-        for (int id = 0; id < numOfDependencyLabels; id++) {
+        for (int tok = 0; tok < numOfDependencyLabels; tok++) {
             int offset = numberOfWordEmbeddingLayers * wordEmbeddingSize + numberOfPosEmbeddingLayers * posEmbeddingSize;
+            int indOffset = numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers;
             for (int pos = 0; pos < numberOfLabelEmbeddingLayers; pos++) {
                 for (int h = 0; h < hiddenLayerSize; h++) {
                     for (int k = 0; k < labelEmbeddingSize; k++) {
-                        saved[pos + numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers][id][h] += hiddenLayer[h][offset + k] *
-                                labelEmbeddings[id][k];
+                        saved[pos + indOffset][tok][h] += hiddenLayer[h][offset + k] * labelEmbeddings[tok][k];
                     }
                 }
                 offset += labelEmbeddingSize;
