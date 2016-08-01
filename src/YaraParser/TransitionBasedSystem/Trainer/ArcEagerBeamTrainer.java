@@ -23,8 +23,6 @@ import YaraParser.TransitionBasedSystem.Parser.ArcEager;
 import YaraParser.TransitionBasedSystem.Parser.BeamScorerThread;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.CompletionService;

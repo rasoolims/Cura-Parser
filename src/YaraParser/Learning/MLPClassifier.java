@@ -64,13 +64,53 @@ public class MLPClassifier {
 
     private void regularizeWithL2() throws Exception {
         double regCost = 0.0;
+        final double[][] wordEmbeddings = mlpNetwork.matrices.getWordEmbedding();
+        final double[][] posEmbeddings = mlpNetwork.matrices.getPosEmbedding();
+        final double[][] labelEmbeddings = mlpNetwork.matrices.getLabelEmbedding();
         final double[][] hiddenLayer = mlpNetwork.matrices.getHiddenLayer();
-        for (int i = 0; i < hiddenLayer.length; i++) {
-            for (int j = 0; j < hiddenLayer[i].length; j++) {
-                regCost += Math.pow(hiddenLayer[i][j], 2);
-                gradients.modify(EmbeddingTypes.HIDDENLAYER, i, j, regularizerCoefficient * 2 * hiddenLayer[i][j]);
+        final double[] hiddenLayerBias = mlpNetwork.matrices.getHiddenLayerBias();
+        final double[][] softmaxLayer = mlpNetwork.matrices.getSoftmaxLayer();
+        final double[] softmaxLayerBias = mlpNetwork.matrices.getSoftmaxLayerBias();
+
+        for (int i = 0; i < mlpNetwork.numOfWords; i++) {
+            for (int j = 0; j < mlpNetwork.wordEmbeddingSize; j++) {
+                regCost += Math.pow(wordEmbeddings[i][j], 2);
+                gradients.modify(EmbeddingTypes.WORD, i, j, regularizerCoefficient * 2 * wordEmbeddings[i][j]);
             }
         }
+
+        for (int i = 0; i < mlpNetwork.numOfPos; i++) {
+            for (int j = 0; j < mlpNetwork.posEmbeddingSize; j++) {
+                regCost += Math.pow(posEmbeddings[i][j], 2);
+                gradients.modify(EmbeddingTypes.POS, i, j, regularizerCoefficient * 2 * posEmbeddings[i][j]);
+            }
+        }
+
+        for (int i = 0; i < mlpNetwork.numOfDependencyLabels; i++) {
+            for (int j = 0; j < mlpNetwork.labelEmbeddingSize; j++) {
+                regCost += Math.pow(labelEmbeddings[i][j], 2);
+                gradients.modify(EmbeddingTypes.DEPENDENCY, i, j, regularizerCoefficient * 2 * labelEmbeddings[i][j]);
+            }
+        }
+
+        for (int h = 0; h < hiddenLayer.length; h++) {
+            regCost += Math.pow(hiddenLayerBias[h], 2);
+            gradients.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, regularizerCoefficient * 2 * hiddenLayerBias[h]);
+            for (int j = 0; j < hiddenLayer[h].length; j++) {
+                regCost += Math.pow(hiddenLayer[h][j], 2);
+                gradients.modify(EmbeddingTypes.HIDDENLAYER, h, j, regularizerCoefficient * 2 * hiddenLayer[h][j]);
+            }
+        }
+
+        for (int i = 0; i < softmaxLayer.length; i++) {
+            regCost += Math.pow(softmaxLayerBias[i], 2);
+            gradients.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, regularizerCoefficient * 2 * softmaxLayerBias[i]);
+            for (int h = 0; h < softmaxLayer[i].length; h++) {
+                regCost += Math.pow(softmaxLayer[i][h], 2);
+                gradients.modify(EmbeddingTypes.SOFTMAX, i, h, regularizerCoefficient * 2 * softmaxLayer[i][h]);
+            }
+        }
+
         cost += regularizerCoefficient * regCost;
     }
 
