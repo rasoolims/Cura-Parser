@@ -17,12 +17,8 @@ public class Adagrad extends Updater {
     double eps;
 
     public Adagrad(MLPNetwork mlpNetwork, double learningRate, double eps) {
-        this.mlpNetwork = mlpNetwork;
-        this.learningRate = learningRate;
+        super(mlpNetwork, learningRate);
         this.eps = eps;
-        gradientHistory = new NetworkMatrices(mlpNetwork.getNumOfWords(), mlpNetwork.getWordEmbeddingSize(), mlpNetwork.getNumOfPos(), mlpNetwork
-                .getPosEmbeddingSize(), mlpNetwork.getNumOfDependencyLabels(), mlpNetwork.getLabelEmbeddingSize(), mlpNetwork.getHiddenLayerSize(),
-                mlpNetwork.getHiddenLayerIntSize(), mlpNetwork.getSoftmaxLayerSize());
     }
 
     @Override

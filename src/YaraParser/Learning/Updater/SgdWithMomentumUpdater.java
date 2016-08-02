@@ -16,12 +16,8 @@ public class SgdWithMomentumUpdater extends Updater {
     double momentum;
 
     public SgdWithMomentumUpdater(MLPNetwork mlpNetwork, double learningRate, double momentum) {
-        this.mlpNetwork = mlpNetwork;
-        this.learningRate = learningRate;
+        super(mlpNetwork, learningRate);
         this.momentum = momentum;
-        gradientHistory = new NetworkMatrices(mlpNetwork.getNumOfWords(), mlpNetwork.getWordEmbeddingSize(), mlpNetwork.getNumOfPos(), mlpNetwork
-                .getPosEmbeddingSize(), mlpNetwork.getNumOfDependencyLabels(), mlpNetwork.getLabelEmbeddingSize(), mlpNetwork.getHiddenLayerSize(),
-                mlpNetwork.getHiddenLayerIntSize(), mlpNetwork.getSoftmaxLayerSize());
     }
 
     @Override
