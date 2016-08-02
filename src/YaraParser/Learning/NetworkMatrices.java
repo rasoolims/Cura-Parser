@@ -120,8 +120,6 @@ public class NetworkMatrices implements Serializable {
      * @param matrices
      */
     public void mergeMatricesInPlace(NetworkMatrices matrices) {
-        //todo check details
-
         ArrayList<double[][]> allMatrices = getAllMatrices();
         ArrayList<double[]> allVectors = getAllVectors();
 
