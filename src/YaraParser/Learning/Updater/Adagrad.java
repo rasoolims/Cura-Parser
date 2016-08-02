@@ -14,7 +14,6 @@ import YaraParser.Structures.EmbeddingTypes;
 
 public class Adagrad extends Updater {
     NetworkMatrices gradientHistory;
-    MLPNetwork mlpNetwork;
     double eps;
 
     public Adagrad(MLPNetwork mlpNetwork, double learningRate, double eps) {

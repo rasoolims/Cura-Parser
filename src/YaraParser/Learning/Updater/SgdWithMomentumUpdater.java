@@ -13,9 +13,7 @@ import YaraParser.Structures.EmbeddingTypes;
  */
 
 public class SgdWithMomentumUpdater extends Updater {
-    NetworkMatrices gradientHistory;
     double momentum;
-    MLPNetwork mlpNetwork;
 
     public SgdWithMomentumUpdater(MLPNetwork mlpNetwork, double learningRate, double momentum) {
         this.mlpNetwork = mlpNetwork;

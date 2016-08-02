@@ -14,6 +14,7 @@ import YaraParser.Learning.NetworkMatrices;
 public abstract class Updater {
     MLPNetwork mlpNetwork;
     double learningRate;
+    NetworkMatrices gradientHistory;
 
     public abstract void update(NetworkMatrices gradients) throws Exception;
 
