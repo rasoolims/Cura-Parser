@@ -58,7 +58,7 @@ public class Options implements Serializable {
 
     public Options() {
         showHelp = false;
-        updaterType = UpdaterType.SGD;
+        updaterType = UpdaterType.ADAM;
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
@@ -66,7 +66,8 @@ public class Options implements Serializable {
         beamWidth = 1;
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
-        learningRate = 0.05;
+        // good for ADAM and ADAGRAD
+        learningRate = 0.01;
         batchSize = 32;
         decayStep = 0.2;
         rootFirst = false;

@@ -46,7 +46,7 @@ public class YaraParser {
             options.beamWidth = 1;
             options.useDynamicOracle = false;
             options.numOfThreads = 1;
-            options.updaterType = UpdaterType.SGD;
+            options.updaterType = UpdaterType.ADAM;
         }
 
         if (options.showHelp) {
