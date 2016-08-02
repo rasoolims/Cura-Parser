@@ -1,10 +1,7 @@
 package YaraParser.Learning;
 
 import YaraParser.Accessories.Pair;
-import YaraParser.Learning.Updater.Adagrad;
-import YaraParser.Learning.Updater.SgdWithMomentumUpdater;
-import YaraParser.Learning.Updater.Updater;
-import YaraParser.Learning.Updater.UpdaterType;
+import YaraParser.Learning.Updater.*;
 import YaraParser.Structures.EmbeddingTypes;
 import YaraParser.Structures.NeuralTrainingInstance;
 
@@ -53,7 +50,7 @@ public class MLPClassifier {
         else if (updaterType == UpdaterType.ADAGRAD)
             updater = new Adagrad(mlpNetwork, learningRate, 1e-6);
         else
-            throw new Exception("unsupported updater");
+            updater = new Adam(mlpNetwork, learningRate, 0.9, 0.9999, 1e-8);
         this.regularizerCoefficient = regularizerCoefficient;
         this.numOfThreads = numOfThreads;
         executor = Executors.newFixedThreadPool(numOfThreads);
