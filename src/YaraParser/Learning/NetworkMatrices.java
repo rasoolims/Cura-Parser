@@ -13,7 +13,6 @@ import java.util.ArrayList;
  * Time: 2:34 PM
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
-
 public class NetworkMatrices implements Serializable {
     private double[][] wordEmbedding;
     private double[][] posEmbedding;
@@ -70,7 +69,6 @@ public class NetworkMatrices implements Serializable {
             throw new Exception("Embedding type not supported");
     }
 
-
     public double[][] getWordEmbedding() {
         return wordEmbedding;
     }
@@ -115,7 +113,6 @@ public class NetworkMatrices implements Serializable {
         vectors.add(softmaxLayerBias);
         return vectors;
     }
-
 
     /**
      * Merges the values by summation and puts everything to the first layer

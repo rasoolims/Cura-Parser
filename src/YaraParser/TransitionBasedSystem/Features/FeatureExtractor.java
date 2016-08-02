@@ -27,7 +27,6 @@ public class FeatureExtractor {
             return extractExtendedFeaturesWithBrownClusters(configuration, length);
     }
 
-
     /**
      * Given a list of templates, extracts all features for the given state
      *

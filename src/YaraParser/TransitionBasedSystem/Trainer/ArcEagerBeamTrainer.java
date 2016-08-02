@@ -62,8 +62,8 @@ public class ArcEagerBeamTrainer {
         this.maps = maps;
     }
 
-    public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int
-            end, double dropoutProb) throws Exception {
+    public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropoutProb)
+            throws Exception {
         ArrayList<NeuralTrainingInstance> instances = new ArrayList<>();
         for (int i = start; i < end; i++) {
             addInstance(trainData.get(i), instances, dropoutProb);
