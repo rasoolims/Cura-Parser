@@ -24,4 +24,11 @@ public class NeuralTrainingInstance {
     public int[] getLabel() {
         return label;
     }
+
+    public int gold() {
+        for (int i = 0; i < label.length; i++)
+            if (label[i] == 1)
+                return i;
+        return -1;
+    }
 }

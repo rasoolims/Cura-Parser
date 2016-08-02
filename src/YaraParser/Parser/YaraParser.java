@@ -167,8 +167,7 @@ public class YaraParser {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options
-                    .clusterFile, 1);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile, 1);
             int wDim = 64;
             if (options.wordEmbeddingFile.length() > 0)
                 wDim = maps.readEmbeddings(options.wordEmbeddingFile);

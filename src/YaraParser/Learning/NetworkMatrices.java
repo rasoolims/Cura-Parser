@@ -1,5 +1,6 @@
 package YaraParser.Learning;
 
+import YaraParser.Accessories.Utils;
 import YaraParser.Structures.EmbeddingTypes;
 
 import java.io.Serializable;
@@ -21,6 +22,17 @@ public class NetworkMatrices implements Serializable {
     private double[] hiddenLayerBias;
     private double[][] softmaxLayer;
     private double[] softmaxLayerBias;
+
+    private NetworkMatrices(double[][] wordEmbedding, double[][] posEmbedding, double[][] labelEmbedding, double[][] hiddenLayer, double[]
+            hiddenLayerBias, double[][] softmaxLayer, double[] softmaxLayerBias) {
+        this.wordEmbedding = wordEmbedding;
+        this.posEmbedding = posEmbedding;
+        this.labelEmbedding = labelEmbedding;
+        this.hiddenLayer = hiddenLayer;
+        this.hiddenLayerBias = hiddenLayerBias;
+        this.softmaxLayer = softmaxLayer;
+        this.softmaxLayerBias = softmaxLayerBias;
+    }
 
     public NetworkMatrices(int wSize, int wDim, int pSize, int pDim, int lSize, int lDim, int hDim, int hIntDim, int softDim) {
         wordEmbedding = new double[wSize][wDim];
@@ -138,5 +150,10 @@ public class NetworkMatrices implements Serializable {
                 v1[s1] += v2[s1];
             }
         }
+    }
+
+    public NetworkMatrices clone() {
+        return new NetworkMatrices(Utils.clone(wordEmbedding), Utils.clone(posEmbedding), Utils.clone(labelEmbedding), Utils.clone(hiddenLayer),
+                Utils.clone(hiddenLayerBias), Utils.clone(softmaxLayer), Utils.clone(softmaxLayerBias));
     }
 }

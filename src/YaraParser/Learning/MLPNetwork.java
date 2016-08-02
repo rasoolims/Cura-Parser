@@ -62,6 +62,38 @@ public class MLPNetwork implements Serializable {
         preCompute();
     }
 
+
+    /**
+     * This is only for testing.
+     *
+     * @param wDim
+     * @throws Exception
+     */
+    public MLPNetwork(int hiddenLayer1Size, int wDim, int numOfWords, int numOfPos, int numOfDependencyLabels, int pDim, int lDim)
+            throws Exception {
+        this.maps = null;
+        this.options = null;
+        this.dependencyLabels = new ArrayList<>(numOfDependencyLabels);
+        for (int i = 0; i < numOfDependencyLabels; i++)
+            this.dependencyLabels.add(i);
+        softmaxLayerSize = 2 * (dependencyLabels.size() + 1);
+        this.numOfWords = numOfWords;
+        this.numOfDependencyLabels = numOfDependencyLabels;
+        labelEmbeddingSize = lDim;
+        wordEmbeddingSize = wDim;
+        this.hiddenLayerSize = hiddenLayer1Size;
+        this.numOfPos = numOfPos;
+        posEmbeddingSize = pDim;
+
+        hiddenLayerIntSize =
+                numberOfPosEmbeddingLayers * wDim + numberOfPosEmbeddingLayers * posEmbeddingSize + numberOfLabelEmbeddingLayers * labelEmbeddingSize;
+        matrices = new NetworkMatrices(numOfWords, wDim, numOfPos, posEmbeddingSize, numOfDependencyLabels, labelEmbeddingSize, hiddenLayerSize,
+                hiddenLayerIntSize, softmaxLayerSize);
+
+        initializeLayers();
+    }
+
+
     public static void averageNetworks(MLPNetwork toAverageFrom, MLPNetwork averaged, double r1, double r2) {
         ArrayList<double[][]> matrices1 = toAverageFrom.matrices.getAllMatrices();
         ArrayList<double[][]> matrices2 = averaged.matrices.getAllMatrices();
@@ -205,7 +237,7 @@ public class MLPNetwork implements Serializable {
             double[][] embedding;
             if (j < numberOfWordEmbeddingLayers)
                 embedding = wordEmbeddings;
-            else if (j < numberOfWordEmbeddingLayers + numberOfWordEmbeddingLayers)
+            else if (j < numberOfWordEmbeddingLayers + numberOfPosEmbeddingLayers)
                 embedding = posEmbeddings;
             else embedding = labelEmbeddings;
 
@@ -250,4 +282,68 @@ public class MLPNetwork implements Serializable {
         return probs;
     }
 
+
+    public IndexMaps getMaps() {
+        return maps;
+    }
+
+    public Options getOptions() {
+        return options;
+    }
+
+    public ArrayList<Integer> getDependencyLabels() {
+        return dependencyLabels;
+    }
+
+    public int getNumberOfWordEmbeddingLayers() {
+        return numberOfWordEmbeddingLayers;
+    }
+
+    public int getNumberOfPosEmbeddingLayers() {
+        return numberOfPosEmbeddingLayers;
+    }
+
+    public int getNumberOfLabelEmbeddingLayers() {
+        return numberOfLabelEmbeddingLayers;
+    }
+
+    public int getNumOfDependencyLabels() {
+        return numOfDependencyLabels;
+    }
+
+    public int getLabelEmbeddingSize() {
+        return labelEmbeddingSize;
+    }
+
+    public int getWordEmbeddingSize() {
+        return wordEmbeddingSize;
+    }
+
+    public int getHiddenLayerSize() {
+        return hiddenLayerSize;
+    }
+
+    public int getHiddenLayerIntSize() {
+        return hiddenLayerIntSize;
+    }
+
+    public int getNumOfWords() {
+        return numOfWords;
+    }
+
+    public int getNumOfPos() {
+        return numOfPos;
+    }
+
+    public int getPosEmbeddingSize() {
+        return posEmbeddingSize;
+    }
+
+    public int getSoftmaxLayerSize() {
+        return softmaxLayerSize;
+    }
+
+    public NetworkMatrices getMatrices() {
+        return matrices;
+    }
 }
