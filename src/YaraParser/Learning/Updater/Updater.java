@@ -16,4 +16,13 @@ public abstract class Updater {
     double learningRate;
 
     public abstract void update(NetworkMatrices gradients) throws Exception;
+
+    public double getLearningRate() {
+        return learningRate;
+    }
+
+    public void setLearningRate(double learningRate) {
+        this.learningRate = learningRate;
+    }
+
 }

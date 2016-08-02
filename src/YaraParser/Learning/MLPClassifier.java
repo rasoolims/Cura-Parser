@@ -1,8 +1,10 @@
 package YaraParser.Learning;
 
 import YaraParser.Accessories.Pair;
+import YaraParser.Learning.Updater.Adagrad;
 import YaraParser.Learning.Updater.SgdWithMomentumUpdater;
 import YaraParser.Learning.Updater.Updater;
+import YaraParser.Learning.Updater.UpdaterType;
 import YaraParser.Structures.EmbeddingTypes;
 import YaraParser.Structures.NeuralTrainingInstance;
 
@@ -41,15 +43,17 @@ public class MLPClassifier {
      * Gradients
      */
     private NetworkMatrices gradients;
-    private double momentum;
-    private double learningRate;
     private double regularizerCoefficient;
 
-    public MLPClassifier(MLPNetwork mlpNetwork, double momentum, double learningRate, double regularizerCoefficient, int numOfThreads) {
+    public MLPClassifier(MLPNetwork mlpNetwork, UpdaterType updaterType, double momentum, double learningRate, double regularizerCoefficient, int
+            numOfThreads) throws Exception {
         this.mlpNetwork = mlpNetwork;
-        updater = new SgdWithMomentumUpdater(mlpNetwork, learningRate, momentum);
-        this.momentum = momentum;
-        this.learningRate = learningRate;
+        if (updaterType == UpdaterType.SGD)
+            updater = new SgdWithMomentumUpdater(mlpNetwork, learningRate, momentum);
+        else if (updaterType == UpdaterType.ADAGRAD)
+            updater = new Adagrad(mlpNetwork, learningRate, 1e-6);
+        else
+            throw new Exception("unsupported updater");
         this.regularizerCoefficient = regularizerCoefficient;
         this.numOfThreads = numOfThreads;
         executor = Executors.newFixedThreadPool(numOfThreads);
@@ -66,7 +70,6 @@ public class MLPClassifier {
         final double[][] softmaxLayer = mlpNetwork.matrices.getSoftmaxLayer();
         final double[] softmaxLayerBias = mlpNetwork.matrices.getSoftmaxLayerBias();
 
-        /*
         for (int i = 0; i < mlpNetwork.numOfWords; i++) {
             for (int j = 0; j < mlpNetwork.wordEmbeddingSize; j++) {
                 regCost += Math.pow(wordEmbeddings[i][j], 2);
@@ -87,18 +90,16 @@ public class MLPClassifier {
                 gradients.modify(EmbeddingTypes.DEPENDENCY, i, j, regularizerCoefficient * 2 * labelEmbeddings[i][j]);
             }
         }
-        */
 
         for (int h = 0; h < hiddenLayer.length; h++) {
-            //  regCost += Math.pow(hiddenLayerBias[h], 2);
-            //  gradients.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, regularizerCoefficient * 2 * hiddenLayerBias[h]);
+            regCost += Math.pow(hiddenLayerBias[h], 2);
+            gradients.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, regularizerCoefficient * 2 * hiddenLayerBias[h]);
             for (int j = 0; j < hiddenLayer[h].length; j++) {
                 regCost += Math.pow(hiddenLayer[h][j], 2);
                 gradients.modify(EmbeddingTypes.HIDDENLAYER, h, j, regularizerCoefficient * 2 * hiddenLayer[h][j]);
             }
         }
 
-        /*
         for (int i = 0; i < softmaxLayer.length; i++) {
             regCost += Math.pow(softmaxLayerBias[i], 2);
             gradients.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, regularizerCoefficient * 2 * softmaxLayerBias[i]);
@@ -107,7 +108,6 @@ public class MLPClassifier {
                 gradients.modify(EmbeddingTypes.SOFTMAX, i, h, regularizerCoefficient * 2 * softmaxLayer[i][h]);
             }
         }
-        */
         cost += regularizerCoefficient * regCost;
     }
 
@@ -155,11 +155,11 @@ public class MLPClassifier {
     }
 
     public double getLearningRate() {
-        return learningRate;
+        return updater.getLearningRate();
     }
 
     public void setLearningRate(double learningRate) {
-        this.learningRate = learningRate;
+        updater.setLearningRate(learningRate);
     }
 
     public String getCurrentTimeStamp() {

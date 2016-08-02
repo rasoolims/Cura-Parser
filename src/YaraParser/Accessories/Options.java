@@ -5,6 +5,8 @@
 
 package YaraParser.Accessories;
 
+import YaraParser.Learning.Updater.UpdaterType;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Serializable;
@@ -42,6 +44,7 @@ public class Options implements Serializable {
     public boolean useRandomOracleSelection;
     public String separator;
     public int numOfThreads;
+    public UpdaterType updaterType;
 
     public String goldFile;
 
@@ -55,6 +58,7 @@ public class Options implements Serializable {
 
     public Options() {
         showHelp = false;
+        updaterType = UpdaterType.SGD;
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
@@ -149,6 +153,7 @@ public class Options implements Serializable {
         output.append("\t \t -h2 [hidden-layer-size-2] \n");
         output.append("\t \t -lr [learning-rate] \n");
         output.append("\t \t -ds [decay-step] \n");
+        output.append("\t \t -u [updater-type: sgd(default),adam,adagrad] \n");
         output.append("\t \t -batch [batch-size] \n");
         output.append("\t \t drop [put if want dropout] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
@@ -226,7 +231,16 @@ public class Options implements Serializable {
                 options.predFile = args[i + 1];
             else if (args[i].startsWith("-e"))
                 options.wordEmbeddingFile = args[i + 1];
-            else if (args[i].startsWith("-h1"))
+            else if (args[i].startsWith("-u")) {
+                if (args[i + 1].equals("sgd"))
+                    options.updaterType = UpdaterType.SGD;
+                else if (args[i + 1].equals("adam"))
+                    options.updaterType = UpdaterType.ADAM;
+                else if (args[i + 1].equals("adagrad"))
+                    options.updaterType = UpdaterType.ADAGRAD;
+                else
+                    throw new Exception("updater not supported");
+            } else if (args[i].startsWith("-h1"))
                 options.hiddenLayer1Size = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-h2"))
                 options.hiddenLayer2Size = Integer.parseInt(args[i + 1]);
@@ -410,6 +424,7 @@ public class Options implements Serializable {
             builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
             builder.append("h1-size: " + hiddenLayer1Size + "\n");
             builder.append("h2-size: " + hiddenLayer2Size + "\n");
+            builder.append("updater: " + updaterType + "\n");
             builder.append("learning rate: " + learningRate + "\n");
             builder.append("decay step: " + decayStep + "\n");
             builder.append("batch size: " + batchSize + "\n");

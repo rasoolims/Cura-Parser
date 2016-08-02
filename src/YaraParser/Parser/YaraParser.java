@@ -12,6 +12,7 @@ import YaraParser.Accessories.Pair;
 import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Learning.MLPClassifier;
 import YaraParser.Learning.MLPNetwork;
+import YaraParser.Learning.Updater.UpdaterType;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
 import YaraParser.Structures.NeuralTrainingInstance;
@@ -38,14 +39,14 @@ public class YaraParser {
             //  options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
             options.modelFile = "/tmp/model";
             options.labeled = false;
-            options.hiddenLayer1Size = 64;
-            options.learningRate = 0.1;
-            options.batchSize = 32;
+            options.hiddenLayer1Size = 200;
+            options.learningRate = 0.01;
+            options.batchSize = 320;
             options.trainingIter = 3000;
             options.beamWidth = 1;
-            options.decayStep = 3;
             options.useDynamicOracle = false;
             options.numOfThreads = 1;
+            options.updaterType = UpdaterType.ADAGRAD;
         }
 
         if (options.showHelp) {
@@ -210,7 +211,7 @@ public class YaraParser {
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim);
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim);
 
-            MLPClassifier classifier = new MLPClassifier(mlpNetwork, 0.9, options.learningRate, 0.0001, options.numOfThreads);
+            MLPClassifier classifier = new MLPClassifier(mlpNetwork, options.updaterType, 0.9, options.learningRate, 0.0001, options.numOfThreads);
 
             int decayStep = (int) (options.decayStep * dataSet.size() / options.batchSize);
             decayStep = decayStep == 0 ? 1 : decayStep;
@@ -227,33 +228,51 @@ public class YaraParser {
                 while (true) {
                     step++;
                     ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, s, e, 0);
-                    classifier.fit(instances, step, step % 100 == 0 ? true : false);
+                    classifier.fit(instances, step, step % 1 == 0 ? true : false);
                     s = e;
                     e = Math.min(dataSet.size(), options.batchSize + e);
 
-                    if (step % decayStep == 0) {
-                        classifier.setLearningRate(0.96 * classifier.getLearningRate());
-                        System.out.println("The new learning rate: " + classifier.getLearningRate());
+                    if (options.updaterType == UpdaterType.SGD) {
+                        if (step % decayStep == 0) {
+                            classifier.setLearningRate(0.96 * classifier.getLearningRate());
+                            System.out.println("The new learning rate: " + classifier.getLearningRate());
+                        }
+
+                        // averaging
+                        double ratio = Math.min(0.9999, (double) step / (9 + step));
+                        MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
                     }
 
-                    // averaging
-                    double ratio = Math.min(0.9999, (double) step / (9 + step));
-                    MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
-
                     if (step % 100 == 0) {
-                        avgMlpNetwork.preCompute();
-                        KBeamArcEagerParser.parseNNConllFileNoParallel(avgMlpNetwork, options.devPath, options.modelFile + ".tmp",
-                                options.beamWidth, 1, false, "");
-                        Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
-                        if (eval.first > bestModelUAS) {
-                            bestModelUAS = eval.first;
-                            System.out.print("Saving the new model...");
-                            FileOutputStream fos = new FileOutputStream(options.modelFile);
-                            GZIPOutputStream gz = new GZIPOutputStream(fos);
-                            ObjectOutput writer = new ObjectOutputStream(gz);
-                            writer.writeObject(avgMlpNetwork);
-                            writer.close();
-                            System.out.print("done!\n");
+                        if (options.updaterType != UpdaterType.SGD) {
+                            KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile + ".tmp",
+                                    options.beamWidth, 1, false, "");
+                            Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
+                            if (eval.first > bestModelUAS) {
+                                bestModelUAS = eval.first;
+                                System.out.print("Saving the new model...");
+                                FileOutputStream fos = new FileOutputStream(options.modelFile);
+                                GZIPOutputStream gz = new GZIPOutputStream(fos);
+                                ObjectOutput writer = new ObjectOutputStream(gz);
+                                writer.writeObject(mlpNetwork);
+                                writer.close();
+                                System.out.print("done!\n");
+                            }
+                        } else if (options.updaterType == UpdaterType.SGD) {
+                            avgMlpNetwork.preCompute();
+                            KBeamArcEagerParser.parseNNConllFileNoParallel(avgMlpNetwork, options.devPath, options.modelFile + ".tmp",
+                                    options.beamWidth, 1, false, "");
+                            Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
+                            if (eval.first > bestModelUAS) {
+                                bestModelUAS = eval.first;
+                                System.out.print("Saving the new model...");
+                                FileOutputStream fos = new FileOutputStream(options.modelFile);
+                                GZIPOutputStream gz = new GZIPOutputStream(fos);
+                                ObjectOutput writer = new ObjectOutputStream(gz);
+                                writer.writeObject(avgMlpNetwork);
+                                writer.close();
+                                System.out.print("done!\n");
+                            }
                         }
                     }
 
