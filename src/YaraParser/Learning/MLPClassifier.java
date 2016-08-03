@@ -82,7 +82,7 @@ public class MLPClassifier {
         }
 
         for (int i = 0; i < mlpNetwork.numOfDepLabels; i++) {
-            for (int j = 0; j < mlpNetwork.labelEmbeddingSize; j++) {
+            for (int j = 0; j < mlpNetwork.labelEmbedDim; j++) {
                 regCost += Math.pow(labelEmbeddings[i][j], 2);
                 gradients.modify(EmbeddingTypes.DEPENDENCY, i, j, regularizerCoefficient * 2 * labelEmbeddings[i][j]);
             }
@@ -159,11 +159,14 @@ public class MLPClassifier {
     }
 
     private void backPropSavedGradients(double[][] hiddenLayer, double[][][] savedGradients) throws Exception {
-        for (int tok : mlpNetwork.maps.preComputeMap.keySet()) {
-            int id = mlpNetwork.maps.preComputeMap.get(tok);
-            double[] embedding = mlpNetwork.matrices.getWordEmbedding()[tok];
-            int offset = 0;
-            for (int index = 0; index < mlpNetwork.numOfWordLayers; index++) {
+        int offset = 0;
+        double[][] wE = mlpNetwork.matrices.getWordEmbedding();
+        double[][] pE = mlpNetwork.matrices.getPosEmbedding();
+        double[][] lE = mlpNetwork.matrices.getLabelEmbedding();
+        for (int index = 0; index < mlpNetwork.numOfWordLayers; index++) {
+            for (int tok : mlpNetwork.maps.preComputeMap.keySet()) {
+                int id = mlpNetwork.maps.preComputeMap.get(tok);
+                double[] embedding = wE[tok];
                 for (int h = 0; h < savedGradients[index][id].length; h++) {
                     double delta = savedGradients[index][id][h];
                     for (int k = 0; k < embedding.length; k++) {
@@ -171,14 +174,13 @@ public class MLPClassifier {
                         gradients.modify(EmbeddingTypes.WORD, tok, k, delta * hiddenLayer[h][offset]);
                     }
                 }
-                offset += embedding.length;
             }
+            offset += mlpNetwork.wordEmbedDim;
         }
 
-        for (int tok = 0; tok < mlpNetwork.numOfPos; tok++) {
-            double[] embedding = mlpNetwork.matrices.getPosEmbedding()[tok];
-            int offset = mlpNetwork.numOfWordLayers * mlpNetwork.wordEmbedDim;
-            for (int index = mlpNetwork.numOfWordLayers; index < mlpNetwork.numOfWordLayers+mlpNetwork.numOfPosLayers; index++) {
+        for (int index = mlpNetwork.numOfWordLayers; index < mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers; index++) {
+            for (int tok = 0; tok < mlpNetwork.numOfPos; tok++) {
+                double[] embedding = pE[tok];
                 for (int h = 0; h < savedGradients[index][tok].length; h++) {
                     double delta = savedGradients[index][tok][h];
                     for (int k = 0; k < embedding.length; k++) {
@@ -186,15 +188,14 @@ public class MLPClassifier {
                         gradients.modify(EmbeddingTypes.POS, tok, k, delta * hiddenLayer[h][offset]);
                     }
                 }
-                offset += embedding.length;
             }
+            offset += mlpNetwork.posEmbeddingDim;
         }
 
-        for (int tok = 0; tok < mlpNetwork.numOfDepLabels; tok++) {
-            double[] embedding = mlpNetwork.matrices.getLabelEmbedding()[tok];
-            int offset = mlpNetwork.numOfWordLayers * mlpNetwork.wordEmbedDim + mlpNetwork.numOfDepLayers * mlpNetwork.posEmbeddingDim;
-            for (int index = mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers;
-                 index < mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers + mlpNetwork.numOfDepLayers; index++) {
+        for (int index = mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers;
+             index < mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers + mlpNetwork.numOfDepLayers; index++) {
+            for (int tok = 0; tok < mlpNetwork.numOfDepLabels; tok++) {
+                double[] embedding = lE[tok];
                 for (int h = 0; h < savedGradients[index][tok].length; h++) {
                     double delta = savedGradients[index][tok][h];
                     for (int k = 0; k < embedding.length; k++) {
@@ -202,8 +203,8 @@ public class MLPClassifier {
                         gradients.modify(EmbeddingTypes.DEPENDENCY, tok, k, delta * hiddenLayer[h][offset]);
                     }
                 }
-                offset += embedding.length;
             }
+            offset += mlpNetwork.labelEmbedDim;
         }
     }
 
@@ -243,7 +244,7 @@ public class MLPClassifier {
         @Override
         public Pair<Pair<Double, Double>, Pair<NetworkMatrices, double[][][]>> call() throws Exception {
             NetworkMatrices gradients = new NetworkMatrices(mlpNetwork.numOfWords, mlpNetwork.wordEmbedDim, mlpNetwork.numOfPos,
-                    mlpNetwork.posEmbeddingDim, mlpNetwork.numOfDepLabels, mlpNetwork.labelEmbeddingSize, mlpNetwork.hiddenLayerDim,
+                    mlpNetwork.posEmbeddingDim, mlpNetwork.numOfDepLabels, mlpNetwork.labelEmbedDim, mlpNetwork.hiddenLayerDim,
                     mlpNetwork.hiddenLayerIntDim, mlpNetwork.softmaxLayerDim);
             double[][][] savedGradients = instantiateSavedGradients();
 
@@ -383,12 +384,10 @@ public class MLPClassifier {
 
         private double[][][] instantiateSavedGradients() {
             double[][][] savedGradients =
-                    new double[mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers + mlpNetwork.numOfDepLayers]
-                            [mlpNetwork.maps.preComputeMap.size()][mlpNetwork.hiddenLayerDim];
+                    new double[mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers + mlpNetwork.numOfDepLayers][][];
             for (int i = 0; i < mlpNetwork.numOfWordLayers; i++)
                 savedGradients[i] = new double[mlpNetwork.maps.preComputeMap.size()][mlpNetwork.hiddenLayerDim];
-            for (int i = mlpNetwork.numOfWordLayers; i < mlpNetwork.numOfWordLayers + mlpNetwork
-                    .numOfPosLayers; i++)
+            for (int i = mlpNetwork.numOfWordLayers; i < mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers; i++)
                 savedGradients[i] = new double[mlpNetwork.numOfPos][mlpNetwork.hiddenLayerDim];
             for (int i = mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers;
                  i < mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers + mlpNetwork.numOfDepLayers; i++)

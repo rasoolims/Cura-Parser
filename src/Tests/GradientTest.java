@@ -82,7 +82,7 @@ public class GradientTest {
 
         double eps = 0.000001;
         for (int i = 38; i < 49; i++) {
-            for (int slot = 0; slot < network.getLabelEmbeddingSize(); slot++) {
+            for (int slot = 0; slot < network.getLabelEmbedDim(); slot++) {
                 int tokNum = randomInstance.getFeatures()[42];
                 double gradForTok = gradients.getLabelEmbedding()[tokNum][slot];
 
@@ -228,7 +228,7 @@ public class GradientTest {
         int[] label = instance.getLabel();
         NetworkMatrices gradients = new NetworkMatrices(
                 mlpNetwork.getNumOfWords(), mlpNetwork.getWordEmbedDim(), mlpNetwork.getNumOfPos(), mlpNetwork.getPosEmbeddingDim(),
-                mlpNetwork.getNumOfDepLabels(), mlpNetwork.getLabelEmbeddingSize(), mlpNetwork.getHiddenLayerDim(),
+                mlpNetwork.getNumOfDepLabels(), mlpNetwork.getLabelEmbedDim(), mlpNetwork.getHiddenLayerDim(),
                 mlpNetwork.getHiddenLayerIntDim(), mlpNetwork.getSoftmaxLayerDim());
 
         double[] hidden = new double[mlpNetwork.getHiddenLayerDim()];
