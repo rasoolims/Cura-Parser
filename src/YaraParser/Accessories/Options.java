@@ -67,7 +67,7 @@ public class Options implements Serializable {
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
         // good for ADAM and ADAGRAD
-        learningRate = 0.01;
+        learningRate = 0.001;
         batchSize = 32;
         decayStep = 0.2;
         rootFirst = false;
