@@ -206,7 +206,7 @@ public class MLPClassifier {
                     for (int h = 0; h < savedGradients[index][id].length; h++) {
                         double delta = savedGradients[index][id][h];
                         for (int k = 0; k < embedding.length; k++) {
-                            g.modify(EmbeddingTypes.HIDDENLAYER, h, offset, delta * embedding[k]);
+                            g.modify(EmbeddingTypes.HIDDENLAYER, h, offset+k, delta * embedding[k]);
                             g.modify(EmbeddingTypes.WORD, tok, k, delta * hiddenLayer[h][offset+k]);
                         }
                     }
@@ -215,20 +215,20 @@ public class MLPClassifier {
             }
 
             int plBorder = net.numWordLayers + net.numPosLayers;
-            for (int index = net.numWordLayers; index < net.numWordLayers + net.numPosLayers; index++) {
-                for (int tok = 0; tok < net.numPos; tok++) {
-                    double[] embedding = index < plBorder ? pE[tok] : lE[tok];
+            for (int index = net.numWordLayers; index < net.numWordLayers + net.numPosLayers + net.numDepLayers; index++) {
+                boolean isPos = index < plBorder;
+                for (int tok = 0; tok < (isPos ? net.numPos : net.numDepLabels); tok++) {
+                    double[] embedding = isPos ? pE[tok] : lE[tok];
                     for (int h = 0; h < savedGradients[index][tok].length; h++) {
                         double delta = savedGradients[index][tok][h];
                         for (int k = 0; k < embedding.length; k++) {
-                            g.modify(EmbeddingTypes.HIDDENLAYER, h, offset, delta * embedding[k]);
-                            g.modify(index < plBorder ? EmbeddingTypes.POS : EmbeddingTypes.DEPENDENCY, tok, k, delta * hiddenLayer[h][offset+k]);
+                            g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, delta * embedding[k]);
+                            g.modify(isPos ? EmbeddingTypes.POS : EmbeddingTypes.DEPENDENCY, tok, k, delta * hiddenLayer[h][offset + k]);
                         }
                     }
                 }
-                offset += index < plBorder ? net.posEmbeddingDim : net.labelEmbedDim;
+                offset += isPos ? net.posEmbeddingDim : net.labelEmbedDim;
             }
-
         }
 
         @Override
