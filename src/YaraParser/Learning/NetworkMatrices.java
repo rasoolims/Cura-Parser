@@ -119,32 +119,14 @@ public class NetworkMatrices implements Serializable {
      *
      * @param matrices
      */
-    public void mergeMatricesInPlace(NetworkMatrices matrices) {
-        ArrayList<double[][]> allMatrices = getAllMatrices();
-        ArrayList<double[]> allVectors = getAllVectors();
-
-        ArrayList<double[][]> allMatrices2 = matrices.getAllMatrices();
-        ArrayList<double[]> allVectors2 = matrices.getAllVectors();
-
-        for (int m = 0; m < allMatrices.size(); m++) {
-            double[][] m1 = allMatrices.get(m);
-            double[][] m2 = allMatrices2.get(m);
-
-            for (int s1 = 0; s1 < m1.length; s1++) {
-                for (int s2 = 0; s2 < m1[s1].length; s2++) {
-                    m1[s1][s2] += m2[s1][s2];
-                }
-            }
-        }
-
-        for (int v = 0; v < allVectors.size(); v++) {
-            double[] v1 = allVectors.get(v);
-            double[] v2 = allVectors2.get(v);
-
-            for (int s1 = 0; s1 < v1.length; s1++) {
-                v1[s1] += v2[s1];
-            }
-        }
+    public void mergeMatricesInPlaceForNonSaved(NetworkMatrices matrices) {
+        Utils.addInPlace(wordEmbedding, matrices.getWordEmbedding());
+        Utils.addInPlace(posEmbedding, matrices.getPosEmbedding());
+        Utils.addInPlace(labelEmbedding, matrices.getLabelEmbedding());
+        Utils.addInPlace(hiddenLayer, matrices.getHiddenLayer());
+        Utils.addInPlace(hiddenLayerBias, matrices.getHiddenLayerBias());
+        Utils.addInPlace(softmaxLayer, matrices.getSoftmaxLayer());
+        Utils.addInPlace(softmaxLayerBias, matrices.getSoftmaxLayerBias());
     }
 
     public NetworkMatrices clone() {

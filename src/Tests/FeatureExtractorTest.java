@@ -71,7 +71,7 @@ public class FeatureExtractorTest {
         MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, 64);
         ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        Sentence sentence = dataSet.get(0).getSentence();//dummySentence(5,mlpNetwork.getNumOfWords()-2,mlpNetwork.getNumOfPos()-2);
+        Sentence sentence = dataSet.get(0).getSentence();//dummySentence(5,mlpNetwork.getNumWords()-2,mlpNetwork.getNumPos()-2);
         Configuration configuration = new Configuration(sentence, options.rootFirst);
 
         /**

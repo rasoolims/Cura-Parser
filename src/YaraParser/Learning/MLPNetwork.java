@@ -23,16 +23,16 @@ public class MLPNetwork implements Serializable {
     final public IndexMaps maps;
     final public Options options;
     final public ArrayList<Integer> depLabels;
-    final int numOfWordLayers = 19;
-    final int numOfPosLayers = 19;
-    final int numOfDepLayers = 11;
-    final int numOfDepLabels;
+    final int numWordLayers = 19;
+    final int numPosLayers = 19;
+    final int numDepLayers = 11;
+    final int numDepLabels;
     final int labelEmbedDim;
     final int wordEmbedDim;
     final int hiddenLayerDim;
     final int hiddenLayerIntDim;
-    final int numOfWords;
-    final int numOfPos;
+    final int numWords;
+    final int numPos;
     final int posEmbeddingDim;
     final int softmaxLayerDim;
     //todo make them private.
@@ -44,16 +44,16 @@ public class MLPNetwork implements Serializable {
         this.options = options;
         this.depLabels = depLabels;
         softmaxLayerDim = 2 * (depLabels.size() + 1);
-        numOfWords = maps.vocabSize() + 2;
-        numOfDepLabels = maps.relSize() + 2;
+        numWords = maps.vocabSize() + 2;
+        numDepLabels = maps.relSize() + 2;
         labelEmbedDim = 32;
         wordEmbedDim = wDim;
         hiddenLayerDim = options.hiddenLayer1Size;
-        numOfPos = maps.posSize() + 2;
+        numPos = maps.posSize() + 2;
         posEmbeddingDim = 32;
 
-        hiddenLayerIntDim = numOfPosLayers * wDim + numOfPosLayers * posEmbeddingDim + numOfDepLayers * labelEmbedDim;
-        matrices = new NetworkMatrices(numOfWords, wDim, numOfPos, posEmbeddingDim, numOfDepLabels, labelEmbedDim, hiddenLayerDim,
+        hiddenLayerIntDim = numPosLayers * wDim + numPosLayers * posEmbeddingDim + numDepLayers * labelEmbedDim;
+        matrices = new NetworkMatrices(numWords, wDim, numPos, posEmbeddingDim, numDepLabels, labelEmbedDim, hiddenLayerDim,
                 hiddenLayerIntDim, softmaxLayerDim);
         initializeLayers();
         addPretrainedWordEmbeddings(maps);
@@ -67,24 +67,24 @@ public class MLPNetwork implements Serializable {
      * @param wDim
      * @throws Exception
      */
-    public MLPNetwork(int hiddenLayer1Size, int wDim, int numOfWords, int numOfPos, int numOfDepLabels, int pDim, int lDim) throws Exception {
+    public MLPNetwork(int hiddenLayer1Size, int wDim, int numWords, int numPos, int numDepLabels, int pDim, int lDim) throws Exception {
         this.maps = null;
         this.options = null;
-        this.depLabels = new ArrayList<>(numOfDepLabels);
-        for (int i = 0; i < numOfDepLabels; i++)
+        this.depLabels = new ArrayList<>(numDepLabels);
+        for (int i = 0; i < numDepLabels; i++)
             this.depLabels.add(i);
         softmaxLayerDim = 2 * (depLabels.size() + 1);
-        this.numOfWords = numOfWords;
-        this.numOfDepLabels = numOfDepLabels;
+        this.numWords = numWords;
+        this.numDepLabels = numDepLabels;
         labelEmbedDim = lDim;
         wordEmbedDim = wDim;
         this.hiddenLayerDim = hiddenLayer1Size;
-        this.numOfPos = numOfPos;
+        this.numPos = numPos;
         posEmbeddingDim = pDim;
 
         hiddenLayerIntDim =
-                numOfPosLayers * wDim + numOfPosLayers * posEmbeddingDim + numOfDepLayers * labelEmbedDim;
-        matrices = new NetworkMatrices(numOfWords, wDim, numOfPos, posEmbeddingDim, numOfDepLabels, labelEmbedDim, hiddenLayerDim,
+                numPosLayers * wDim + numPosLayers * posEmbeddingDim + numDepLayers * labelEmbedDim;
+        matrices = new NetworkMatrices(numWords, wDim, numPos, posEmbeddingDim, numDepLabels, labelEmbedDim, hiddenLayerDim,
                 hiddenLayerIntDim, softmaxLayerDim);
 
         initializeLayers();
@@ -113,7 +113,7 @@ public class MLPNetwork implements Serializable {
 
     private void addPretrainedWordEmbeddings(IndexMaps maps) {
         int numOfPretrained = 0;
-        for (int i = 0; i < numOfWords; i++) {
+        for (int i = 0; i < numWords; i++) {
             double[] embeddings = maps.embeddings(i);
             if (embeddings != null) {
                 matrices.resetToPretrainedWordEmbeddings(i, embeddings);
@@ -126,19 +126,19 @@ public class MLPNetwork implements Serializable {
     private void initializeLayers() throws Exception {
         Random random = new Random();
         double wEmbedStdDev = Math.pow(1.0 / wordEmbedDim, 0.5);
-        for (int i = 0; i < numOfWords; i++) {
+        for (int i = 0; i < numWords; i++) {
             for (int j = 0; j < wordEmbedDim; j++) {
                 matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * wEmbedStdDev);
             }
         }
 
-        for (int i = 0; i < numOfPos; i++) {
+        for (int i = 0; i < numPos; i++) {
             for (int j = 0; j < posEmbeddingDim; j++) {
                 matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * 0.01);
             }
         }
 
-        for (int i = 0; i < numOfDepLabels; i++) {
+        for (int i = 0; i < numDepLabels; i++) {
             for (int j = 0; j < labelEmbedDim; j++) {
                 matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * 0.01);
             }
@@ -168,18 +168,18 @@ public class MLPNetwork implements Serializable {
         final double[][] posEmbeddings = matrices.getPosEmbedding();
         final double[][] labelEmbeddings = matrices.getLabelEmbedding();
 
-        saved = new double[numOfWordLayers + numOfPosLayers + numOfDepLayers][][];
-        for (int i = 0; i < numOfWordLayers; i++)
+        saved = new double[numWordLayers + numPosLayers + numDepLayers][][];
+        for (int i = 0; i < numWordLayers; i++)
             saved[i] = new double[maps.preComputeMap.size()][hiddenLayerDim];
-        for (int i = numOfWordLayers; i < numOfWordLayers + numOfPosLayers; i++)
-            saved[i] = new double[numOfPos][hiddenLayerDim];
-        for (int i = numOfWordLayers + numOfPosLayers; i < numOfWordLayers + numOfPosLayers + numOfDepLayers; i++)
-            saved[i] = new double[numOfDepLabels][hiddenLayerDim];
+        for (int i = numWordLayers; i < numWordLayers + numPosLayers; i++)
+            saved[i] = new double[numPos][hiddenLayerDim];
+        for (int i = numWordLayers + numPosLayers; i < numWordLayers + numPosLayers + numDepLayers; i++)
+            saved[i] = new double[numDepLabels][hiddenLayerDim];
 
         for (int tok : maps.preComputeMap.keySet()) {
             int id = maps.preComputeMap.get(tok);
             int offset = 0;
-            for (int pos = 0; pos < numOfWordLayers; pos++) {
+            for (int pos = 0; pos < numWordLayers; pos++) {
                 for (int h = 0; h < hiddenLayerDim; h++) {
                     for (int k = 0; k < wordEmbedDim; k++) {
                         saved[pos][id][h] += hiddenLayer[h][offset + k] * wordEmbeddings[tok][k];
@@ -189,10 +189,10 @@ public class MLPNetwork implements Serializable {
             }
         }
 
-        for (int tok = 0; tok < numOfPos; tok++) {
-            int offset = numOfWordLayers * wordEmbedDim;
-            int indOffset = numOfWordLayers;
-            for (int pos = 0; pos < numOfPosLayers; pos++) {
+        for (int tok = 0; tok < numPos; tok++) {
+            int offset = numWordLayers * wordEmbedDim;
+            int indOffset = numWordLayers;
+            for (int pos = 0; pos < numPosLayers; pos++) {
                 for (int h = 0; h < hiddenLayerDim; h++) {
                     for (int k = 0; k < posEmbeddingDim; k++) {
                         saved[pos + indOffset][tok][h] += hiddenLayer[h][offset + k] * posEmbeddings[tok][k];
@@ -202,10 +202,10 @@ public class MLPNetwork implements Serializable {
             }
         }
 
-        for (int tok = 0; tok < numOfDepLabels; tok++) {
-            int offset = numOfWordLayers * wordEmbedDim + numOfPosLayers * posEmbeddingDim;
-            int indOffset = numOfWordLayers + numOfPosLayers;
-            for (int pos = 0; pos < numOfDepLayers; pos++) {
+        for (int tok = 0; tok < numDepLabels; tok++) {
+            int offset = numWordLayers * wordEmbedDim + numPosLayers * posEmbeddingDim;
+            int indOffset = numWordLayers + numPosLayers;
+            for (int pos = 0; pos < numDepLayers; pos++) {
                 for (int h = 0; h < hiddenLayerDim; h++) {
                     for (int k = 0; k < labelEmbedDim; k++) {
                         saved[pos + indOffset][tok][h] += hiddenLayer[h][offset + k] * labelEmbeddings[tok][k];
@@ -230,15 +230,15 @@ public class MLPNetwork implements Serializable {
         for (int j = 0; j < feats.length; j++) {
             int tok = feats[j];
             double[][] embedding;
-            if (j < numOfWordLayers)
+            if (j < numWordLayers)
                 embedding = wordEmbeddings;
-            else if (j < numOfWordLayers + numOfPosLayers)
+            else if (j < numWordLayers + numPosLayers)
                 embedding = posEmbeddings;
             else embedding = labelEmbeddings;
 
-            if (saved != null && (j >= numOfWordLayers || maps.preComputeMap.containsKey(tok))) {
+            if (saved != null && (j >= numWordLayers || maps.preComputeMap.containsKey(tok))) {
                 int id = tok;
-                if (j < numOfWordLayers)
+                if (j < numWordLayers)
                     id = maps.preComputeMap.get(tok);
                 for (int i = 0; i < hidden.length; ++i) {
                     hidden[i] += saved[j][id][i];
@@ -290,20 +290,20 @@ public class MLPNetwork implements Serializable {
         return depLabels;
     }
 
-    public int getNumOfWordLayers() {
-        return numOfWordLayers;
+    public int getNumWordLayers() {
+        return numWordLayers;
     }
 
-    public int getNumOfPosLayers() {
-        return numOfPosLayers;
+    public int getNumPosLayers() {
+        return numPosLayers;
     }
 
-    public int getNumOfDepLayers() {
-        return numOfDepLayers;
+    public int getNumDepLayers() {
+        return numDepLayers;
     }
 
-    public int getNumOfDepLabels() {
-        return numOfDepLabels;
+    public int getNumDepLabels() {
+        return numDepLabels;
     }
 
     public int getLabelEmbedDim() {
@@ -322,12 +322,12 @@ public class MLPNetwork implements Serializable {
         return hiddenLayerIntDim;
     }
 
-    public int getNumOfWords() {
-        return numOfWords;
+    public int getNumWords() {
+        return numWords;
     }
 
-    public int getNumOfPos() {
-        return numOfPos;
+    public int getNumPos() {
+        return numPos;
     }
 
     public int getPosEmbeddingDim() {

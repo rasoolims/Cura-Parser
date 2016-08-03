@@ -24,8 +24,8 @@ public abstract class Updater {
     public Updater(MLPNetwork mlpNetwork, double learningRate) {
         this.mlpNetwork = mlpNetwork;
         this.learningRate = learningRate;
-        gradientHistory = new NetworkMatrices(mlpNetwork.getNumOfWords(), mlpNetwork.getWordEmbedDim(), mlpNetwork.getNumOfPos(), mlpNetwork
-                .getPosEmbeddingDim(), mlpNetwork.getNumOfDepLabels(), mlpNetwork.getLabelEmbedDim(), mlpNetwork.getHiddenLayerDim(),
+        gradientHistory = new NetworkMatrices(mlpNetwork.getNumWords(), mlpNetwork.getWordEmbedDim(), mlpNetwork.getNumPos(), mlpNetwork
+                .getPosEmbeddingDim(), mlpNetwork.getNumDepLabels(), mlpNetwork.getLabelEmbedDim(), mlpNetwork.getHiddenLayerDim(),
                 mlpNetwork.getHiddenLayerIntDim(), mlpNetwork.getSoftmaxLayerDim());
         gradientHistoryVariance = null;
         t = 1;

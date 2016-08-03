@@ -34,10 +34,10 @@ public class GradientTest {
 
                 NetworkMatrices plusEPS = purturb(network.getMatrices(), EmbeddingTypes.WORD, tokNum, slot, eps);
                 NetworkMatrices negEPS = purturb(network.getMatrices(), EmbeddingTypes.WORD, tokNum, slot, -eps);
-                double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                        network.getNumOfPosLayers());
-                double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                        network.getNumOfPosLayers());
+                double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                        network.getNumPosLayers());
+                double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                        network.getNumPosLayers());
 
                 double diff = -(plusPurturb[goldLabel] - negPurturb[goldLabel]) / (2 * eps);
                 System.out.println(gradForTok + "\t" + diff);
@@ -61,10 +61,10 @@ public class GradientTest {
 
                 NetworkMatrices plusEPS = purturb(network.getMatrices(), EmbeddingTypes.POS, tokNum, slot, eps);
                 NetworkMatrices negEPS = purturb(network.getMatrices(), EmbeddingTypes.POS, tokNum, slot, -eps);
-                double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                        network.getNumOfPosLayers());
-                double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                        network.getNumOfPosLayers());
+                double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                        network.getNumPosLayers());
+                double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                        network.getNumPosLayers());
 
                 double diff = -(plusPurturb[goldLabel] - negPurturb[goldLabel]) / (2 * eps);
                 System.out.println(gradForTok + "\t" + diff);
@@ -88,10 +88,10 @@ public class GradientTest {
 
                 NetworkMatrices plusEPS = purturb(network.getMatrices(), EmbeddingTypes.DEPENDENCY, tokNum, slot, eps);
                 NetworkMatrices negEPS = purturb(network.getMatrices(), EmbeddingTypes.DEPENDENCY, tokNum, slot, -eps);
-                double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                        network.getNumOfPosLayers());
-                double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                        network.getNumOfPosLayers());
+                double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                        network.getNumPosLayers());
+                double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                        network.getNumPosLayers());
 
                 double diff = -(plusPurturb[goldLabel] - negPurturb[goldLabel]) / (2 * eps);
                 System.out.println(gradForTok + "\t" + diff);
@@ -115,10 +115,10 @@ public class GradientTest {
 
                 NetworkMatrices plusEPS = purturb(network.getMatrices(), EmbeddingTypes.HIDDENLAYER, tokNum, slot, eps);
                 NetworkMatrices negEPS = purturb(network.getMatrices(), EmbeddingTypes.HIDDENLAYER, tokNum, slot, -eps);
-                double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                        network.getNumOfPosLayers());
-                double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                        network.getNumOfPosLayers());
+                double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                        network.getNumPosLayers());
+                double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                        network.getNumPosLayers());
 
                 double diff = -(plusPurturb[goldLabel] - negPurturb[goldLabel]) / (2 * eps);
                 System.out.println(gradForTok + "\t" + diff);
@@ -141,10 +141,10 @@ public class GradientTest {
 
             NetworkMatrices plusEPS = purturb(network.getMatrices(), EmbeddingTypes.HIDDENLAYERBIAS, tokNum, -1, eps);
             NetworkMatrices negEPS = purturb(network.getMatrices(), EmbeddingTypes.HIDDENLAYERBIAS, tokNum, -1, -eps);
-            double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                    network.getNumOfPosLayers());
-            double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                    network.getNumOfPosLayers());
+            double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                    network.getNumPosLayers());
+            double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                    network.getNumPosLayers());
 
             double diff = -(plusPurturb[goldLabel] - negPurturb[goldLabel]) / (2 * eps);
             System.out.println(gradForTok + "\t" + diff);
@@ -167,10 +167,10 @@ public class GradientTest {
 
                 NetworkMatrices plusEPS = purturb(network.getMatrices(), EmbeddingTypes.SOFTMAX, tokNum, slot, eps);
                 NetworkMatrices negEPS = purturb(network.getMatrices(), EmbeddingTypes.SOFTMAX, tokNum, slot, -eps);
-                double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                        network.getNumOfPosLayers());
-                double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                        network.getNumOfPosLayers());
+                double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                        network.getNumPosLayers());
+                double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                        network.getNumPosLayers());
 
                 double diff = -(plusPurturb[goldLabel] - negPurturb[goldLabel]) / (2 * eps);
                 System.out.println(gradForTok + "\t" + diff);
@@ -193,10 +193,10 @@ public class GradientTest {
 
             NetworkMatrices plusEPS = purturb(network.getMatrices(), EmbeddingTypes.SOFTMAXBIAS, tokNum, -1, eps);
             NetworkMatrices negEPS = purturb(network.getMatrices(), EmbeddingTypes.SOFTMAXBIAS, tokNum, -1, -eps);
-            double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                    network.getNumOfPosLayers());
-            double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumOfWordLayers(),
-                    network.getNumOfPosLayers());
+            double[] plusPurturb = output(plusEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                    network.getNumPosLayers());
+            double[] negPurturb = output(negEPS, randomInstance.getFeatures(), network.getNumWordLayers(),
+                    network.getNumPosLayers());
 
             double diff = -(plusPurturb[goldLabel] - negPurturb[goldLabel]) / (2 * eps);
             System.out.println(gradForTok + "\t" + diff);
@@ -227,8 +227,8 @@ public class GradientTest {
         int[] features = instance.getFeatures();
         int[] label = instance.getLabel();
         NetworkMatrices gradients = new NetworkMatrices(
-                mlpNetwork.getNumOfWords(), mlpNetwork.getWordEmbedDim(), mlpNetwork.getNumOfPos(), mlpNetwork.getPosEmbeddingDim(),
-                mlpNetwork.getNumOfDepLabels(), mlpNetwork.getLabelEmbedDim(), mlpNetwork.getHiddenLayerDim(),
+                mlpNetwork.getNumWords(), mlpNetwork.getWordEmbedDim(), mlpNetwork.getNumPos(), mlpNetwork.getPosEmbeddingDim(),
+                mlpNetwork.getNumDepLabels(), mlpNetwork.getLabelEmbedDim(), mlpNetwork.getHiddenLayerDim(),
                 mlpNetwork.getHiddenLayerIntDim(), mlpNetwork.getSoftmaxLayerDim());
 
         double[] hidden = new double[mlpNetwork.getHiddenLayerDim()];
@@ -245,9 +245,9 @@ public class GradientTest {
         for (int j = 0; j < features.length; j++) {
             int tok = features[j];
             final double[] embedding;
-            if (j < mlpNetwork.getNumOfWordLayers())
+            if (j < mlpNetwork.getNumWordLayers())
                 embedding = wordEmbeddings[tok];
-            else if (j < mlpNetwork.getNumOfWordLayers() + mlpNetwork.getNumOfPosLayers())
+            else if (j < mlpNetwork.getNumWordLayers() + mlpNetwork.getNumPosLayers())
                 embedding = posEmbeddings[tok];
             else
                 embedding = labelEmbeddings[tok];
@@ -312,7 +312,7 @@ public class GradientTest {
         }
 
         offset = 0;
-        for (int index = 0; index < mlpNetwork.getNumOfWordLayers(); index++) {
+        for (int index = 0; index < mlpNetwork.getNumWordLayers(); index++) {
             double[] embeddings = wordEmbeddings[features[index]];
             for (int h = 0; h < reluHidden.length; h++) {
                 for (int k = 0; k < embeddings.length; k++) {
@@ -323,8 +323,8 @@ public class GradientTest {
             offset += embeddings.length;
         }
 
-        for (int index = mlpNetwork.getNumOfWordLayers(); index < mlpNetwork
-                .getNumOfWordLayers() + mlpNetwork.getNumOfPosLayers(); index++) {
+        for (int index = mlpNetwork.getNumWordLayers(); index < mlpNetwork
+                .getNumWordLayers() + mlpNetwork.getNumPosLayers(); index++) {
             double[] embeddings = posEmbeddings[features[index]];
             for (int h = 0; h < reluHidden.length; h++) {
                 for (int k = 0; k < embeddings.length; k++) {
@@ -334,9 +334,9 @@ public class GradientTest {
             }
             offset += embeddings.length;
         }
-        for (int index = mlpNetwork.getNumOfWordLayers() + mlpNetwork
-                .getNumOfPosLayers(); index < mlpNetwork.getNumOfWordLayers() +
-                mlpNetwork.getNumOfPosLayers() + mlpNetwork.getNumOfDepLayers(); index++) {
+        for (int index = mlpNetwork.getNumWordLayers() + mlpNetwork
+                .getNumPosLayers(); index < mlpNetwork.getNumWordLayers() +
+                mlpNetwork.getNumPosLayers() + mlpNetwork.getNumDepLayers(); index++) {
             double[] embeddings = labelEmbeddings[features[index]];
             for (int h = 0; h < reluHidden.length; h++) {
                 for (int k = 0; k < embeddings.length; k++) {

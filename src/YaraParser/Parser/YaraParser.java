@@ -41,12 +41,12 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.learningRate = 0.01;
+            options.learningRate = 0.001;
             options.batchSize = 320;
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
-            options.numOfThreads = 1;
+            options.numOfThreads = 2;
             options.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
         }
@@ -230,7 +230,7 @@ public class YaraParser {
                 while (true) {
                     step++;
                     ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, s, e, 0);
-                    classifier.fit(instances, step, step % 1 == 0 ? true : false);
+                    classifier.fit(instances, step, step % 10 == 0 ? true : false);
                     s = e;
                     e = Math.min(dataSet.size(), options.batchSize + e);
 

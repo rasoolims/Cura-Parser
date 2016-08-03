@@ -258,7 +258,7 @@ public class Options implements Serializable {
                 else
                     throw new Exception("updater not supported");
             } else if (args[i].equals("-eval"))
-                options.UASEvalPerStep =  Integer.parseInt(args[i + 1]);
+                options.UASEvalPerStep = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-h1"))
                 options.hiddenLayer1Size = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-h2"))
