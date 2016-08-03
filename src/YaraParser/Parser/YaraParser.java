@@ -10,6 +10,7 @@ import YaraParser.Accessories.Evaluator;
 import YaraParser.Accessories.Options;
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.AveragedPerceptron;
+import YaraParser.Learning.AveragingOption;
 import YaraParser.Learning.MLPClassifier;
 import YaraParser.Learning.MLPNetwork;
 import YaraParser.Learning.Updater.UpdaterType;
@@ -47,6 +48,7 @@ public class YaraParser {
             options.useDynamicOracle = false;
             options.numOfThreads = 1;
             options.updaterType = UpdaterType.ADAM;
+            options.averagingOption = AveragingOption.BOTH;
         }
 
         if (options.showHelp) {
@@ -237,14 +239,16 @@ public class YaraParser {
                             classifier.setLearningRate(0.96 * classifier.getLearningRate());
                             System.out.println("The new learning rate: " + classifier.getLearningRate());
                         }
+                    }
 
+                    if (options.averagingOption != AveragingOption.NO) {
                         // averaging
                         double ratio = Math.min(0.9999, (double) step / (9 + step));
                         MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
                     }
 
-                    if (step % 100 == 0) {
-                        if (options.updaterType != UpdaterType.SGD) {
+                    if (step % 10 == 0) {
+                        if (options.averagingOption != AveragingOption.ONLY) {
                             KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile + ".tmp",
                                     options.beamWidth, 1, false, "");
                             Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
@@ -256,9 +260,10 @@ public class YaraParser {
                                 ObjectOutput writer = new ObjectOutputStream(gz);
                                 writer.writeObject(mlpNetwork);
                                 writer.close();
-                                System.out.print("done!\n");
+                                System.out.print("done!\n\n");
                             }
-                        } else if (options.updaterType == UpdaterType.SGD) {
+                        }
+                        if (options.averagingOption != AveragingOption.NO) {
                             avgMlpNetwork.preCompute();
                             KBeamArcEagerParser.parseNNConllFileNoParallel(avgMlpNetwork, options.devPath, options.modelFile + ".tmp",
                                     options.beamWidth, 1, false, "");
@@ -271,7 +276,7 @@ public class YaraParser {
                                 ObjectOutput writer = new ObjectOutputStream(gz);
                                 writer.writeObject(avgMlpNetwork);
                                 writer.close();
-                                System.out.print("done!\n");
+                                System.out.print("done!\n\n");
                             }
                         }
                     }

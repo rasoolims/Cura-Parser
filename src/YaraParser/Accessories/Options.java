@@ -5,6 +5,7 @@
 
 package YaraParser.Accessories;
 
+import YaraParser.Learning.AveragingOption;
 import YaraParser.Learning.Updater.UpdaterType;
 
 import java.io.BufferedReader;
@@ -12,6 +13,7 @@ import java.io.FileReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+
 
 public class Options implements Serializable {
     public boolean train;
@@ -34,7 +36,7 @@ public class Options implements Serializable {
     public int batchSize;
     public double decayStep;
     public boolean dropout;
-
+    public AveragingOption averagingOption;
     public String modelFile;
     public boolean lowercase;
     public boolean useExtendedFeatures;
@@ -76,6 +78,7 @@ public class Options implements Serializable {
         inputFile = "";
         devPath = "";
         scorePath = "";
+        averagingOption = AveragingOption.BOTH;
         separator = "_";
         clusterFile = "";
         wordEmbeddingFile = "";
@@ -150,6 +153,7 @@ public class Options implements Serializable {
                 "parser (default: empty)\n\t\t\t the format should be the same as https://github" +
                 ".com/percyliang/brown-cluster/blob/master/output.txt \n");
         output.append("\t \t -e [embedding-file] \n");
+        output.append("\t \t -avg [both,no,only] (default: both)\n");
         output.append("\t \t -h1 [hidden-layer-size-1] \n");
         output.append("\t \t -h2 [hidden-layer-size-2] \n");
         output.append("\t \t -lr [learning-rate] \n");
@@ -241,7 +245,17 @@ public class Options implements Serializable {
                     options.updaterType = UpdaterType.ADAGRAD;
                 else
                     throw new Exception("updater not supported");
-            } else if (args[i].startsWith("-h1"))
+            }else if (args[i].startsWith("-avg")) {
+                if (args[i + 1].equals("both"))
+                    options.averagingOption = AveragingOption.BOTH;
+                else if (args[i + 1].equals("no"))
+                    options.averagingOption = AveragingOption.NO;
+                else if (args[i + 1].equals("only"))
+                    options.averagingOption = AveragingOption.ONLY;
+                else
+                    throw new Exception("updater not supported");
+            }
+            else if (args[i].startsWith("-h1"))
                 options.hiddenLayer1Size = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-h2"))
                 options.hiddenLayer2Size = Integer.parseInt(args[i + 1]);
