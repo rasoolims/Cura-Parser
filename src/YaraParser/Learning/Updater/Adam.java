@@ -57,8 +57,8 @@ public class Adam extends Updater {
             m[i] = beta1 * m[i] + (1 - beta1) * g[i];
             v[i] = beta2 * v[i] + (1 - beta2) * Math.pow(g[i], 2);
 
-            double _m = m[i] / (1 - beta1);
-            double _v = v[i] / (1 - beta2);
+            double _m = m[i] / (1 - beta1_);
+            double _v = v[i] / (1 - beta2_);
 
             mlpNetwork.modify(embeddingTypes, i, -1, -learningRate * _m / (Math.sqrt(_v) + eps));
         }
