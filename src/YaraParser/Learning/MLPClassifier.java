@@ -239,9 +239,6 @@ public class MLPClassifier {
             for (NeuralTrainingInstance instance : instances) {
                 int[] features = instance.getFeatures();
                 int[] label = instance.getLabel();
-
-                double[] hidden = new double[net.hiddenLayerDim];
-
                 final double[][] softmaxLayer = net.matrices.getSoftmaxLayer();
                 final double[] softmaxLayerBias = net.matrices.getSoftmaxLayerBias();
                 final double[][] hiddenLayer = net.matrices.getHiddenLayer();
@@ -249,6 +246,10 @@ public class MLPClassifier {
                 final double[][] wordEmbeddings = net.matrices.getWordEmbedding();
                 final double[][] posEmbeddings = net.matrices.getPosEmbedding();
                 final double[][] labelEmbeddings = net.matrices.getLabelEmbedding();
+
+                double[] hidden = new double[net.hiddenLayerDim];
+                double[] reluHidden = new double[hidden.length];
+                double[] probs = new double[softmaxLayerBias.length];
 
                 int offset = 0;
                 for (int j = 0; j < features.length; j++) {
@@ -278,7 +279,6 @@ public class MLPClassifier {
                     offset += embedding.length;
                 }
 
-                double[] reluHidden = new double[hidden.length];
                 for (int h = 0; h < hidden.length; h++) {
                     hidden[h] += hiddenLayerBias[h];
                     //relu
@@ -288,7 +288,6 @@ public class MLPClassifier {
                 int argmax = -1;
                 int gold = -1;
                 double sum = 0;
-                double[] probs = new double[softmaxLayerBias.length];
                 for (int i = 0; i < probs.length; i++) {
                     if (label[i] >= 0) {
                         if (label[i] == 1)
