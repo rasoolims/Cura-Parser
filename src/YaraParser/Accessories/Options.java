@@ -47,6 +47,7 @@ public class Options implements Serializable {
     public String separator;
     public int numOfThreads;
     public UpdaterType updaterType;
+    public int UASEvalPerStep;
 
     public String goldFile;
 
@@ -78,6 +79,7 @@ public class Options implements Serializable {
         inputFile = "";
         devPath = "";
         scorePath = "";
+
         averagingOption = AveragingOption.BOTH;
         separator = "_";
         clusterFile = "";
@@ -93,7 +95,7 @@ public class Options implements Serializable {
         numOfThreads = 8;
         useExtendedWithBrownClusterFeatures = false;
         parsePartialConll = false;
-
+        UASEvalPerStep = 100;
         partialTrainingStartingIteration = 3;
 
         punctuations = new HashSet<String>();
@@ -160,6 +162,7 @@ public class Options implements Serializable {
         output.append("\t \t -ds [decay-step] \n");
         output.append("\t \t -u [updater-type: sgd(default),adam,adagrad] \n");
         output.append("\t \t -batch [batch-size] \n");
+        output.append("\t \t -eval [uas eval per step (default 100)] \n");
         output.append("\t \t drop [put if want dropout] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:20)\n");
@@ -254,7 +257,9 @@ public class Options implements Serializable {
                     options.averagingOption = AveragingOption.ONLY;
                 else
                     throw new Exception("updater not supported");
-            } else if (args[i].startsWith("-h1"))
+            } else if (args[i].equals("-eval"))
+                options.UASEvalPerStep =  Integer.parseInt(args[i + 1]);
+            else if (args[i].startsWith("-h1"))
                 options.hiddenLayer1Size = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-h2"))
                 options.hiddenLayer2Size = Integer.parseInt(args[i + 1]);

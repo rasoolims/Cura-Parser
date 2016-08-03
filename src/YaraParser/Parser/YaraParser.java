@@ -247,7 +247,7 @@ public class YaraParser {
                         MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
                     }
 
-                    if (step % 10 == 0) {
+                    if (step % options.UASEvalPerStep == 0) {
                         if (options.averagingOption != AveragingOption.ONLY) {
                             KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile + ".tmp",
                                     options.beamWidth, 1, false, "");
