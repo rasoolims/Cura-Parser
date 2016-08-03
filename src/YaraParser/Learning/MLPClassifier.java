@@ -245,18 +245,7 @@ public class MLPClassifier {
             NetworkMatrices gradients = new NetworkMatrices(mlpNetwork.numOfWords, mlpNetwork.wordEmbeddingSize, mlpNetwork.numOfPos,
                     mlpNetwork.posEmbeddingSize, mlpNetwork.numOfDependencyLabels, mlpNetwork.labelEmbeddingSize, mlpNetwork.hiddenLayerSize,
                     mlpNetwork.hiddenLayerIntSize, mlpNetwork.softmaxLayerSize);
-            double[][][] savedGradients =
-                    new double[mlpNetwork.numberOfWordEmbeddingLayers + mlpNetwork.numberOfPosEmbeddingLayers + mlpNetwork
-                            .numberOfLabelEmbeddingLayers]
-                            [mlpNetwork.maps.preComputeMap.size()][mlpNetwork.hiddenLayerSize];
-            for (int i = 0; i < mlpNetwork.numberOfWordEmbeddingLayers; i++)
-                savedGradients[i] = new double[mlpNetwork.maps.preComputeMap.size()][mlpNetwork.hiddenLayerSize];
-            for (int i = mlpNetwork.numberOfWordEmbeddingLayers; i < mlpNetwork.numberOfWordEmbeddingLayers + mlpNetwork
-                    .numberOfPosEmbeddingLayers; i++)
-                savedGradients[i] = new double[mlpNetwork.numOfPos][mlpNetwork.hiddenLayerSize];
-            for (int i = mlpNetwork.numberOfWordEmbeddingLayers + mlpNetwork.numberOfPosEmbeddingLayers;
-                 i < mlpNetwork.numberOfWordEmbeddingLayers + mlpNetwork.numberOfPosEmbeddingLayers + mlpNetwork.numberOfLabelEmbeddingLayers; i++)
-                savedGradients[i] = new double[mlpNetwork.numOfDependencyLabels][mlpNetwork.hiddenLayerSize];
+            double[][][] savedGradients = instantiateSavedGradients();
 
             double cost = 0;
             double correct = 0;
@@ -392,6 +381,21 @@ public class MLPClassifier {
             }
 
             return new Pair<>(new Pair<>(cost, correct), new Pair<>(gradients, savedGradients));
+        }
+
+        private double[][][] instantiateSavedGradients() {
+            double[][][] savedGradients =
+                    new double[mlpNetwork.numberOfWordEmbeddingLayers + mlpNetwork.numberOfPosEmbeddingLayers + mlpNetwork.numberOfLabelEmbeddingLayers]
+                            [mlpNetwork.maps.preComputeMap.size()][mlpNetwork.hiddenLayerSize];
+            for (int i = 0; i < mlpNetwork.numberOfWordEmbeddingLayers; i++)
+                savedGradients[i] = new double[mlpNetwork.maps.preComputeMap.size()][mlpNetwork.hiddenLayerSize];
+            for (int i = mlpNetwork.numberOfWordEmbeddingLayers; i < mlpNetwork.numberOfWordEmbeddingLayers + mlpNetwork
+                    .numberOfPosEmbeddingLayers; i++)
+                savedGradients[i] = new double[mlpNetwork.numOfPos][mlpNetwork.hiddenLayerSize];
+            for (int i = mlpNetwork.numberOfWordEmbeddingLayers + mlpNetwork.numberOfPosEmbeddingLayers;
+                 i < mlpNetwork.numberOfWordEmbeddingLayers + mlpNetwork.numberOfPosEmbeddingLayers + mlpNetwork.numberOfLabelEmbeddingLayers; i++)
+                savedGradients[i] = new double[mlpNetwork.numOfDependencyLabels][mlpNetwork.hiddenLayerSize];
+            return savedGradients;
         }
     }
 }
