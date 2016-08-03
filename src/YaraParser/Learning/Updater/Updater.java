@@ -22,9 +22,9 @@ public abstract class Updater {
     public Updater(MLPNetwork mlpNetwork, double learningRate) {
         this.mlpNetwork = mlpNetwork;
         this.learningRate = learningRate;
-        gradientHistory = new NetworkMatrices(mlpNetwork.getNumOfWords(), mlpNetwork.getWordEmbeddingSize(), mlpNetwork.getNumOfPos(), mlpNetwork
-                .getPosEmbeddingSize(), mlpNetwork.getNumOfDependencyLabels(), mlpNetwork.getLabelEmbeddingSize(), mlpNetwork.getHiddenLayerSize(),
-                mlpNetwork.getHiddenLayerIntSize(), mlpNetwork.getSoftmaxLayerSize());
+        gradientHistory = new NetworkMatrices(mlpNetwork.getNumOfWords(), mlpNetwork.getWordEmbedDim(), mlpNetwork.getNumOfPos(), mlpNetwork
+                .getPosEmbeddingDim(), mlpNetwork.getNumOfDepLabels(), mlpNetwork.getLabelEmbeddingSize(), mlpNetwork.getHiddenLayerDim(),
+                mlpNetwork.getHiddenLayerIntDim(), mlpNetwork.getSoftmaxLayerDim());
         gradientHistoryVariance = null;
     }
 

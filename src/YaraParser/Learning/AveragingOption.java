@@ -8,7 +8,7 @@ package YaraParser.Learning;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
-public enum AveragingOption{
+public enum AveragingOption {
     NO,
     ONLY,
     BOTH

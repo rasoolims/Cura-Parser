@@ -245,7 +245,7 @@ public class Options implements Serializable {
                     options.updaterType = UpdaterType.ADAGRAD;
                 else
                     throw new Exception("updater not supported");
-            }else if (args[i].startsWith("-avg")) {
+            } else if (args[i].startsWith("-avg")) {
                 if (args[i + 1].equals("both"))
                     options.averagingOption = AveragingOption.BOTH;
                 else if (args[i + 1].equals("no"))
@@ -254,8 +254,7 @@ public class Options implements Serializable {
                     options.averagingOption = AveragingOption.ONLY;
                 else
                     throw new Exception("updater not supported");
-            }
-            else if (args[i].startsWith("-h1"))
+            } else if (args[i].startsWith("-h1"))
                 options.hiddenLayer1Size = Integer.parseInt(args[i + 1]);
             else if (args[i].startsWith("-h2"))
                 options.hiddenLayer2Size = Integer.parseInt(args[i + 1]);

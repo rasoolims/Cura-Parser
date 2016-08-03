@@ -199,7 +199,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
         Options options = nnInf.options;
         IndexMaps maps = nnInf.maps;
-        ArrayList<Integer> dependencyLabels = nnInf.dependencyLabels;
+        ArrayList<Integer> dependencyLabels = nnInf.depLabels;
         CoNLLReader reader = new CoNLLReader(inputFile);
         boolean addScore = false;
         if (scorePath.trim().length() > 0)
