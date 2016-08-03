@@ -18,6 +18,8 @@ public abstract class Updater {
     NetworkMatrices gradientHistory;
     // only for ADAM
     NetworkMatrices gradientHistoryVariance;
+    // iteration.
+    int t;
 
     public Updater(MLPNetwork mlpNetwork, double learningRate) {
         this.mlpNetwork = mlpNetwork;
@@ -26,6 +28,7 @@ public abstract class Updater {
                 .getPosEmbeddingDim(), mlpNetwork.getNumOfDepLabels(), mlpNetwork.getLabelEmbedDim(), mlpNetwork.getHiddenLayerDim(),
                 mlpNetwork.getHiddenLayerIntDim(), mlpNetwork.getSoftmaxLayerDim());
         gradientHistoryVariance = null;
+        t = 1;
     }
 
     public void update(NetworkMatrices gradients) throws Exception {
@@ -43,6 +46,7 @@ public abstract class Updater {
                 gradientHistoryVariance == null ? null : gradientHistoryVariance.getSoftmaxLayer(), EmbeddingTypes.SOFTMAX);
         update(gradients.getSoftmaxLayerBias(), gradientHistory.getSoftmaxLayerBias(),
                 gradientHistoryVariance == null ? null : gradientHistoryVariance.getSoftmaxLayerBias(), EmbeddingTypes.SOFTMAXBIAS);
+        t++;
     }
 
     public double getLearningRate() {

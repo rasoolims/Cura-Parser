@@ -237,7 +237,7 @@ public class Options implements Serializable {
                 options.goldFile = args[i + 1];
             else if (args[i].startsWith("-parse"))
                 options.predFile = args[i + 1];
-            else if (args[i].startsWith("-e"))
+            else if (args[i].equals("-e"))
                 options.wordEmbeddingFile = args[i + 1];
             else if (args[i].startsWith("-u")) {
                 if (args[i + 1].equals("sgd"))
