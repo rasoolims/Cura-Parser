@@ -207,7 +207,7 @@ public class MLPClassifier {
                         double delta = savedGradients[index][id][h];
                         for (int k = 0; k < embedding.length; k++) {
                             g.modify(EmbeddingTypes.HIDDENLAYER, h, offset, delta * embedding[k]);
-                            g.modify(EmbeddingTypes.WORD, tok, k, delta * hiddenLayer[h][offset]);
+                            g.modify(EmbeddingTypes.WORD, tok, k, delta * hiddenLayer[h][offset+k]);
                         }
                     }
                 }
@@ -222,7 +222,7 @@ public class MLPClassifier {
                         double delta = savedGradients[index][tok][h];
                         for (int k = 0; k < embedding.length; k++) {
                             g.modify(EmbeddingTypes.HIDDENLAYER, h, offset, delta * embedding[k]);
-                            g.modify(index < plBorder ? EmbeddingTypes.POS : EmbeddingTypes.DEPENDENCY, tok, k, delta * hiddenLayer[h][offset]);
+                            g.modify(index < plBorder ? EmbeddingTypes.POS : EmbeddingTypes.DEPENDENCY, tok, k, delta * hiddenLayer[h][offset+k]);
                         }
                     }
                 }
