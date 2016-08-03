@@ -178,7 +178,7 @@ public class MLPClassifier {
         for (int tok = 0; tok < mlpNetwork.numOfPos; tok++) {
             double[] embedding = mlpNetwork.matrices.getPosEmbedding()[tok];
             int offset = mlpNetwork.numOfWordLayers * mlpNetwork.wordEmbedDim;
-            for (int index = 0; index < mlpNetwork.numOfPosLayers; index++) {
+            for (int index = mlpNetwork.numOfWordLayers; index < mlpNetwork.numOfWordLayers+mlpNetwork.numOfPosLayers; index++) {
                 for (int h = 0; h < savedGradients[index][tok].length; h++) {
                     double delta = savedGradients[index][tok][h];
                     for (int k = 0; k < embedding.length; k++) {
@@ -193,7 +193,8 @@ public class MLPClassifier {
         for (int tok = 0; tok < mlpNetwork.numOfDepLabels; tok++) {
             double[] embedding = mlpNetwork.matrices.getLabelEmbedding()[tok];
             int offset = mlpNetwork.numOfWordLayers * mlpNetwork.wordEmbedDim + mlpNetwork.numOfDepLayers * mlpNetwork.posEmbeddingDim;
-            for (int index = 0; index < mlpNetwork.numOfDepLayers; index++) {
+            for (int index = mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers;
+                 index < mlpNetwork.numOfWordLayers + mlpNetwork.numOfPosLayers + mlpNetwork.numOfDepLayers; index++) {
                 for (int h = 0; h < savedGradients[index][tok].length; h++) {
                     double delta = savedGradients[index][tok][h];
                     for (int k = 0; k < embedding.length; k++) {
