@@ -9,6 +9,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -137,7 +138,7 @@ public class MLPClassifier {
         int s = 0;
         int e = Math.min(instances.size(), chunkSize);
         for (int i = 0; i < Math.min(instances.size(), numThreads); i++) {
-            pool.submit(new CostThread(instances, instances.size(), s, e));
+            pool.submit(new CostThread(instances.subList(s, e), instances.size()));
             s = e;
             e = Math.min(instances.size(), e + chunkSize);
         }
@@ -179,18 +180,14 @@ public class MLPClassifier {
     }
 
     public class CostThread implements Callable<Pair<Pair<Double, Double>, NetworkMatrices>> {
-        ArrayList<NeuralTrainingInstance> instances;
+        List<NeuralTrainingInstance> instances;
         int batchSize;
-        int s;
-        int e;
         NetworkMatrices g;
         double[][][] savedGradients;
 
-        public CostThread(ArrayList<NeuralTrainingInstance> instances, int batchSize, int s, int e) {
+        public CostThread(List<NeuralTrainingInstance> instances, int batchSize) {
             this.instances = instances;
             this.batchSize = batchSize;
-            this.s = s;
-            this.e = e;
             g = new NetworkMatrices(net.numWords, net.wordEmbedDim, net.numPos, net.posEmbeddingDim, net.numDepLabels, net.labelEmbedDim,
                     net.hiddenLayerDim, net.hiddenLayerIntDim, net.softmaxLayerDim);
             savedGradients = instantiateSavedGradients();
@@ -217,33 +214,21 @@ public class MLPClassifier {
                 offset += net.wordEmbedDim;
             }
 
+            int plBorder = net.numWordLayers + net.numPosLayers;
             for (int index = net.numWordLayers; index < net.numWordLayers + net.numPosLayers; index++) {
                 for (int tok = 0; tok < net.numPos; tok++) {
-                    double[] embedding = pE[tok];
+                    double[] embedding = index < plBorder ? pE[tok] : lE[tok];
                     for (int h = 0; h < savedGradients[index][tok].length; h++) {
                         double delta = savedGradients[index][tok][h];
                         for (int k = 0; k < embedding.length; k++) {
                             g.modify(EmbeddingTypes.HIDDENLAYER, h, offset, delta * embedding[k]);
-                            g.modify(EmbeddingTypes.POS, tok, k, delta * hiddenLayer[h][offset]);
+                            g.modify(index < plBorder ? EmbeddingTypes.POS : EmbeddingTypes.DEPENDENCY, tok, k, delta * hiddenLayer[h][offset]);
                         }
                     }
                 }
-                offset += net.posEmbeddingDim;
+                offset += index < plBorder ? net.posEmbeddingDim : net.labelEmbedDim;
             }
 
-            for (int index = net.numWordLayers + net.numPosLayers; index < net.numWordLayers + net.numPosLayers + net.numDepLayers; index++) {
-                for (int tok = 0; tok < net.numDepLabels; tok++) {
-                    double[] embedding = lE[tok];
-                    for (int h = 0; h < savedGradients[index][tok].length; h++) {
-                        double delta = savedGradients[index][tok][h];
-                        for (int k = 0; k < embedding.length; k++) {
-                            g.modify(EmbeddingTypes.HIDDENLAYER, h, offset, delta * embedding[k]);
-                            g.modify(EmbeddingTypes.DEPENDENCY, tok, k, delta * hiddenLayer[h][offset]);
-                        }
-                    }
-                }
-                offset += net.labelEmbedDim;
-            }
         }
 
         @Override
@@ -251,8 +236,7 @@ public class MLPClassifier {
             double cost = 0;
             double correct = 0;
 
-            for (int instanceIndex = s; instanceIndex < e; instanceIndex++) {
-                NeuralTrainingInstance instance = instances.get(instanceIndex);
+            for (NeuralTrainingInstance instance : instances) {
                 int[] features = instance.getFeatures();
                 int[] label = instance.getLabel();
 
@@ -351,8 +335,9 @@ public class MLPClassifier {
                 offset = 0;
                 for (int index = 0; index < net.numWordLayers; index++) {
                     if (net.maps.preComputeMap.containsKey(features[index])) {
+                        int id = net.maps.preComputeMap.get(features[index]);
                         for (int h = 0; h < reluHidden.length; h++) {
-                            savedGradients[index][net.maps.preComputeMap.get(features[index])][h] += hiddenGrad[h];
+                            savedGradients[index][id][h] += hiddenGrad[h];
                         }
                     } else {
                         double[] embeddings = wordEmbeddings[features[index]];
@@ -366,14 +351,11 @@ public class MLPClassifier {
                     offset += net.wordEmbedDim;
                 }
 
-                for (int index = net.numWordLayers; index < net.numWordLayers + net.numPosLayers; index++) {
+                // for label and pos
+                for (int index = net.numWordLayers; index < savedGradients.length; index++) {
+                    int id = features[index];
                     for (int h = 0; h < reluHidden.length; h++) {
-                        savedGradients[index][features[index]][h] += hiddenGrad[h];
-                    }
-                }
-                for (int index = net.numWordLayers + net.numPosLayers; index < net.numWordLayers + net.numPosLayers + net.numDepLayers; index++) {
-                    for (int h = 0; h < reluHidden.length; h++) {
-                        savedGradients[index][features[index]][h] += hiddenGrad[h];
+                        savedGradients[index][id][h] += hiddenGrad[h];
                     }
                 }
             }
