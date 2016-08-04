@@ -46,7 +46,7 @@ public class YaraParser {
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
-            options.numOfThreads = 2;
+            options.numOfThreads = 1;
             options.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
         }
@@ -210,8 +210,8 @@ public class YaraParser {
                     AveragedPerceptron(featureLength, dependencyLabels.size()),
                     options, dependencyLabels, featureLength, maps);
 
-            MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim);
-            MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim);
+            MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
+            MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
 
             MLPClassifier classifier = new MLPClassifier(mlpNetwork, options.updaterType, 0.9, options.learningRate, 0.0001, options.numOfThreads);
 
@@ -230,7 +230,7 @@ public class YaraParser {
                 while (true) {
                     step++;
                     ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, s, e, 0);
-                    classifier.fit(instances, step, step % 10 == 0 ? true : false);
+                    classifier.fit(instances, step, step % 1 == 0 ? true : false);
                     s = e;
                     e = Math.min(dataSet.size(), options.batchSize + e);
 

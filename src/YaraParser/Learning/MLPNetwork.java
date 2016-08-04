@@ -39,18 +39,18 @@ public class MLPNetwork implements Serializable {
     NetworkMatrices matrices;
     double[][][] saved;
 
-    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int wDim) throws Exception {
+    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int wDim, int pDim, int lDim) throws Exception {
         this.maps = maps;
         this.options = options;
         this.depLabels = depLabels;
         softmaxLayerDim = 2 * (depLabels.size() + 1);
         numWords = maps.vocabSize() + 2;
         numDepLabels = maps.relSize() + 2;
-        labelEmbedDim = 32;
+        labelEmbedDim = lDim;
         wordEmbedDim = wDim;
         hiddenLayerDim = options.hiddenLayer1Size;
         numPos = maps.posSize() + 2;
-        posEmbeddingDim = 32;
+        posEmbeddingDim = pDim;
 
         hiddenLayerIntDim = numPosLayers * wDim + numPosLayers * posEmbeddingDim + numDepLayers * labelEmbedDim;
         matrices = new NetworkMatrices(numWords, wDim, numPos, posEmbeddingDim, numDepLabels, labelEmbedDim, hiddenLayerDim,
@@ -60,36 +60,24 @@ public class MLPNetwork implements Serializable {
         preCompute();
     }
 
-
-    /**
-     * This is only for testing.
-     *
-     * @param wDim
-     * @throws Exception
-     */
-    public MLPNetwork(int hiddenLayer1Size, int wDim, int numWords, int numPos, int numDepLabels, int pDim, int lDim) throws Exception {
-        this.maps = null;
-        this.options = null;
-        this.depLabels = new ArrayList<>(numDepLabels);
-        for (int i = 0; i < numDepLabels; i++)
-            this.depLabels.add(i);
-        softmaxLayerDim = 2 * (depLabels.size() + 1);
-        this.numWords = numWords;
+    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int numDepLabels, int labelEmbedDim, int wordEmbedDim, int
+            hiddenLayerDim, int hiddenLayerIntDim, int numWords, int numPos, int posEmbeddingDim, int softmaxLayerDim, NetworkMatrices matrices,
+                      double[][][] saved) {
+        this.maps = maps;
+        this.options = options;
+        this.depLabels = depLabels;
         this.numDepLabels = numDepLabels;
-        labelEmbedDim = lDim;
-        wordEmbedDim = wDim;
-        this.hiddenLayerDim = hiddenLayer1Size;
+        this.labelEmbedDim = labelEmbedDim;
+        this.wordEmbedDim = wordEmbedDim;
+        this.hiddenLayerDim = hiddenLayerDim;
+        this.hiddenLayerIntDim = hiddenLayerIntDim;
+        this.numWords = numWords;
         this.numPos = numPos;
-        posEmbeddingDim = pDim;
-
-        hiddenLayerIntDim =
-                numPosLayers * wDim + numPosLayers * posEmbeddingDim + numDepLayers * labelEmbedDim;
-        matrices = new NetworkMatrices(numWords, wDim, numPos, posEmbeddingDim, numDepLabels, labelEmbedDim, hiddenLayerDim,
-                hiddenLayerIntDim, softmaxLayerDim);
-
-        initializeLayers();
+        this.posEmbeddingDim = posEmbeddingDim;
+        this.softmaxLayerDim = softmaxLayerDim;
+        this.matrices = matrices;
+        this.saved = saved;
     }
-
 
     public static void averageNetworks(MLPNetwork toAverageFrom, MLPNetwork averaged, double r1, double r2) {
         ArrayList<double[][]> matrices1 = toAverageFrom.matrices.getAllMatrices();
@@ -216,7 +204,7 @@ public class MLPNetwork implements Serializable {
         }
     }
 
-    public double[] output(final int[] feats) {
+    public double[] output(final int[] feats, final int[] labels) {
         final double[][] softmaxLayer = matrices.getSoftmaxLayer();
         final double[] softmaxLayerBias = matrices.getSoftmaxLayerBias();
         final double[][] hiddenLayer = matrices.getHiddenLayer();
@@ -262,12 +250,14 @@ public class MLPNetwork implements Serializable {
         double[] probs = new double[softmaxLayerBias.length];
         double sum = 0;
         for (int i = 0; i < probs.length; i++) {
-            for (int j = 0; j < hidden.length; j++) {
-                probs[i] += softmaxLayer[i][j] * hidden[j];
+            if (labels[i] >= 0) {
+                for (int j = 0; j < hidden.length; j++) {
+                    probs[i] += softmaxLayer[i][j] * hidden[j];
+                }
+                probs[i] += softmaxLayerBias[i];
+                probs[i] = Math.exp(probs[i]);
+                sum += probs[i];
             }
-            probs[i] += softmaxLayerBias[i];
-            probs[i] = Math.exp(probs[i]);
-            sum += probs[i];
         }
 
         for (int i = 0; i < probs.length; i++) {
@@ -276,7 +266,6 @@ public class MLPNetwork implements Serializable {
         }
         return probs;
     }
-
 
     public IndexMaps getMaps() {
         return maps;
@@ -340,5 +329,21 @@ public class MLPNetwork implements Serializable {
 
     public NetworkMatrices getMatrices() {
         return matrices;
+    }
+
+    /**
+     * This is used just for testing.
+     *
+     * @return
+     */
+    public MLPNetwork clone() {
+        try {
+            MLPNetwork network = new MLPNetwork(maps, options, depLabels, numDepLabels, labelEmbedDim, wordEmbedDim, hiddenLayerDim,
+                    hiddenLayerIntDim, numWords, numPos, posEmbeddingDim, softmaxLayerDim, null, null);
+            network.matrices = matrices.clone();
+            return network;
+        } catch (Exception ex) {
+            return null;
+        }
     }
 }

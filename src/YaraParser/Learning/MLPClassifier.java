@@ -179,189 +179,216 @@ public class MLPClassifier {
         }
     }
 
+    private void backPropSavedGradients(NetworkMatrices g, double[][][] savedWGradients, double[][][] savedPGradients, double[][][] savedLGradients)
+            throws Exception {
+        int offset = 0;
+        double[][] hiddenLayer = g.getHiddenLayer();
+        double[][] wE = net.matrices.getWordEmbedding();
+        double[][] pE = net.matrices.getPosEmbedding();
+        double[][] lE = net.matrices.getLabelEmbedding();
+        for (int index = 0; index < savedWGradients.length; index++) {
+            for (int tok : net.maps.preComputeMap.keySet()) {
+                int id = net.maps.preComputeMap.get(tok);
+                double[] embedding = wE[tok];
+                for (int h = 0; h < hiddenLayer.length; h++) {
+                    double delta = savedWGradients[index][id][h];
+                    for (int k = 0; k < embedding.length; k++) {
+                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, delta * embedding[k]);
+                        g.modify(EmbeddingTypes.WORD, tok, k, delta * hiddenLayer[h][offset + k]);
+                    }
+                }
+            }
+            offset += net.wordEmbedDim;
+        }
+
+        for (int index = 0; index < savedPGradients.length; index++) {
+            for (int tok = 0; tok < savedPGradients[index].length; tok++) {
+                double[] embedding = pE[tok];
+                for (int h = 0; h < hiddenLayer.length; h++) {
+                    double delta = savedPGradients[index][tok][h];
+                    for (int k = 0; k < embedding.length; k++) {
+                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, delta * embedding[k]);
+                        g.modify(EmbeddingTypes.POS, tok, k, delta * hiddenLayer[h][offset + k]);
+                    }
+                }
+            }
+            offset += net.posEmbeddingDim;
+        }
+
+        for (int index = 0; index < savedLGradients.length; index++) {
+            for (int tok = 0; tok < savedLGradients[index].length; tok++) {
+                double[] embedding = lE[tok];
+                for (int h = 0; h < hiddenLayer.length; h++) {
+                    double delta = savedLGradients[index][tok][h];
+                    for (int k = 0; k < embedding.length; k++) {
+                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, delta * embedding[k]);
+                        g.modify(EmbeddingTypes.DEPENDENCY, tok, k, delta * hiddenLayer[h][offset + k]);
+                    }
+                }
+            }
+            offset += net.labelEmbedDim;
+        }
+    }
+
+    public Pair<Double, Double> calculateCost(List<NeuralTrainingInstance> instances, int batchSize, NetworkMatrices g,
+                                              double[][][] savedWGradients, double[][][] savedPGradients, double[][][] savedLGradients)
+            throws Exception {
+        double cost = 0;
+        double correct = 0;
+
+        for (NeuralTrainingInstance instance : instances) {
+            int[] features = instance.getFeatures();
+            int[] label = instance.getLabel();
+            double[] hidden = new double[net.getHiddenLayerDim()];
+            final double[][] softmaxLayer = net.getMatrices().getSoftmaxLayer();
+            final double[] softmaxLayerBias = net.getMatrices().getSoftmaxLayerBias();
+            final double[][] hiddenLayer = net.getMatrices().getHiddenLayer();
+            final double[] hiddenLayerBias = net.getMatrices().getHiddenLayerBias();
+            final double[][] wordEmbeddings = net.getMatrices().getWordEmbedding();
+            final double[][] posEmbeddings = net.getMatrices().getPosEmbedding();
+            final double[][] labelEmbeddings = net.getMatrices().getLabelEmbedding();
+
+            int offset = 0;
+            for (int j = 0; j < features.length; j++) {
+                int tok = features[j];
+                final double[] embedding;
+                if (j < net.getNumWordLayers())
+                    embedding = wordEmbeddings[tok];
+                else if (j < net.getNumWordLayers() + net.getNumPosLayers())
+                    embedding = posEmbeddings[tok];
+                else
+                    embedding = labelEmbeddings[tok];
+
+                for (int h = 0; h < hidden.length; h++) {
+                    for (int k = 0; k < embedding.length; k++) {
+                        hidden[h] += hiddenLayer[h][offset + k] * embedding[k];
+                    }
+                }
+
+                offset += embedding.length;
+            }
+
+            double[] reluHidden = new double[hidden.length];
+            for (int h = 0; h < hidden.length; h++) {
+                hidden[h] += hiddenLayerBias[h];
+                //relu
+                reluHidden[h] = Math.max(0, hidden[h]);
+            }
+
+            int argmax = -1;
+            int gold = -1;
+            double sum = 0;
+            double[] probs = new double[softmaxLayerBias.length];
+            for (int i = 0; i < probs.length; i++) {
+                if (label[i] >= 0) {
+                    if (label[i] == 1)
+                        gold = i;
+                    for (int h = 0; h < reluHidden.length; h++) {
+                        probs[i] += softmaxLayer[i][h] * reluHidden[h];
+                    }
+
+                    probs[i] += softmaxLayerBias[i];
+                    probs[i] = Math.exp(probs[i]);
+                    sum += probs[i];
+
+                    if (argmax < 0 || probs[i] > probs[argmax])
+                        argmax = i;
+                }
+            }
+
+            for (int i = 0; i < probs.length; i++) {
+                probs[i] /= sum;
+            }
+
+            cost -= Math.log(probs[gold]);
+            if (argmax == gold)
+                correct += 1.0;
+
+            double[] reluGradW = new double[reluHidden.length];
+            double[] delta = new double[probs.length];
+            for (int i = 0; i < probs.length; i++) {
+                if (label[i] >= 0) {
+                    delta[i] = (-label[i] + probs[i]) / batchSize;
+                    g.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, delta[i]);
+                    for (int h = 0; h < reluHidden.length; h++) {
+                        g.modify(EmbeddingTypes.SOFTMAX, i, h, delta[i] * reluHidden[h]);
+                        reluGradW[h] += delta[i] * softmaxLayer[i][h];
+                    }
+                }
+            }
+
+            double[] hiddenGrad = new double[hidden.length];
+            for (int h = 0; h < reluHidden.length; h++) {
+                hiddenGrad[h] = (reluHidden[h] == 0. ? 0 : reluGradW[h]);
+                g.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, hiddenGrad[h]);
+            }
+
+            offset = 0;
+            for (int index = 0; index < net.getNumWordLayers(); index++) {
+                double[] embeddings = wordEmbeddings[features[index]];
+                for (int h = 0; h < reluHidden.length; h++) {
+                    for (int k = 0; k < embeddings.length; k++) {
+                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
+                        g.modify(EmbeddingTypes.WORD, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
+                    }
+                }
+                offset += embeddings.length;
+            }
+
+            for (int index = net.getNumWordLayers(); index < net
+                    .getNumWordLayers() + net.getNumPosLayers(); index++) {
+                double[] embeddings = posEmbeddings[features[index]];
+                for (int h = 0; h < reluHidden.length; h++) {
+                    for (int k = 0; k < embeddings.length; k++) {
+                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
+                        g.modify(EmbeddingTypes.POS, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
+                    }
+                }
+                offset += embeddings.length;
+            }
+            for (int index = net.getNumWordLayers() + net
+                    .getNumPosLayers(); index < net.getNumWordLayers() +
+                    net.getNumPosLayers() + net.getNumDepLayers(); index++) {
+                double[] embeddings = labelEmbeddings[features[index]];
+                for (int h = 0; h < reluHidden.length; h++) {
+                    for (int k = 0; k < embeddings.length; k++) {
+                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
+                        g.modify(EmbeddingTypes.DEPENDENCY, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
+                    }
+                }
+                offset += embeddings.length;
+            }
+        }
+
+        //todo   backPropSavedGradients(g, savedWGradients, savedPGradients, savedLGradients);
+        return new Pair<>(cost, correct);
+    }
+
     public class CostThread implements Callable<Pair<Pair<Double, Double>, NetworkMatrices>> {
         List<NeuralTrainingInstance> instances;
         int batchSize;
         NetworkMatrices g;
-        double[][][] savedGradients;
+        double[][][] savedWGradients;
+        double[][][] savedPGradients;
+        double[][][] savedLGradients;
 
         public CostThread(List<NeuralTrainingInstance> instances, int batchSize) {
             this.instances = instances;
             this.batchSize = batchSize;
             g = new NetworkMatrices(net.numWords, net.wordEmbedDim, net.numPos, net.posEmbeddingDim, net.numDepLabels, net.labelEmbedDim,
                     net.hiddenLayerDim, net.hiddenLayerIntDim, net.softmaxLayerDim);
-            savedGradients = instantiateSavedGradients();
+            savedWGradients = new double[net.numWordLayers][net.maps.preComputeMap.size()][net.hiddenLayerDim];
+            savedPGradients = new double[net.numPosLayers][net.numPos][net.hiddenLayerDim];
+            savedLGradients = new double[net.numDepLayers][net.numDepLabels][net.hiddenLayerDim];
         }
 
-        private void backPropSavedGradients() throws Exception {
-            int offset = 0;
-            double[][] hiddenLayer = g.getHiddenLayer();
-            double[][] wE = net.matrices.getWordEmbedding();
-            double[][] pE = net.matrices.getPosEmbedding();
-            double[][] lE = net.matrices.getLabelEmbedding();
-            for (int index = 0; index < net.numWordLayers; index++) {
-                for (int tok : net.maps.preComputeMap.keySet()) {
-                    int id = net.maps.preComputeMap.get(tok);
-                    double[] embedding = wE[tok];
-                    for (int h = 0; h < savedGradients[index][id].length; h++) {
-                        double delta = savedGradients[index][id][h];
-                        for (int k = 0; k < embedding.length; k++) {
-                            g.modify(EmbeddingTypes.HIDDENLAYER, h, offset+k, delta * embedding[k]);
-                            g.modify(EmbeddingTypes.WORD, tok, k, delta * hiddenLayer[h][offset+k]);
-                        }
-                    }
-                }
-                offset += net.wordEmbedDim;
-            }
-
-            int plBorder = net.numWordLayers + net.numPosLayers;
-            for (int index = net.numWordLayers; index < net.numWordLayers + net.numPosLayers + net.numDepLayers; index++) {
-                boolean isPos = index < plBorder;
-                for (int tok = 0; tok < (isPos ? net.numPos : net.numDepLabels); tok++) {
-                    double[] embedding = isPos ? pE[tok] : lE[tok];
-                    for (int h = 0; h < savedGradients[index][tok].length; h++) {
-                        double delta = savedGradients[index][tok][h];
-                        for (int k = 0; k < embedding.length; k++) {
-                            g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, delta * embedding[k]);
-                            g.modify(isPos ? EmbeddingTypes.POS : EmbeddingTypes.DEPENDENCY, tok, k, delta * hiddenLayer[h][offset + k]);
-                        }
-                    }
-                }
-                offset += isPos ? net.posEmbeddingDim : net.labelEmbedDim;
-            }
-        }
 
         @Override
         public Pair<Pair<Double, Double>, NetworkMatrices> call() throws Exception {
-            double cost = 0;
-            double correct = 0;
-
-            for (NeuralTrainingInstance instance : instances) {
-                int[] features = instance.getFeatures();
-                int[] label = instance.getLabel();
-                final double[][] softmaxLayer = net.matrices.getSoftmaxLayer();
-                final double[] softmaxLayerBias = net.matrices.getSoftmaxLayerBias();
-                final double[][] hiddenLayer = net.matrices.getHiddenLayer();
-                final double[] hiddenLayerBias = net.matrices.getHiddenLayerBias();
-                final double[][] wordEmbeddings = net.matrices.getWordEmbedding();
-                final double[][] posEmbeddings = net.matrices.getPosEmbedding();
-                final double[][] labelEmbeddings = net.matrices.getLabelEmbedding();
-
-                double[] hidden = new double[net.hiddenLayerDim];
-                double[] reluHidden = new double[hidden.length];
-                double[] probs = new double[softmaxLayerBias.length];
-
-                int offset = 0;
-                for (int j = 0; j < features.length; j++) {
-                    int tok = features[j];
-                    final double[] embedding;
-                    if (j < net.numWordLayers)
-                        embedding = wordEmbeddings[tok];
-                    else if (j < net.numWordLayers + net.numPosLayers)
-                        embedding = posEmbeddings[tok];
-                    else
-                        embedding = labelEmbeddings[tok];
-
-                    if (net.saved != null && (j >= net.numWordLayers || net.maps.preComputeMap.containsKey(tok))) {
-                        int id = tok;
-                        if (j < net.numWordLayers)
-                            id = net.maps.preComputeMap.get(tok);
-                        for (int h = 0; h < hidden.length; h++) {
-                            hidden[h] += net.saved[j][id][h];
-                        }
-                    } else {
-                        for (int h = 0; h < hidden.length; h++) {
-                            for (int k = 0; k < embedding.length; k++) {
-                                hidden[h] += hiddenLayer[h][offset + k] * embedding[k];
-                            }
-                        }
-                    }
-                    offset += embedding.length;
-                }
-
-                for (int h = 0; h < hidden.length; h++) {
-                    hidden[h] += hiddenLayerBias[h];
-                    //relu
-                    reluHidden[h] = Math.max(0, hidden[h]);
-                }
-
-                int argmax = -1;
-                int gold = -1;
-                double sum = 0;
-                for (int i = 0; i < probs.length; i++) {
-                    if (label[i] >= 0) {
-                        if (label[i] == 1)
-                            gold = i;
-                        for (int h = 0; h < reluHidden.length; h++) {
-                            probs[i] += softmaxLayer[i][h] * reluHidden[h];
-                        }
-
-                        probs[i] += softmaxLayerBias[i];
-                        probs[i] = Math.exp(probs[i]);
-                        sum += probs[i];
-
-                        if (argmax < 0 || probs[i] > probs[argmax])
-                            argmax = i;
-                    }
-                }
-
-                for (int i = 0; i < probs.length; i++) {
-                    probs[i] /= sum;
-                }
-
-                cost -= Math.log(probs[gold]);
-                if (argmax == gold)
-                    correct += 1.0;
-
-                double[] reluGradW = new double[reluHidden.length];
-                for (int i = 0; i < probs.length; i++) {
-                    if (label[i] >= 0) {
-                        double delta = (-label[i] + probs[i]) / batchSize;
-                        g.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, delta);
-                        for (int h = 0; h < reluHidden.length; h++) {
-                            g.modify(EmbeddingTypes.SOFTMAX, i, h, delta * reluHidden[h]);
-                            reluGradW[h] += delta * softmaxLayer[i][h];
-                        }
-                    }
-                }
-
-                double[] hiddenGrad = new double[hidden.length];
-                for (int h = 0; h < reluHidden.length; h++) {
-                    hiddenGrad[h] = (reluHidden[h] == 0. ? 0 : reluGradW[h]);
-                    g.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, hiddenGrad[h]);
-                }
-
-                offset = 0;
-                for (int index = 0; index < net.numWordLayers; index++) {
-                    if (net.maps.preComputeMap.containsKey(features[index])) {
-                        int id = net.maps.preComputeMap.get(features[index]);
-                        for (int h = 0; h < reluHidden.length; h++) {
-                            savedGradients[index][id][h] += hiddenGrad[h];
-                        }
-                    } else {
-                        double[] embeddings = wordEmbeddings[features[index]];
-                        for (int h = 0; h < reluHidden.length; h++) {
-                            for (int k = 0; k < embeddings.length; k++) {
-                                g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
-                                g.modify(EmbeddingTypes.WORD, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
-                            }
-                        }
-                    }
-                    offset += net.wordEmbedDim;
-                }
-
-                // for label and pos
-                for (int index = net.numWordLayers; index < savedGradients.length; index++) {
-                    int id = features[index];
-                    for (int h = 0; h < reluHidden.length; h++) {
-                        savedGradients[index][id][h] += hiddenGrad[h];
-                    }
-                }
-            }
-
-            backPropSavedGradients();
-            return new Pair<>(new Pair<>(cost, correct), g);
+            Pair<Double, Double> costValue = calculateCost(instances, batchSize, g, savedWGradients, savedPGradients, savedLGradients);
+            return new Pair<>(costValue, g);
         }
+
 
         private double[][][] instantiateSavedGradients() {
             double[][][] savedGradients = new double[net.numWordLayers + net.numPosLayers + net.numDepLayers][][];
@@ -375,4 +402,5 @@ public class MLPClassifier {
             return savedGradients;
         }
     }
+
 }

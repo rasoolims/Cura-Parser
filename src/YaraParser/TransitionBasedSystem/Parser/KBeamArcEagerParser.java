@@ -131,14 +131,30 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
-
-            double[] logVals = nn.output(baseFeatures);
             State currentState = configuration.state;
-            double prevScore = configuration.score;
             boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
+
+            int[] label = new int[nn.getSoftmaxLayerDim()];
+            if (!canShift)
+                label[0] = -1;
+            if (!canReduce)
+                label[1] = -1;
+            if (!canRightArc) {
+                for (int dependency : dependencyRelations) {
+                    label[2 + dependency] = -1;
+                }
+            }
+            if (!canLeftArc) {
+                for (int dependency : dependencyRelations) {
+                    label[2 + dependency + dependencyRelations.size()] = -1;
+                }
+            }
+            double[] logVals = nn.output(baseFeatures, label);
+            double prevScore = configuration.score;
+
             if (!canShift
                     && !canReduce
                     && !canRightArc
