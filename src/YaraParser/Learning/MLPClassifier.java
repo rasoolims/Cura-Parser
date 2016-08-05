@@ -182,7 +182,7 @@ public class MLPClassifier {
     private void backPropSavedGradients(NetworkMatrices g, double[][][] savedGradients)
             throws Exception {
         int offset = 0;
-        double[][] hiddenLayer = g.getHiddenLayer();
+        double[][] hiddenLayer = net.matrices.getHiddenLayer();
         double[][] wE = net.matrices.getWordEmbedding();
         double[][] pE = net.matrices.getPosEmbedding();
         double[][] lE = net.matrices.getLabelEmbedding();
@@ -324,39 +324,27 @@ public class MLPClassifier {
 
             offset = 0;
             for (int index = 0; index < net.getNumWordLayers(); index++) {
-                double[] embeddings = wordEmbeddings[features[index]];
-                for (int h = 0; h < reluHidden.length; h++) {
-                    for (int k = 0; k < embeddings.length; k++) {
-                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
-                        g.modify(EmbeddingTypes.WORD, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
+                if (net.maps.preComputeMap.containsKey(features[index])) {
+                    int id = net.maps.preComputeMap.get(features[index]);
+                    for (int h = 0; h < reluHidden.length; h++) {
+                        savedGradients[index][id][h] += hiddenGrad[h];
+                    }
+
+                } else {
+                    double[] embeddings = wordEmbeddings[features[index]];
+                    for (int h = 0; h < reluHidden.length; h++) {
+                        for (int k = 0; k < embeddings.length; k++) {
+                            g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
+                            g.modify(EmbeddingTypes.WORD, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
+                        }
                     }
                 }
-                offset += embeddings.length;
+                offset += net.wordEmbedDim;
             }
 
-            for (int index = net.getNumWordLayers(); index < net
-                    .getNumWordLayers() + net.getNumPosLayers(); index++) {
-                double[] embeddings = posEmbeddings[features[index]];
-                for (int h = 0; h < reluHidden.length; h++) {
-                    for (int k = 0; k < embeddings.length; k++) {
-                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
-                        g.modify(EmbeddingTypes.POS, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
-                    }
-                }
-                offset += embeddings.length;
-            }
-            for (int index = net.getNumWordLayers() + net
-                    .getNumPosLayers(); index < net.getNumWordLayers() +
-                    net.getNumPosLayers() + net.getNumDepLayers(); index++) {
-                double[] embeddings = labelEmbeddings[features[index]];
-                for (int h = 0; h < reluHidden.length; h++) {
-                    for (int k = 0; k < embeddings.length; k++) {
-                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
-                        g.modify(EmbeddingTypes.DEPENDENCY, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
-                    }
-                }
-                offset += embeddings.length;
-            }
+            for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++)
+                for (int h = 0; h < reluHidden.length; h++)
+                    savedGradients[index][features[index]][h] += hiddenGrad[h];
         }
 
         backPropSavedGradients(g, savedGradients);
