@@ -139,10 +139,10 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
         for (int i = 0; i < network.getNumWordLayers(); i++)
             savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+        for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
             savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
         for (int i = network.getNumWordLayers() + network.getNumPosLayers();
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
@@ -207,10 +207,10 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
         for (int i = 0; i < network.getNumWordLayers(); i++)
             savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+        for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
             savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
         for (int i = network.getNumWordLayers() + network.getNumPosLayers();
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
@@ -275,10 +275,10 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
         for (int i = 0; i < network.getNumWordLayers(); i++)
             savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+        for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
             savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
         for (int i = network.getNumWordLayers() + network.getNumPosLayers();
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
@@ -344,10 +344,10 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
         for (int i = 0; i < network.getNumWordLayers(); i++)
             savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+        for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
             savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
         for (int i = network.getNumWordLayers() + network.getNumPosLayers();
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
@@ -412,10 +412,10 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
         for (int i = 0; i < network.getNumWordLayers(); i++)
             savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+        for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
             savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
         for (int i = network.getNumWordLayers() + network.getNumPosLayers();
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
@@ -478,10 +478,10 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
         for (int i = 0; i < network.getNumWordLayers(); i++)
             savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+        for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
             savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
         for (int i = network.getNumWordLayers() + network.getNumPosLayers();
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
@@ -546,10 +546,10 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
         for (int i = 0; i < network.getNumWordLayers(); i++)
             savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+        for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
             savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
         for (int i = network.getNumWordLayers() + network.getNumPosLayers();
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)

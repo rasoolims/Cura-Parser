@@ -179,19 +179,19 @@ public class MLPClassifier {
         }
     }
 
-    private void backPropSavedGradients(NetworkMatrices g, double[][][] savedWGradients, double[][][] savedPGradients, double[][][] savedLGradients)
+    private void backPropSavedGradients(NetworkMatrices g, double[][][] savedGradients)
             throws Exception {
         int offset = 0;
         double[][] hiddenLayer = g.getHiddenLayer();
         double[][] wE = net.matrices.getWordEmbedding();
         double[][] pE = net.matrices.getPosEmbedding();
         double[][] lE = net.matrices.getLabelEmbedding();
-        for (int index = 0; index < savedWGradients.length; index++) {
+        for (int index = 0; index < net.numWordLayers; index++) {
             for (int tok : net.maps.preComputeMap.keySet()) {
                 int id = net.maps.preComputeMap.get(tok);
                 double[] embedding = wE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
-                    double delta = savedWGradients[index][id][h];
+                    double delta = savedGradients[index][id][h];
                     for (int k = 0; k < embedding.length; k++) {
                         g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, delta * embedding[k]);
                         g.modify(EmbeddingTypes.WORD, tok, k, delta * hiddenLayer[h][offset + k]);
@@ -201,11 +201,11 @@ public class MLPClassifier {
             offset += net.wordEmbedDim;
         }
 
-        for (int index = 0; index < savedPGradients.length; index++) {
-            for (int tok = 0; tok < savedPGradients[index].length; tok++) {
+        for (int index = net.numWordLayers; index < net.numWordLayers + net.numPosLayers; index++) {
+            for (int tok = 0; tok < savedGradients[index].length; tok++) {
                 double[] embedding = pE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
-                    double delta = savedPGradients[index][tok][h];
+                    double delta = savedGradients[index][tok][h];
                     for (int k = 0; k < embedding.length; k++) {
                         g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, delta * embedding[k]);
                         g.modify(EmbeddingTypes.POS, tok, k, delta * hiddenLayer[h][offset + k]);
@@ -215,11 +215,11 @@ public class MLPClassifier {
             offset += net.posEmbeddingDim;
         }
 
-        for (int index = 0; index < savedLGradients.length; index++) {
-            for (int tok = 0; tok < savedLGradients[index].length; tok++) {
+        for (int index = net.numWordLayers + net.numPosLayers; index < net.numWordLayers + net.numPosLayers + net.numDepLayers; index++) {
+            for (int tok = 0; tok < savedGradients[index].length; tok++) {
                 double[] embedding = lE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
-                    double delta = savedLGradients[index][tok][h];
+                    double delta = savedGradients[index][tok][h];
                     for (int k = 0; k < embedding.length; k++) {
                         g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, delta * embedding[k]);
                         g.modify(EmbeddingTypes.DEPENDENCY, tok, k, delta * hiddenLayer[h][offset + k]);
@@ -359,7 +359,7 @@ public class MLPClassifier {
             }
         }
 
-        //todo   backPropSavedGradients(g, savedWGradients, savedPGradients, savedLGradients);
+        backPropSavedGradients(g, savedGradients);
         return new Pair<>(cost, correct);
     }
 
