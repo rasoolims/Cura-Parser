@@ -213,7 +213,8 @@ public class YaraParser {
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
 
-            MLPClassifier classifier = new MLPClassifier(mlpNetwork, options.updaterType, 0.9, options.learningRate, 0.0001, options.numOfThreads);
+            MLPClassifier classifier = new MLPClassifier(mlpNetwork, options.updaterType, 0.9, options.learningRate, 0.0001, options.numOfThreads,
+                    options.dropoutProbForHiddenLayer);
 
             int decayStep = (int) (options.decayStep * dataSet.size() / options.batchSize);
             decayStep = decayStep == 0 ? 1 : decayStep;

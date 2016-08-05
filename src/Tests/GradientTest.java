@@ -148,7 +148,7 @@ public class GradientTest {
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
             savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
-        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
+        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
         network.preCompute();
 
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
@@ -216,7 +216,7 @@ public class GradientTest {
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
             savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
-        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
+        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
         network.preCompute();
 
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
@@ -284,7 +284,7 @@ public class GradientTest {
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
             savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
-        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
+        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
         network.preCompute();
 
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
@@ -353,7 +353,7 @@ public class GradientTest {
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
             savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
-        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
+        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
         network.preCompute();
 
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
@@ -421,7 +421,7 @@ public class GradientTest {
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
             savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
-        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
+        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
         network.preCompute();
 
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
@@ -487,7 +487,7 @@ public class GradientTest {
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
             savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
-        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
+        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
         network.preCompute();
 
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
@@ -555,7 +555,7 @@ public class GradientTest {
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
             savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
-        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
+        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
         network.preCompute();
 
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
@@ -621,8 +621,8 @@ public class GradientTest {
              i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
             savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
-        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
-        MLPClassifier classifierMultiThread = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 4);
+        MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
+        MLPClassifier classifierMultiThread = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 4, 0);
         network.preCompute();
 
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network

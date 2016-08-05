@@ -48,6 +48,7 @@ public class Options implements Serializable {
     public int numOfThreads;
     public UpdaterType updaterType;
     public int UASEvalPerStep;
+    public double dropoutProbForHiddenLayer;
 
     public String goldFile;
 
@@ -79,7 +80,7 @@ public class Options implements Serializable {
         inputFile = "";
         devPath = "";
         scorePath = "";
-
+        dropoutProbForHiddenLayer = 0;
         averagingOption = AveragingOption.BOTH;
         separator = "_";
         clusterFile = "";
@@ -162,6 +163,7 @@ public class Options implements Serializable {
         output.append("\t \t -ds [decay-step] \n");
         output.append("\t \t -u [updater-type: sgd(default),adam,adagrad] \n");
         output.append("\t \t -batch [batch-size] \n");
+        output.append("\t \t -d [dropout-prob] \n");
         output.append("\t \t -eval [uas eval per step (default 100)] \n");
         output.append("\t \t drop [put if want dropout] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
@@ -271,6 +273,8 @@ public class Options implements Serializable {
                 options.learningRate = Double.parseDouble(args[i + 1]);
             else if (args[i].startsWith("-ds"))
                 options.decayStep = Double.parseDouble(args[i + 1]);
+            else if (args[i].startsWith("-d"))
+                options.dropoutProbForHiddenLayer = Double.parseDouble(args[i + 1]);
             else if (args[i].startsWith("-cluster")) {
                 options.clusterFile = args[i + 1];
                 options.useExtendedWithBrownClusterFeatures = true;
@@ -449,6 +453,7 @@ public class Options implements Serializable {
             builder.append("learning rate: " + learningRate + "\n");
             builder.append("decay step: " + decayStep + "\n");
             builder.append("batch size: " + batchSize + "\n");
+            builder.append("dropout probability: " + dropoutProbForHiddenLayer + "\n");
             return builder.toString();
         } else if (parseConllFile) {
             StringBuilder builder = new StringBuilder();

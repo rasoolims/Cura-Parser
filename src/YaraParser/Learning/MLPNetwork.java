@@ -227,7 +227,7 @@ public class MLPNetwork implements Serializable {
                 if (j < numWordLayers)
                     id = maps.preComputeMap.get(tok);
                 double[] s = saved[j][id];
-                for (int i = 0; i < hidden.length; ++i) {
+                for (int i = 0; i < hidden.length; i++) {
                     hidden[i] += s[i];
                 }
             } else {
