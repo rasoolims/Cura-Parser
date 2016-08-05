@@ -139,9 +139,14 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedWGradients = new double[network.getNumWordLayers()][network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        double[][][] savedPGradients = new double[network.getNumPosLayers()][network.getNumPos()][network.getHiddenLayerDim()];
-        double[][][] savedLGradients = new double[network.getNumDepLayers()][network.getNumDepLabels()][network.getHiddenLayerDim()];
+        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        for (int i = 0; i < network.getNumWordLayers(); i++)
+            savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+            savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+             i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+            savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
         MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
         network.preCompute();
@@ -149,7 +154,7 @@ public class GradientTest {
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
                 .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
-        classifier.calculateCost(instances, 1, gradients, savedWGradients, savedPGradients, savedLGradients);
+        classifier.calculateCost(instances, 1, gradients, savedGradients);
 
         double eps = 0.000001;
         for (int i = 0; i < network.getNumWordLayers(); i++) {
@@ -202,9 +207,14 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedWGradients = new double[network.getNumWordLayers()][network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        double[][][] savedPGradients = new double[network.getNumPosLayers()][network.getNumPos()][network.getHiddenLayerDim()];
-        double[][][] savedLGradients = new double[network.getNumDepLayers()][network.getNumDepLabels()][network.getHiddenLayerDim()];
+        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        for (int i = 0; i < network.getNumWordLayers(); i++)
+            savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+            savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+             i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+            savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
         MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
         network.preCompute();
@@ -212,7 +222,7 @@ public class GradientTest {
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
                 .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
-        classifier.calculateCost(instances, 1, gradients, savedWGradients, savedPGradients, savedLGradients);
+        classifier.calculateCost(instances, 1, gradients, savedGradients);
 
         double eps = 0.000001;
         for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++) {
@@ -265,9 +275,14 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedWGradients = new double[network.getNumWordLayers()][network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        double[][][] savedPGradients = new double[network.getNumPosLayers()][network.getNumPos()][network.getHiddenLayerDim()];
-        double[][][] savedLGradients = new double[network.getNumDepLayers()][network.getNumDepLabels()][network.getHiddenLayerDim()];
+        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        for (int i = 0; i < network.getNumWordLayers(); i++)
+            savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+            savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+             i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+            savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
         MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
         network.preCompute();
@@ -275,7 +290,7 @@ public class GradientTest {
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
                 .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
-        classifier.calculateCost(instances, 1, gradients, savedWGradients, savedPGradients, savedLGradients);
+        classifier.calculateCost(instances, 1, gradients, savedGradients);
 
         double eps = 0.000001;
         for (int i = network.getNumWordLayers() + network.getNumPosLayers(); i < network.getNumWordLayers() + network.getNumPosLayers() + network
@@ -329,9 +344,14 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedWGradients = new double[network.getNumWordLayers()][network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        double[][][] savedPGradients = new double[network.getNumPosLayers()][network.getNumPos()][network.getHiddenLayerDim()];
-        double[][][] savedLGradients = new double[network.getNumDepLayers()][network.getNumDepLabels()][network.getHiddenLayerDim()];
+        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        for (int i = 0; i < network.getNumWordLayers(); i++)
+            savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+            savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+             i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+            savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
         MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
         network.preCompute();
@@ -339,7 +359,7 @@ public class GradientTest {
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
                 .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
-        classifier.calculateCost(instances, 1, gradients, savedWGradients, savedPGradients, savedLGradients);
+        classifier.calculateCost(instances, 1, gradients, savedGradients);
 
         double eps = 0.000001;
         for (int i = 0; i < network.getHiddenLayerDim(); i++) {
@@ -392,9 +412,14 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedWGradients = new double[network.getNumWordLayers()][network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        double[][][] savedPGradients = new double[network.getNumPosLayers()][network.getNumPos()][network.getHiddenLayerDim()];
-        double[][][] savedLGradients = new double[network.getNumDepLayers()][network.getNumDepLabels()][network.getHiddenLayerDim()];
+        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        for (int i = 0; i < network.getNumWordLayers(); i++)
+            savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+            savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+             i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+            savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
         MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
         network.preCompute();
@@ -402,7 +427,7 @@ public class GradientTest {
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
                 .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
-        classifier.calculateCost(instances, 1, gradients, savedWGradients, savedPGradients, savedLGradients);
+        classifier.calculateCost(instances, 1, gradients, savedGradients);
 
         double eps = 0.000001;
         for (int i = 0; i < network.getHiddenLayerDim(); i++) {
@@ -453,9 +478,14 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedWGradients = new double[network.getNumWordLayers()][network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        double[][][] savedPGradients = new double[network.getNumPosLayers()][network.getNumPos()][network.getHiddenLayerDim()];
-        double[][][] savedLGradients = new double[network.getNumDepLayers()][network.getNumDepLabels()][network.getHiddenLayerDim()];
+        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        for (int i = 0; i < network.getNumWordLayers(); i++)
+            savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+            savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+             i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+            savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
         MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
         network.preCompute();
@@ -463,7 +493,7 @@ public class GradientTest {
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
                 .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
-        classifier.calculateCost(instances, 1, gradients, savedWGradients, savedPGradients, savedLGradients);
+        classifier.calculateCost(instances, 1, gradients, savedGradients);
 
         double eps = 0.000001;
         for (int i = 0; i < network.getSoftmaxLayerDim(); i++) {
@@ -516,9 +546,14 @@ public class GradientTest {
                 options, dependencyLabels, 72, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
-        double[][][] savedWGradients = new double[network.getNumWordLayers()][network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
-        double[][][] savedPGradients = new double[network.getNumPosLayers()][network.getNumPos()][network.getHiddenLayerDim()];
-        double[][][] savedLGradients = new double[network.getNumDepLayers()][network.getNumDepLabels()][network.getHiddenLayerDim()];
+        double[][][] savedGradients = new double[network.getNumWordLayers()+network.getNumPosLayers()+network.getNumDepLayers()][][];
+        for (int i = 0; i < network.getNumWordLayers(); i++)
+            savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers(); i <  network.getNumWordLayers() + network.getNumPosLayers(); i++)
+            savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+        for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+             i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+            savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
 
         MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1);
         network.preCompute();
@@ -526,7 +561,7 @@ public class GradientTest {
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
                 .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
-        classifier.calculateCost(instances, 1, gradients, savedWGradients, savedPGradients, savedLGradients);
+        classifier.calculateCost(instances, 1, gradients, savedGradients);
 
         double eps = 0.000001;
         for (int i = 0; i < network.getSoftmaxLayerDim(); i++) {

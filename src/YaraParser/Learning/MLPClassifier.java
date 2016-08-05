@@ -230,8 +230,7 @@ public class MLPClassifier {
         }
     }
 
-    public Pair<Double, Double> calculateCost(List<NeuralTrainingInstance> instances, int batchSize, NetworkMatrices g,
-                                              double[][][] savedWGradients, double[][][] savedPGradients, double[][][] savedLGradients)
+    public Pair<Double, Double> calculateCost(List<NeuralTrainingInstance> instances, int batchSize, NetworkMatrices g, double[][][] savedGradients)
             throws Exception {
         double cost = 0;
         double correct = 0;
@@ -368,24 +367,20 @@ public class MLPClassifier {
         List<NeuralTrainingInstance> instances;
         int batchSize;
         NetworkMatrices g;
-        double[][][] savedWGradients;
-        double[][][] savedPGradients;
-        double[][][] savedLGradients;
+        double[][][] savedGradients;
 
         public CostThread(List<NeuralTrainingInstance> instances, int batchSize) {
             this.instances = instances;
             this.batchSize = batchSize;
             g = new NetworkMatrices(net.numWords, net.wordEmbedDim, net.numPos, net.posEmbeddingDim, net.numDepLabels, net.labelEmbedDim,
                     net.hiddenLayerDim, net.hiddenLayerIntDim, net.softmaxLayerDim);
-            savedWGradients = new double[net.numWordLayers][net.maps.preComputeMap.size()][net.hiddenLayerDim];
-            savedPGradients = new double[net.numPosLayers][net.numPos][net.hiddenLayerDim];
-            savedLGradients = new double[net.numDepLayers][net.numDepLabels][net.hiddenLayerDim];
+            savedGradients = instantiateSavedGradients();
         }
 
 
         @Override
         public Pair<Pair<Double, Double>, NetworkMatrices> call() throws Exception {
-            Pair<Double, Double> costValue = calculateCost(instances, batchSize, g, savedWGradients, savedPGradients, savedLGradients);
+            Pair<Double, Double> costValue = calculateCost(instances, batchSize, g, savedGradients);
             return new Pair<>(costValue, g);
         }
 
