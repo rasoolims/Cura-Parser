@@ -246,6 +246,8 @@ public class Options implements Serializable {
                     options.updaterType = UpdaterType.ADAM;
                 else if (args[i + 1].equals("adagrad"))
                     options.updaterType = UpdaterType.ADAGRAD;
+                else if (args[i + 1].equals("adamax"))
+                    options.updaterType = UpdaterType.ADAMAX;
                 else
                     throw new Exception("updater not supported");
             } else if (args[i].startsWith("-avg")) {

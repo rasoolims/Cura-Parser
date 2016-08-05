@@ -50,8 +50,12 @@ public class MLPClassifier {
             updater = new SgdWithMomentumUpdater(net, learningRate, momentum);
         else if (updaterType == UpdaterType.ADAGRAD)
             updater = new Adagrad(net, learningRate, 1e-6);
-        else
+        else if (updaterType == UpdaterType.ADAM)
             updater = new Adam(net, learningRate, 0.9, 0.9999, 1e-8);
+        else if (updaterType == UpdaterType.ADAMAX)
+            updater = new AdaMax(net, learningRate, 0.9, 0.9999, 1e-8);
+        else
+            throw new Exception("Updater not implemented");
         this.regCoef = regCoef;
         this.numThreads = numThreads;
         executor = Executors.newFixedThreadPool(numThreads);

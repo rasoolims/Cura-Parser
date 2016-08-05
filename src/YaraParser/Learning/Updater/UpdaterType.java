@@ -11,5 +11,6 @@ package YaraParser.Learning.Updater;
 public enum UpdaterType {
     SGD,
     ADAGRAD,
-    ADAM
+    ADAM,
+    ADAMAX
 }

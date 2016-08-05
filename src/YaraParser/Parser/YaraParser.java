@@ -41,13 +41,13 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.learningRate = 0.001;
+            options.learningRate = 0.002;
             options.batchSize = 320;
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
             options.numOfThreads = 1;
-            options.updaterType = UpdaterType.ADAM;
+            options.updaterType = UpdaterType.ADAMAX;
             options.averagingOption = AveragingOption.BOTH;
         }
 
