@@ -164,43 +164,41 @@ public class MLPNetwork implements Serializable {
         for (int i = numWordLayers + numPosLayers; i < numWordLayers + numPosLayers + numDepLayers; i++)
             saved[i] = new double[numDepLabels][hiddenLayerDim];
 
-        for (int tok : maps.preComputeMap.keySet()) {
-            int id = maps.preComputeMap.get(tok);
-            int offset = 0;
-            for (int pos = 0; pos < numWordLayers; pos++) {
+        int offset = 0;
+        for (int pos = 0; pos < numWordLayers; pos++) {
+            for (int tok : maps.preComputeMap.keySet()) {
+                int id = maps.preComputeMap.get(tok);
                 for (int h = 0; h < hiddenLayerDim; h++) {
                     for (int k = 0; k < wordEmbedDim; k++) {
                         saved[pos][id][h] += hiddenLayer[h][offset + k] * wordEmbeddings[tok][k];
                     }
                 }
-                offset += wordEmbedDim;
             }
+            offset += wordEmbedDim;
         }
 
-        for (int tok = 0; tok < numPos; tok++) {
-            int offset = numWordLayers * wordEmbedDim;
-            int indOffset = numWordLayers;
-            for (int pos = 0; pos < numPosLayers; pos++) {
+        for (int pos = 0; pos < numPosLayers; pos++) {
+            for (int tok = 0; tok < numPos; tok++) {
+                int indOffset = numWordLayers;
                 for (int h = 0; h < hiddenLayerDim; h++) {
                     for (int k = 0; k < posEmbeddingDim; k++) {
                         saved[pos + indOffset][tok][h] += hiddenLayer[h][offset + k] * posEmbeddings[tok][k];
                     }
                 }
-                offset += posEmbeddingDim;
             }
+            offset += posEmbeddingDim;
         }
 
-        for (int tok = 0; tok < numDepLabels; tok++) {
-            int offset = numWordLayers * wordEmbedDim + numPosLayers * posEmbeddingDim;
-            int indOffset = numWordLayers + numPosLayers;
-            for (int pos = 0; pos < numDepLayers; pos++) {
+        for (int pos = 0; pos < numDepLayers; pos++) {
+            for (int tok = 0; tok < numDepLabels; tok++) {
+                int indOffset = numWordLayers + numPosLayers;
                 for (int h = 0; h < hiddenLayerDim; h++) {
                     for (int k = 0; k < labelEmbedDim; k++) {
                         saved[pos + indOffset][tok][h] += hiddenLayer[h][offset + k] * labelEmbeddings[tok][k];
                     }
                 }
-                offset += labelEmbedDim;
             }
+            offset += labelEmbedDim;
         }
     }
 
@@ -228,17 +226,18 @@ public class MLPNetwork implements Serializable {
                 int id = tok;
                 if (j < numWordLayers)
                     id = maps.preComputeMap.get(tok);
+                double[] s = saved[j][id];
                 for (int i = 0; i < hidden.length; ++i) {
-                    hidden[i] += saved[j][id][i];
+                    hidden[i] += s[i];
                 }
             } else {
                 for (int i = 0; i < hidden.length; i++) {
-                    for (int k = 0; k < embedding[0].length; k++) {
+                    for (int k = 0; k < embedding[tok].length; k++) {
                         hidden[i] += hiddenLayer[i][offset + k] * embedding[tok][k];
                     }
                 }
             }
-            offset += embedding[0].length;
+            offset += embedding[tok].length;
         }
 
         for (int i = 0; i < hidden.length; i++) {
@@ -260,9 +259,12 @@ public class MLPNetwork implements Serializable {
             }
         }
 
+        double smallNumber = -Double.MAX_VALUE / probs.length;
         for (int i = 0; i < probs.length; i++) {
             probs[i] /= sum;
-            probs[i] = Math.log(probs[i]);
+            if (probs[i] != 0.0)
+                probs[i] = Math.log(probs[i]);
+            else probs[i] = smallNumber;
         }
         return probs;
     }

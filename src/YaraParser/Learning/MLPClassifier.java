@@ -263,7 +263,6 @@ public class MLPClassifier {
                         hidden[h] += hiddenLayer[h][offset + k] * embedding[k];
                     }
                 }
-
                 offset += embedding.length;
             }
 
