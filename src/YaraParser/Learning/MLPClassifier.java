@@ -127,7 +127,7 @@ public class MLPClassifier {
         }
     }
 
-    private void cost(ArrayList<NeuralTrainingInstance> instances) throws Exception {
+    public void cost(ArrayList<NeuralTrainingInstance> instances) throws Exception {
         submitThreads(instances);
         mergeCosts(instances);
         samples += instances.size();
@@ -350,6 +350,10 @@ public class MLPClassifier {
         return new Pair<>(cost, correct);
     }
 
+    public NetworkMatrices getGradients() {
+        return gradients;
+    }
+
     public class CostThread implements Callable<Pair<Pair<Double, Double>, NetworkMatrices>> {
         List<NeuralTrainingInstance> instances;
         int batchSize;
@@ -384,5 +388,4 @@ public class MLPClassifier {
             return savedGradients;
         }
     }
-
 }
