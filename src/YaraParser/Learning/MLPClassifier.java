@@ -7,10 +7,7 @@ import YaraParser.Structures.NeuralTrainingInstance;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -258,11 +255,11 @@ public class MLPClassifier {
             final double[][] posEmbeddings = net.getMatrices().getPosEmbedding();
             final double[][] labelEmbeddings = net.getMatrices().getLabelEmbedding();
 
-            int[] isDropped = new int[hidden.length];
+            HashSet<Integer> hiddenNodesToUse = new HashSet<>();
             if (dropoutProb > 0) {
-                for (int i = 0; i < isDropped.length; i++) {
-                    if (random.nextDouble() < dropoutProb)
-                        isDropped[i] = 1;
+                for (int i = 0; i < hidden.length; i++) {
+                    if (dropoutProb <= 0 || random.nextDouble() >= dropoutProb)
+                        hiddenNodesToUse.add(i);
                 }
             }
 
@@ -282,16 +279,13 @@ public class MLPClassifier {
                     if (j < net.numWordLayers)
                         id = net.maps.preComputeMap.get(tok);
                     double[] s = net.saved[j][id];
-                    for (int h = 0; h < hidden.length; h++) {
-                        if (isDropped[h] == 0)// not dropped-out
-                            hidden[h] += s[h];
+                    for (int h : hiddenNodesToUse) {
+                        hidden[h] += s[h];
                     }
                 } else {
-                    for (int i = 0; i < hidden.length; i++) {
-                        if (isDropped[i] == 0) { // not dropped-out
-                            for (int k = 0; k < embedding.length; k++) {
-                                hidden[i] += hiddenLayer[i][offset + k] * embedding[k];
-                            }
+                    for (int h : hiddenNodesToUse) {
+                        for (int k = 0; k < embedding.length; k++) {
+                            hidden[h] += hiddenLayer[h][offset + k] * embedding[k];
                         }
                     }
                 }
@@ -299,12 +293,10 @@ public class MLPClassifier {
             }
 
             double[] reluHidden = new double[hidden.length];
-            for (int h = 0; h < hidden.length; h++) {
-                if (isDropped[h] == 0) { // not dropped-out
-                    hidden[h] += hiddenLayerBias[h];
-                    //relu
-                    reluHidden[h] = Math.max(0, hidden[h]);
-                }
+            for (int h : hiddenNodesToUse) {
+                hidden[h] += hiddenLayerBias[h];
+                //relu
+                reluHidden[h] = Math.max(0, hidden[h]);
             }
 
             int argmax = -1;
@@ -315,10 +307,8 @@ public class MLPClassifier {
                 if (label[i] >= 0) {
                     if (label[i] == 1)
                         gold = i;
-                    for (int h = 0; h < reluHidden.length; h++) {
-                        if (isDropped[h] == 0) { // not dropped-out
-                            probs[i] += softmaxLayer[i][h] * reluHidden[h];
-                        }
+                    for (int h : hiddenNodesToUse) {
+                        probs[i] += softmaxLayer[i][h] * reluHidden[h];
                     }
 
                     probs[i] += softmaxLayerBias[i];
@@ -344,52 +334,42 @@ public class MLPClassifier {
                 if (label[i] >= 0) {
                     delta[i] = (-label[i] + probs[i]) / batchSize;
                     g.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, delta[i]);
-                    for (int h = 0; h < reluHidden.length; h++) {
-                        if (isDropped[h] == 0) { // not dropped-out
-                            g.modify(EmbeddingTypes.SOFTMAX, i, h, delta[i] * reluHidden[h]);
-                            reluGradW[h] += delta[i] * softmaxLayer[i][h];
-                        }
+                    for (int h : hiddenNodesToUse) {
+                        g.modify(EmbeddingTypes.SOFTMAX, i, h, delta[i] * reluHidden[h]);
+                        reluGradW[h] += delta[i] * softmaxLayer[i][h];
                     }
                 }
             }
 
             double[] hiddenGrad = new double[hidden.length];
-            for (int h = 0; h < reluHidden.length; h++) {
-                if (isDropped[h] == 0) { // not dropped-out
-                    hiddenGrad[h] = (reluHidden[h] == 0. ? 0 : reluGradW[h]);
-                    g.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, hiddenGrad[h]);
-                }
+            for (int h : hiddenNodesToUse) {
+                hiddenGrad[h] = (reluHidden[h] == 0. ? 0 : reluGradW[h]);
+                g.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, hiddenGrad[h]);
             }
 
             offset = 0;
             for (int index = 0; index < net.getNumWordLayers(); index++) {
                 if (net.maps.preComputeMap.containsKey(features[index])) {
                     int id = net.maps.preComputeMap.get(features[index]);
-                    for (int h = 0; h < reluHidden.length; h++) {
-                        if (isDropped[h] == 0) { // not dropped-out
-                            savedGradients[index][id][h] += hiddenGrad[h];
-                        }
+                    for (int h : hiddenNodesToUse) {
+                        savedGradients[index][id][h] += hiddenGrad[h];
                     }
-
                 } else {
                     double[] embeddings = wordEmbeddings[features[index]];
-                    for (int h = 0; h < reluHidden.length; h++) {
-                        if (isDropped[h] == 0) { // not dropped-out
-                            for (int k = 0; k < embeddings.length; k++) {
-                                g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
-                                g.modify(EmbeddingTypes.WORD, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
-                            }
+                    for (int h : hiddenNodesToUse) {
+                        for (int k = 0; k < embeddings.length; k++) {
+                            g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
+                            g.modify(EmbeddingTypes.WORD, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
                         }
+
                     }
                 }
                 offset += net.wordEmbedDim;
             }
 
             for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++)
-                for (int h = 0; h < reluHidden.length; h++) {
-                    if (isDropped[h] == 0) { // not dropped-out
-                        savedGradients[index][features[index]][h] += hiddenGrad[h];
-                    }
+                for (int h : hiddenNodesToUse) {
+                    savedGradients[index][features[index]][h] += hiddenGrad[h];
                 }
         }
 
