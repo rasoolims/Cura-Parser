@@ -232,7 +232,7 @@ public class YaraParser {
                 while (true) {
                     step++;
                     ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, s, e, 0);
-                    classifier.fit(instances, step, step % 100 == 0 ? true : false);
+                    classifier.fit(instances, step, step % options.UASEvalPerStep == 0 ? true : false);
                     s = e;
                     e = Math.min(dataSet.size(), options.batchSize + e);
 
