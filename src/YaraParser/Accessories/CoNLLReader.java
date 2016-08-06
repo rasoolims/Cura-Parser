@@ -94,7 +94,6 @@ public class CoNLLReader {
             }
         }
 
-
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");

@@ -5,6 +5,7 @@ import YaraParser.Structures.EmbeddingTypes;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -119,8 +120,12 @@ public class NetworkMatrices implements Serializable {
      *
      * @param matrices
      */
-    public void mergeMatricesInPlaceForNonSaved(NetworkMatrices matrices) {
-        Utils.addInPlace(wordEmbedding, matrices.getWordEmbedding());
+    public void mergeMatricesInPlaceForNonSaved(NetworkMatrices matrices, HashSet<Integer> seenWords) {
+        double[][] otherWordEmbedding = matrices.getWordEmbedding();
+        for (int i : seenWords)
+            for (int j = 0; j < wordEmbedding[i].length; j++)
+                wordEmbedding[i][j] += otherWordEmbedding[i][j];
+
         Utils.addInPlace(posEmbedding, matrices.getPosEmbedding());
         Utils.addInPlace(labelEmbedding, matrices.getLabelEmbedding());
         Utils.addInPlace(hiddenLayer, matrices.getHiddenLayer());

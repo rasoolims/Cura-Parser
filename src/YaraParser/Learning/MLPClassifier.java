@@ -25,7 +25,7 @@ public class MLPClassifier {
      * for multi-threading
      */
     ExecutorService executor;
-    CompletionService<Pair<Pair<Double, Double>, NetworkMatrices>> pool;
+    CompletionService<Pair<Pair<Double, Pair<Double, HashSet<Integer>>>, NetworkMatrices>> pool;
     int numThreads;
 
     /**
@@ -153,17 +153,17 @@ public class MLPClassifier {
     }
 
     private void mergeCosts(ArrayList<NeuralTrainingInstance> instances) throws Exception {
-        Pair<Pair<Double, Double>, NetworkMatrices> firstResult = pool.take().get();
+        Pair<Pair<Double, Pair<Double, HashSet<Integer>>>, NetworkMatrices> firstResult = pool.take().get();
         gradients = firstResult.second;
 
         cost += firstResult.first.first;
-        correct += firstResult.first.second;
+        correct += firstResult.first.second.first;
 
         for (int i = 1; i < Math.min(instances.size(), numThreads); i++) {
-            Pair<Pair<Double, Double>, NetworkMatrices> result = pool.take().get();
-            gradients.mergeMatricesInPlaceForNonSaved(result.second);
+            Pair<Pair<Double, Pair<Double, HashSet<Integer>>>, NetworkMatrices> result = pool.take().get();
+            gradients.mergeMatricesInPlaceForNonSaved(result.second, result.first.second.second);
             cost += result.first.first;
-            correct += result.first.second;
+            correct += result.first.second.first;
         }
     }
 
@@ -238,14 +238,15 @@ public class MLPClassifier {
         }
     }
 
-    public Pair<Double, Double> calculateCost(List<NeuralTrainingInstance> instances, int batchSize, NetworkMatrices g, double[][][] savedGradients)
+    public Pair<Double, Pair<Double, HashSet<Integer>>> calculateCost(List<NeuralTrainingInstance> instances, int batchSize, NetworkMatrices g,
+                                                                      double[][][] savedGradients)
             throws Exception {
         double cost = 0;
         double correct = 0;
-        HashSet<Integer>[] wordsSeen = new HashSet[net.numWordLayers + net.numPosLayers + net.numDepLayers];
-        for (int i = 0; i < wordsSeen.length; i++)
-            wordsSeen[i] = new HashSet<>();
-
+        HashSet<Integer>[] featuresSeen = new HashSet[net.numWordLayers + net.numPosLayers + net.numDepLayers];
+        HashSet<Integer> seenWordFeatures = new HashSet<>();
+        for (int i = 0; i < featuresSeen.length; i++)
+            featuresSeen[i] = new HashSet<>();
 
         for (NeuralTrainingInstance instance : instances) {
             int[] features = instance.getFeatures();
@@ -351,8 +352,9 @@ public class MLPClassifier {
 
             offset = 0;
             for (int index = 0; index < net.getNumWordLayers(); index++) {
+                seenWordFeatures.add(features[index]);
                 if (net.maps.preComputeMap.containsKey(features[index])) {
-                    wordsSeen[index].add(features[index]);
+                    featuresSeen[index].add(features[index]);
                     int id = net.maps.preComputeMap.get(features[index]);
                     for (int h : hiddenNodesToUse) {
                         savedGradients[index][id][h] += hiddenGrad[h];
@@ -370,22 +372,22 @@ public class MLPClassifier {
             }
 
             for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++) {
-                wordsSeen[index].add(features[index]);
+                featuresSeen[index].add(features[index]);
                 for (int h : hiddenNodesToUse) {
                     savedGradients[index][features[index]][h] += hiddenGrad[h];
                 }
             }
         }
 
-        backPropSavedGradients(g, savedGradients, wordsSeen);
-        return new Pair<>(cost, correct);
+        backPropSavedGradients(g, savedGradients, featuresSeen);
+        return new Pair<>(cost, new Pair<>(correct, seenWordFeatures));
     }
 
     public NetworkMatrices getGradients() {
         return gradients;
     }
 
-    public class CostThread implements Callable<Pair<Pair<Double, Double>, NetworkMatrices>> {
+    public class CostThread implements Callable<Pair<Pair<Double, Pair<Double, HashSet<Integer>>>, NetworkMatrices>> {
         List<NeuralTrainingInstance> instances;
         int batchSize;
         NetworkMatrices g;
@@ -401,8 +403,8 @@ public class MLPClassifier {
 
 
         @Override
-        public Pair<Pair<Double, Double>, NetworkMatrices> call() throws Exception {
-            Pair<Double, Double> costValue = calculateCost(instances, batchSize, g, savedGradients);
+        public Pair<Pair<Double, Pair<Double, HashSet<Integer>>>, NetworkMatrices> call() throws Exception {
+            Pair<Double, Pair<Double, HashSet<Integer>>> costValue = calculateCost(instances, batchSize, g, savedGradients);
             return new Pair<>(costValue, g);
         }
 
