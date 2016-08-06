@@ -37,17 +37,18 @@ public class YaraParser {
             options.inputFile = "/Users/msr/Desktop/data/dev_smal.conll";
             options.devPath = "/Users/msr/Desktop/data/train_smal.conll";
             options.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
-            //  options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
+            options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.learningRate = 0.002;
+            options.learningRate = 0.001;
             options.batchSize = 320;
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
             options.numOfThreads = 1;
-            options.updaterType = UpdaterType.ADAMAX;
+            options.UASEvalPerStep = 10;
+            options.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
         }
 
@@ -231,7 +232,7 @@ public class YaraParser {
                 while (true) {
                     step++;
                     ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, s, e, 0);
-                    classifier.fit(instances, step, step % 1 == 0 ? true : false);
+                    classifier.fit(instances, step, step % 100 == 0 ? true : false);
                     s = e;
                     e = Math.min(dataSet.size(), options.batchSize + e);
 

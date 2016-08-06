@@ -27,19 +27,20 @@ public class IndexMaps implements Serializable {
     private HashMap<Integer, Integer> posMap;
     private HashMap<Integer, Integer> depRelationMap;
     private HashMap<Integer, double[]> embeddingsDictionary;
+    private HashMap<String, String> str2clusterMap;
 
 
     public IndexMaps(HashMap<String, Integer> stringMap, HashMap<Integer, Integer> labelMap, String rootString,
-                     HashMap<Integer, Integer> wordMap, HashMap<Integer, Integer> posMap, HashMap<Integer, Integer>
-                             depRelationMap,
+                     HashMap<Integer, Integer> wordMap, HashMap<Integer, Integer> posMap, HashMap<Integer, Integer> depRelationMap,
                      HashMap<Integer, Integer> brown4Clusters, HashMap<Integer, Integer> brown6Clusters,
-                     HashMap<String, Integer> brownFullClusters, HashSet<Integer> rareWords, HashMap<Integer,
-            Integer> preComputeMap) {
+                     HashMap<String, Integer> brownFullClusters, HashSet<Integer> rareWords, HashMap<Integer, Integer> preComputeMap,
+                     HashMap<String, String> str2clusterMap) {
         this.stringMap = stringMap;
         this.wordMap = wordMap;
         this.posMap = posMap;
         this.depRelationMap = depRelationMap;
         this.labelMap = labelMap;
+        this.str2clusterMap = str2clusterMap;
 
         revStrings = new String[stringMap.size() + 1];
         revStrings[0] = "ROOT";
@@ -192,5 +193,15 @@ public class IndexMaps implements Serializable {
 
     public boolean hasEmbeddings() {
         return embeddingsDictionary != null && embeddingsDictionary.size() > 0;
+    }
+
+    public int clusterIdForWord(String word) {
+        int id = -1;
+        if (str2clusterMap.containsKey(word)) {
+            String c = str2clusterMap.get(word);
+            if (stringMap.containsKey(c))
+                return wordMap.get(stringMap.get(c));
+        }
+        return id;
     }
 }
