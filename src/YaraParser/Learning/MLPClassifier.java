@@ -187,7 +187,7 @@ public class MLPClassifier {
         }
     }
 
-    private void backPropSavedGradients(NetworkMatrices g, double[][][] savedGradients)
+    private void backPropSavedGradients(NetworkMatrices g, double[][][] savedGradients, HashSet<Integer>[] wordsSeen)
             throws Exception {
         int offset = 0;
         double[][] hiddenLayer = net.matrices.getHiddenLayer();
@@ -195,7 +195,7 @@ public class MLPClassifier {
         double[][] pE = net.matrices.getPosEmbedding();
         double[][] lE = net.matrices.getLabelEmbedding();
         for (int index = 0; index < net.numWordLayers; index++) {
-            for (int tok : net.maps.preComputeMap.keySet()) {
+            for (int tok : wordsSeen[index]) {
                 int id = net.maps.preComputeMap.get(tok);
                 double[] embedding = wE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
@@ -210,7 +210,7 @@ public class MLPClassifier {
         }
 
         for (int index = net.numWordLayers; index < net.numWordLayers + net.numPosLayers; index++) {
-            for (int tok = 0; tok < savedGradients[index].length; tok++) {
+            for (int tok : wordsSeen[index]) {
                 double[] embedding = pE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
                     double delta = savedGradients[index][tok][h];
@@ -224,7 +224,7 @@ public class MLPClassifier {
         }
 
         for (int index = net.numWordLayers + net.numPosLayers; index < net.numWordLayers + net.numPosLayers + net.numDepLayers; index++) {
-            for (int tok = 0; tok < savedGradients[index].length; tok++) {
+            for (int tok : wordsSeen[index]) {
                 double[] embedding = lE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
                     double delta = savedGradients[index][tok][h];
@@ -242,6 +242,10 @@ public class MLPClassifier {
             throws Exception {
         double cost = 0;
         double correct = 0;
+        HashSet<Integer>[] wordsSeen = new HashSet[net.numWordLayers + net.numPosLayers + net.numDepLayers];
+        for (int i = 0; i < wordsSeen.length; i++)
+            wordsSeen[i] = new HashSet<>();
+
 
         for (NeuralTrainingInstance instance : instances) {
             int[] features = instance.getFeatures();
@@ -256,11 +260,9 @@ public class MLPClassifier {
             final double[][] labelEmbeddings = net.getMatrices().getLabelEmbedding();
 
             HashSet<Integer> hiddenNodesToUse = new HashSet<>();
-            if (dropoutProb > 0) {
-                for (int i = 0; i < hidden.length; i++) {
-                    if (dropoutProb <= 0 || random.nextDouble() >= dropoutProb)
-                        hiddenNodesToUse.add(i);
-                }
+            for (int i = 0; i < hidden.length; i++) {
+                if (dropoutProb <= 0 || random.nextDouble() >= dropoutProb)
+                    hiddenNodesToUse.add(i);
             }
 
             int offset = 0;
@@ -350,6 +352,7 @@ public class MLPClassifier {
             offset = 0;
             for (int index = 0; index < net.getNumWordLayers(); index++) {
                 if (net.maps.preComputeMap.containsKey(features[index])) {
+                    wordsSeen[index].add(features[index]);
                     int id = net.maps.preComputeMap.get(features[index]);
                     for (int h : hiddenNodesToUse) {
                         savedGradients[index][id][h] += hiddenGrad[h];
@@ -361,19 +364,20 @@ public class MLPClassifier {
                             g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
                             g.modify(EmbeddingTypes.WORD, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
                         }
-
                     }
                 }
                 offset += net.wordEmbedDim;
             }
 
-            for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++)
+            for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++) {
+                wordsSeen[index].add(features[index]);
                 for (int h : hiddenNodesToUse) {
                     savedGradients[index][features[index]][h] += hiddenGrad[h];
                 }
+            }
         }
 
-        backPropSavedGradients(g, savedGradients);
+        backPropSavedGradients(g, savedGradients, wordsSeen);
         return new Pair<>(cost, correct);
     }
 
