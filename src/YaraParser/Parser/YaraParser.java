@@ -41,14 +41,14 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.learningRate = 0.001;
+            options.learningRate = 0.01;
             options.batchSize = 320;
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
             options.numOfThreads = 1;
             options.UASEvalPerStep = 10;
-            options.updaterType = UpdaterType.ADAM;
+            options.updaterType = UpdaterType.ADAGRAD;
             options.averagingOption = AveragingOption.BOTH;
         }
 

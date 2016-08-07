@@ -11,7 +11,6 @@ import YaraParser.Structures.EmbeddingTypes;
  * Time: 6:25 PM
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
-
 public class Adam extends Updater {
     double beta1, beta2;
     // beta{1,2} ^ t

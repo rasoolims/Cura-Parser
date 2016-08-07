@@ -460,6 +460,7 @@ public class Options implements Serializable {
             builder.append("h1-size: " + hiddenLayer1Size + "\n");
             builder.append("h2-size: " + hiddenLayer2Size + "\n");
             builder.append("updater: " + updaterType + "\n");
+            builder.append("activation: " + activationType + "\n");
             builder.append("learning rate: " + learningRate + "\n");
             builder.append("decay step: " + decayStep + "\n");
             builder.append("batch size: " + batchSize + "\n");

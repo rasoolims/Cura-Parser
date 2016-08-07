@@ -1,5 +1,7 @@
 package YaraParser.Learning.Activation;
 
+import java.io.Serializable;
+
 /**
  * Created by Mohammad Sadegh Rasooli.
  * ML-NLP Lab, Department of Computer Science, Columbia University
@@ -8,7 +10,7 @@ package YaraParser.Learning.Activation;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
-public abstract class Activation {
+public abstract class Activation implements Serializable {
     public Activation() {
     }
 
