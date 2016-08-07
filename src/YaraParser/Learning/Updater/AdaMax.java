@@ -1,6 +1,6 @@
 package YaraParser.Learning.Updater;
 
-import YaraParser.Learning.MLPNetwork;
+import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.EmbeddingTypes;
 
 /**

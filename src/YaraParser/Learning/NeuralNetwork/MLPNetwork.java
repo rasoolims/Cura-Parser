@@ -1,4 +1,4 @@
-package YaraParser.Learning;
+package YaraParser.Learning.NeuralNetwork;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -9,6 +9,10 @@ package YaraParser.Learning;
  */
 
 import YaraParser.Accessories.Options;
+import YaraParser.Learning.Activation.Activation;
+import YaraParser.Learning.Activation.ActivationType;
+import YaraParser.Learning.Activation.Cubic;
+import YaraParser.Learning.Activation.Relu;
 import YaraParser.Structures.EmbeddingTypes;
 import YaraParser.Structures.IndexMaps;
 
@@ -23,6 +27,8 @@ public class MLPNetwork implements Serializable {
     final public IndexMaps maps;
     final public Options options;
     final public ArrayList<Integer> depLabels;
+    public final Activation activation;
+    public final ActivationType activationType;
     final int numWordLayers = 19;
     final int numPosLayers = 19;
     final int numDepLayers = 11;
@@ -52,6 +58,9 @@ public class MLPNetwork implements Serializable {
         numPos = maps.posSize() + 2;
         posEmbeddingDim = pDim;
 
+        this.activationType = options.activationType;
+        activation = activationType == ActivationType.RELU ? new Relu() : new Cubic();
+
         hiddenLayerIntDim = numPosLayers * wDim + numPosLayers * posEmbeddingDim + numDepLayers * labelEmbedDim;
         matrices = new NetworkMatrices(numWords, wDim, numPos, posEmbeddingDim, numDepLabels, labelEmbedDim, hiddenLayerDim,
                 hiddenLayerIntDim, softmaxLayerDim);
@@ -62,7 +71,7 @@ public class MLPNetwork implements Serializable {
 
     public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int numDepLabels, int labelEmbedDim, int wordEmbedDim, int
             hiddenLayerDim, int hiddenLayerIntDim, int numWords, int numPos, int posEmbeddingDim, int softmaxLayerDim, NetworkMatrices matrices,
-                      double[][][] saved) {
+                      double[][][] saved, ActivationType activationType) {
         this.maps = maps;
         this.options = options;
         this.depLabels = depLabels;
@@ -77,6 +86,8 @@ public class MLPNetwork implements Serializable {
         this.softmaxLayerDim = softmaxLayerDim;
         this.matrices = matrices;
         this.saved = saved;
+        this.activationType = activationType;
+        activation = activationType == ActivationType.RELU ? new Relu() : new Cubic();
     }
 
     public static void averageNetworks(MLPNetwork toAverageFrom, MLPNetwork averaged, double r1, double r2) {
@@ -242,8 +253,7 @@ public class MLPNetwork implements Serializable {
 
         for (int i = 0; i < hidden.length; i++) {
             hidden[i] += hiddenLayerBias[i];
-            //relu
-            hidden[i] = Math.max(hidden[i], 0);
+            hidden[i] = activation.activate(hidden[i]);
         }
 
         double[] probs = new double[softmaxLayerBias.length];
@@ -341,7 +351,7 @@ public class MLPNetwork implements Serializable {
     public MLPNetwork clone() {
         try {
             MLPNetwork network = new MLPNetwork(maps, options, depLabels, numDepLabels, labelEmbedDim, wordEmbedDim, hiddenLayerDim,
-                    hiddenLayerIntDim, numWords, numPos, posEmbeddingDim, softmaxLayerDim, null, null);
+                    hiddenLayerIntDim, numWords, numPos, posEmbeddingDim, softmaxLayerDim, null, null, activationType);
             network.matrices = matrices.clone();
             return network;
         } catch (Exception ex) {

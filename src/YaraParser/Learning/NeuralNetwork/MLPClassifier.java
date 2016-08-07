@@ -1,4 +1,4 @@
-package YaraParser.Learning;
+package YaraParser.Learning.NeuralNetwork;
 
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.Updater.*;
@@ -51,7 +51,7 @@ public class MLPClassifier {
         random = new Random();
         this.dropoutProb = dropoutProb;
         if (updaterType == UpdaterType.SGD)
-            updater = new SgdWithMomentumUpdater(net, learningRate, momentum);
+            updater = new SGD(net, learningRate, momentum);
         else if (updaterType == UpdaterType.ADAGRAD)
             updater = new Adagrad(net, learningRate, 1e-6);
         else if (updaterType == UpdaterType.ADAM)
@@ -293,11 +293,10 @@ public class MLPClassifier {
                 offset += embedding.length;
             }
 
-            double[] reluHidden = new double[hidden.length];
+            double[] activationHidden = new double[hidden.length];
             for (int h : hiddenNodesToUse) {
                 hidden[h] += hiddenLayerBias[h];
-                //relu
-                reluHidden[h] = Math.max(0, hidden[h]);
+                activationHidden[h] = net.activation.activate(hidden[h]);
             }
 
             int argmax = -1;
@@ -309,7 +308,7 @@ public class MLPClassifier {
                     if (label[i] == 1)
                         gold = i;
                     for (int h : hiddenNodesToUse) {
-                        probs[i] += softmaxLayer[i][h] * reluHidden[h];
+                        probs[i] += softmaxLayer[i][h] * activationHidden[h];
                     }
 
                     probs[i] += softmaxLayerBias[i];
@@ -329,22 +328,22 @@ public class MLPClassifier {
             if (argmax == gold)
                 correct += 1.0;
 
-            double[] reluGradW = new double[reluHidden.length];
+            double[] activationGradW = new double[activationHidden.length];
             double[] delta = new double[probs.length];
             for (int i = 0; i < probs.length; i++) {
                 if (label[i] >= 0) {
                     delta[i] = (-label[i] + probs[i]) / batchSize;
                     g.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, delta[i]);
                     for (int h : hiddenNodesToUse) {
-                        g.modify(EmbeddingTypes.SOFTMAX, i, h, delta[i] * reluHidden[h]);
-                        reluGradW[h] += delta[i] * softmaxLayer[i][h];
+                        g.modify(EmbeddingTypes.SOFTMAX, i, h, delta[i] * activationHidden[h]);
+                        activationGradW[h] += delta[i] * softmaxLayer[i][h];
                     }
                 }
             }
 
             double[] hiddenGrad = new double[hidden.length];
             for (int h : hiddenNodesToUse) {
-                hiddenGrad[h] = (reluHidden[h] == 0. ? 0 : reluGradW[h]);
+                hiddenGrad[h] = net.activation.gradient(hidden[h], activationGradW[h]);
                 g.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, hiddenGrad[h]);
             }
 

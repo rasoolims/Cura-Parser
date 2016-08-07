@@ -5,6 +5,7 @@
 
 package YaraParser.Accessories;
 
+import YaraParser.Learning.Activation.ActivationType;
 import YaraParser.Learning.AveragingOption;
 import YaraParser.Learning.Updater.UpdaterType;
 
@@ -49,7 +50,7 @@ public class Options implements Serializable {
     public UpdaterType updaterType;
     public int UASEvalPerStep;
     public double dropoutProbForHiddenLayer;
-
+    public ActivationType activationType;
     public String goldFile;
 
     public HashSet<String> punctuations;
@@ -82,6 +83,7 @@ public class Options implements Serializable {
         scorePath = "";
         dropoutProbForHiddenLayer = 0;
         averagingOption = AveragingOption.BOTH;
+        activationType = ActivationType.RELU;
         separator = "_";
         clusterFile = "";
         wordEmbeddingFile = "";
@@ -161,6 +163,7 @@ public class Options implements Serializable {
         output.append("\t \t -h2 [hidden-layer-size-2] \n");
         output.append("\t \t -lr [learning-rate] \n");
         output.append("\t \t -ds [decay-step] \n");
+        output.append("\t \t -a [activation (relu,cubic) -- default:relu] \n");
         output.append("\t \t -u [updater-type: sgd(default),adam,adagrad] \n");
         output.append("\t \t -batch [batch-size] \n");
         output.append("\t \t -d [dropout-prob] \n");
@@ -241,7 +244,14 @@ public class Options implements Serializable {
                 options.predFile = args[i + 1];
             else if (args[i].equals("-e"))
                 options.wordEmbeddingFile = args[i + 1];
-            else if (args[i].startsWith("-u")) {
+            else if (args[i].startsWith("-a")) {
+                if (args[i + 1].equals("relu"))
+                    options.activationType = ActivationType.RELU;
+                else if (args[i + 1].equals("cubic"))
+                    options.activationType = ActivationType.CUBIC;
+                else
+                    throw new Exception("updater not supported");
+            } else if (args[i].startsWith("-u")) {
                 if (args[i + 1].equals("sgd"))
                     options.updaterType = UpdaterType.SGD;
                 else if (args[i + 1].equals("adam"))

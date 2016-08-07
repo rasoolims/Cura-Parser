@@ -9,7 +9,7 @@ import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Options;
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.AveragedPerceptron;
-import YaraParser.Learning.MLPNetwork;
+import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
 import YaraParser.Structures.Sentence;

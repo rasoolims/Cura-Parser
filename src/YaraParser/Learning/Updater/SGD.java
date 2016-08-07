@@ -1,6 +1,6 @@
 package YaraParser.Learning.Updater;
 
-import YaraParser.Learning.MLPNetwork;
+import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.EmbeddingTypes;
 
 /**
@@ -11,10 +11,10 @@ import YaraParser.Structures.EmbeddingTypes;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
-public class SgdWithMomentumUpdater extends Updater {
+public class SGD extends Updater {
     double momentum;
 
-    public SgdWithMomentumUpdater(MLPNetwork mlpNetwork, double learningRate, double momentum) {
+    public SGD(MLPNetwork mlpNetwork, double learningRate, double momentum) {
         super(mlpNetwork, learningRate);
         this.momentum = momentum;
     }

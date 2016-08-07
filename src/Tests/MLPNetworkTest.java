@@ -3,7 +3,7 @@ package Tests;
 import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Options;
 import YaraParser.Learning.AveragedPerceptron;
-import YaraParser.Learning.MLPNetwork;
+import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.NeuralTrainingInstance;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;

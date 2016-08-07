@@ -1,4 +1,4 @@
-package YaraParser.Learning;
+package YaraParser.Learning.NeuralNetwork;
 
 import YaraParser.Accessories.Utils;
 import YaraParser.Structures.EmbeddingTypes;
