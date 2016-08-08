@@ -37,9 +37,6 @@ public class CoNLLReader {
                                           int rareMaxWordCount) throws Exception {
         HashMap<String, Integer> stringMap = new HashMap<String, Integer>();
         HashMap<Integer, Integer> labelMap = new HashMap<Integer, Integer>();
-        HashMap<String, Integer> clusterMap = new HashMap<>();
-        HashMap<Integer, Integer> cluster4Map = new HashMap<>();
-        HashMap<Integer, Integer> cluster6Map = new HashMap<>();
         HashMap<String, String> str2clusterMap = new HashMap<>();
 
         HashMap<Integer, Integer> wordMap = new HashMap<Integer, Integer>();
@@ -128,33 +125,6 @@ public class CoNLLReader {
                     String cluster = spl[0];
                     String word = spl[1];
                     str2clusterMap.put(word, "cluster___" + cluster.substring(0, Math.min(8, cluster.length())));
-                    String prefix4 = cluster.substring(0, Math.min(4, cluster.length()));
-                    String prefix6 = cluster.substring(0, Math.min(6, cluster.length()));
-                    int clusterNum = wi;
-
-                    if (!stringMap.containsKey(cluster)) {
-                        clusterMap.put(word, wi);
-                    } else {
-                        clusterNum = stringMap.get(cluster);
-                        clusterMap.put(word, clusterNum);
-                    }
-
-                    int pref4Id = wi;
-                    if (!stringMap.containsKey(prefix4)) {
-                        stringMap.put(prefix4, wi++);
-                    } else {
-                        pref4Id = stringMap.get(prefix4);
-                    }
-
-                    int pref6Id = wi;
-                    if (!stringMap.containsKey(prefix6)) {
-                        stringMap.put(prefix6, wi++);
-                    } else {
-                        pref6Id = stringMap.get(prefix6);
-                    }
-
-                    cluster4Map.put(clusterNum, pref4Id);
-                    cluster6Map.put(clusterNum, pref6Id);
                 }
             }
         }
@@ -249,8 +219,7 @@ public class CoNLLReader {
             }
         }
 
-        return new IndexMaps(stringMap, labelMap, rootString, wordMap, posMap, depRelationMap, cluster4Map,
-                cluster6Map, clusterMap, rareWords, preComputeMap, str2clusterMap);
+        return new IndexMaps(stringMap, labelMap, rootString, wordMap, posMap, depRelationMap, rareWords, preComputeMap, str2clusterMap);
     }
 
 
@@ -268,9 +237,6 @@ public class CoNLLReader {
         String line;
         ArrayList<Integer> tokens = new ArrayList<Integer>();
         ArrayList<Integer> tags = new ArrayList<Integer>();
-        ArrayList<Integer> cluster4Ids = new ArrayList<Integer>();
-        ArrayList<Integer> cluster6Ids = new ArrayList<Integer>();
-        ArrayList<Integer> clusterIds = new ArrayList<Integer>();
 
         HashMap<Integer, Pair<Integer, Integer>> goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
         int sentenceCounter = 0;
@@ -286,27 +252,18 @@ public class CoNLLReader {
                         }
                         tokens.add(0);
                         tags.add(0);
-                        cluster4Ids.add(0);
-                        cluster6Ids.add(0);
-                        clusterIds.add(0);
                     }
-                    Sentence currentSentence = new Sentence(tokens, tags, cluster4Ids, cluster6Ids, clusterIds);
+                    Sentence currentSentence = new Sentence(tokens, tags);
                     GoldConfiguration goldConfiguration = new GoldConfiguration(currentSentence, goldDependencies);
                     if (keepNonProjective || !goldConfiguration.isNonprojective())
                         configurationSet.add(goldConfiguration);
                     goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
                     tokens = new ArrayList<Integer>();
                     tags = new ArrayList<Integer>();
-                    cluster4Ids = new ArrayList<Integer>();
-                    cluster6Ids = new ArrayList<Integer>();
-                    clusterIds = new ArrayList<Integer>();
                 } else {
                     goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
                     tokens = new ArrayList<Integer>();
                     tags = new ArrayList<Integer>();
-                    cluster4Ids = new ArrayList<Integer>();
-                    cluster6Ids = new ArrayList<Integer>();
-                    clusterIds = new ArrayList<Integer>();
                 }
                 if (sentenceCounter >= limit) {
                     System.out.println("buffer full..." + configurationSet.size());
@@ -322,15 +279,13 @@ public class CoNLLReader {
                     word = word.toLowerCase();
                 String pos = splitLine[3].trim();
 
-                int wi = -1;
+                int wi;
                 if (wordMap.containsKey(word)) {
                     wi = wordMap.get(word);
-                } else if (maps.hasClusters()) {
+                } else {
                     wi = maps.clusterIdForWord(word);
                     if (wi == -1)
                         oovTypes.add(word);
-                } else {
-                    oovTypes.add(word);
                 }
 
                 int pi = -1;
@@ -357,13 +312,9 @@ public class CoNLLReader {
                 if (headIndex == -1)
                     ri = -1;
 
-                int[] ids = maps.clusterId(word);
-                clusterIds.add(ids[0]);
-                cluster4Ids.add(ids[1]);
-                cluster6Ids.add(ids[2]);
 
                 if (headIndex >= 0)
-                    goldDependencies.put(wordIndex, new Pair<Integer, Integer>(headIndex, ri));
+                    goldDependencies.put(wordIndex, new Pair<>(headIndex, ri));
             }
         }
         if (tokens.size() > 0) {
@@ -374,12 +325,9 @@ public class CoNLLReader {
                 }
                 tokens.add(0);
                 tags.add(0);
-                cluster4Ids.add(0);
-                cluster6Ids.add(0);
-                clusterIds.add(0);
             }
             sentenceCounter++;
-            Sentence currentSentence = new Sentence(tokens, tags, cluster4Ids, cluster6Ids, clusterIds);
+            Sentence currentSentence = new Sentence(tokens, tags);
             configurationSet.add(new GoldConfiguration(currentSentence, goldDependencies));
         }
 

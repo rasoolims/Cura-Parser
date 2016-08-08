@@ -8,7 +8,6 @@ package YaraParser.Structures;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -19,9 +18,6 @@ public class IndexMaps implements Serializable {
     public String[] revStrings;
     private HashMap<String, Integer> stringMap;
     private HashMap<Integer, Integer> labelMap;
-    private HashMap<Integer, Integer> brown4Clusters;
-    private HashMap<Integer, Integer> brown6Clusters;
-    private HashMap<String, Integer> brownFullClusters;
     // for neural net
     private HashMap<Integer, Integer> wordMap;
     private HashMap<Integer, Integer> posMap;
@@ -32,8 +28,7 @@ public class IndexMaps implements Serializable {
 
     public IndexMaps(HashMap<String, Integer> stringMap, HashMap<Integer, Integer> labelMap, String rootString,
                      HashMap<Integer, Integer> wordMap, HashMap<Integer, Integer> posMap, HashMap<Integer, Integer> depRelationMap,
-                     HashMap<Integer, Integer> brown4Clusters, HashMap<Integer, Integer> brown6Clusters,
-                     HashMap<String, Integer> brownFullClusters, HashSet<Integer> rareWords, HashMap<Integer, Integer> preComputeMap,
+                     HashSet<Integer> rareWords, HashMap<Integer, Integer> preComputeMap,
                      HashMap<String, String> str2clusterMap) {
         this.stringMap = stringMap;
         this.wordMap = wordMap;
@@ -48,60 +43,10 @@ public class IndexMaps implements Serializable {
         for (String word : stringMap.keySet()) {
             revStrings[stringMap.get(word)] = word;
         }
-        this.brown4Clusters = brown4Clusters;
-        this.brown6Clusters = brown6Clusters;
-        this.brownFullClusters = brownFullClusters;
         this.rootString = rootString;
         embeddingsDictionary = new HashMap<>();
         this.rareWords = rareWords;
         this.preComputeMap = preComputeMap;
-    }
-
-    public Sentence makeSentence(String[] words, String[] posTags, boolean rootFirst, boolean lowerCased) {
-        ArrayList<Integer> tokens = new ArrayList<Integer>();
-        ArrayList<Integer> tags = new ArrayList<Integer>();
-        ArrayList<Integer> bc4 = new ArrayList<Integer>();
-        ArrayList<Integer> bc6 = new ArrayList<Integer>();
-        ArrayList<Integer> bcf = new ArrayList<Integer>();
-
-        int i = 0;
-        for (String word : words) {
-            if (word.length() == 0)
-                continue;
-            String lowerCaseWord = word.toLowerCase();
-            if (lowerCased)
-                word = lowerCaseWord;
-
-            int[] clusterIDs = clusterId(word);
-            bcf.add(clusterIDs[0]);
-            bc4.add(clusterIDs[1]);
-            bc6.add(clusterIDs[2]);
-
-            String pos = posTags[i];
-
-            int wi = -1;
-            if (stringMap.containsKey(word))
-                wi = stringMap.get(word);
-
-            int pi = -1;
-            if (stringMap.containsKey(pos))
-                pi = stringMap.get(pos);
-
-            tokens.add(wi);
-            tags.add(pi);
-
-            i++;
-        }
-
-        if (!rootFirst) {
-            tokens.add(0);
-            tags.add(0);
-            bcf.add(0);
-            bc6.add(0);
-            bc4.add(0);
-        }
-
-        return new Sentence(tokens, tags, bc4, bc6, bcf);
     }
 
     public HashMap<String, Integer> getStringMap() {
@@ -111,25 +56,6 @@ public class IndexMaps implements Serializable {
 
     public HashMap<Integer, Integer> getLabelMap() {
         return labelMap;
-    }
-
-    public int[] clusterId(String word) {
-        int[] ids = new int[3];
-        ids[0] = -100;
-        ids[1] = -100;
-        ids[2] = -100;
-        if (brownFullClusters.containsKey(word))
-            ids[0] = brownFullClusters.get(word);
-
-        if (ids[0] > 0) {
-            ids[1] = brown4Clusters.get(ids[0]);
-            ids[2] = brown6Clusters.get(ids[0]);
-        }
-        return ids;
-    }
-
-    public boolean hasClusters() {
-        return brownFullClusters != null && brownFullClusters.size() > 0;
     }
 
     public int getNeuralWordKey(int wordId) {
@@ -189,10 +115,6 @@ public class IndexMaps implements Serializable {
 
     public double[] embeddings(int wordIndex) {
         return embeddingsDictionary.get(wordIndex);
-    }
-
-    public boolean hasEmbeddings() {
-        return embeddingsDictionary != null && embeddingsDictionary.size() > 0;
     }
 
     public int clusterIdForWord(String word) {

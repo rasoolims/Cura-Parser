@@ -122,7 +122,7 @@ public class FeatureExtractorTest {
         tokens.add(0);
         pos.add(0);
         dummyB.add(-1);
-        return new Sentence(tokens, pos, dummyB, dummyB, dummyB);
+        return new Sentence(tokens, pos);
 
     }
 }

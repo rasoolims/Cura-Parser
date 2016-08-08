@@ -139,9 +139,6 @@ public class YaraParser {
                 dependencyLabels.add(lab);
 
             int featureLength = options.useExtendedFeatures ? 72 : 26;
-            if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
-                featureLength = 153;
-
             System.out.println("size of training data (#sens): " + dataSet.size());
 
             HashMap<String, Integer> labels = new HashMap<String, Integer>();
@@ -186,12 +183,9 @@ public class YaraParser {
                 dependencyLabels.add(lab);
 
             int featureLength = options.useExtendedFeatures ? 72 : 26;
-            if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
-                featureLength = 153;
-
             System.out.println("size of training data (#sens): " + dataSet.size());
 
-            HashMap<String, Integer> labels = new HashMap<String, Integer>();
+            HashMap<String, Integer> labels = new HashMap<>();
             int labIndex = 0;
             labels.put("sh", labIndex++);
             labels.put("rd", labIndex++);
