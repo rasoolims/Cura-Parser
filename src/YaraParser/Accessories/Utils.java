@@ -37,20 +37,20 @@ public class Utils {
     }
 
     public static boolean equals(double[][] o1, double[][] o2) {
-        if(o1.length!=o2.length)
+        if (o1.length != o2.length)
             return false;
         for (int i = 0; i < o1.length; i++) {
-            if(!equals(o1[i],o2[i]))
+            if (!equals(o1[i], o2[i]))
                 return false;
         }
         return true;
     }
 
     public static boolean equals(double[] o1, double[] o2) {
-        if(o1.length!=o2.length)
+        if (o1.length != o2.length)
             return false;
         for (int i = 0; i < o1.length; i++) {
-            if (o1[i]!=o2[i])
+            if (o1[i] != o2[i])
                 return false;
         }
         return true;

@@ -235,9 +235,9 @@ public class GradientTest {
             double[] nullEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[1]);
             double[] rootEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[2]);
             double[] simpleWordEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[3]);
-            for(int i=0; i<3; i++){
-               classifier.fit((ArrayList<NeuralTrainingInstance>) instances, i, true);
-           }
+            for (int i = 0; i < 3; i++) {
+                classifier.fit((ArrayList<NeuralTrainingInstance>) instances, i, true);
+            }
 
             assert !Utils.equals(network.getMatrices().getWordEmbedding()[0], oovEmbedding);
             assert !Utils.equals(network.getMatrices().getWordEmbedding()[1], nullEmbedding);
