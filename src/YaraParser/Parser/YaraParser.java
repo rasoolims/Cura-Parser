@@ -80,40 +80,6 @@ public class YaraParser {
         }
     }
 
-    private static void parse(Options options) throws Exception {
-        if (options.outputFile.equals("") || options.inputFile.equals("")
-                || options.modelFile.equals("")) {
-            Options.showHelp();
-
-        } else {
-            InfStruct infStruct = new InfStruct(options.modelFile);
-            ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
-            IndexMaps maps = infStruct.maps;
-
-
-            Options inf_options = infStruct.options;
-            AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
-
-            int featureSize = averagedPerceptron.featureSize();
-            KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize,
-                    maps, options.numOfThreads);
-
-            if (options.parseTaggedFile)
-                parser.parseTaggedFile(options.inputFile,
-                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, inf_options.lowercase,
-                        options.separator, options.numOfThreads);
-            else if (options.parseConllFile)
-                parser.parseConllFile(options.inputFile,
-                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, true, inf_options
-                                .lowercase, options.numOfThreads, false, options.scorePath);
-            else if (options.parsePartialConll)
-                parser.parseConllFile(options.inputFile,
-                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, options.labeled,
-                        inf_options.lowercase, options.numOfThreads, true, options.scorePath);
-            parser.shutDownLiveThreads();
-        }
-    }
-
     private static void parseNN(Options options) throws Exception {
         FileInputStream fos = new FileInputStream(options.modelFile);
         GZIPInputStream gz = new GZIPInputStream(fos);
@@ -121,47 +87,6 @@ public class YaraParser {
         MLPNetwork mlpNetwork = (MLPNetwork) reader.readObject();
         KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.inputFile, options.outputFile,
                 options.beamWidth, 1, false, "");
-    }
-
-    public static void train(Options options) throws Exception {
-        if (options.inputFile.equals("") || options.modelFile.equals("")) {
-            Options.showHelp();
-        } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options
-                    .clusterFile, 1);
-            CoNLLReader reader = new CoNLLReader(options.inputFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
-                    .rootFirst, options.lowercase, maps);
-            System.out.println("CoNLL data reading done!");
-
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab : maps.getLabelMap().keySet())
-                dependencyLabels.add(lab);
-
-            int featureLength = options.useExtendedFeatures ? 72 : 26;
-            System.out.println("size of training data (#sens): " + dataSet.size());
-
-            HashMap<String, Integer> labels = new HashMap<String, Integer>();
-            int labIndex = 0;
-            labels.put("sh", labIndex++);
-            labels.put("rd", labIndex++);
-            labels.put("us", labIndex++);
-            for (int label : dependencyLabels) {
-                if (options.labeled) {
-                    labels.put("ra_" + label, 3 + label);
-                    labels.put("la_" + label, 3 + dependencyLabels.size() + label);
-                } else {
-                    labels.put("ra_" + label, 3);
-                    labels.put("la_" + label, 4);
-                }
-            }
-
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(featureLength, dependencyLabels.size()),
-                    options, dependencyLabels, featureLength, maps);
-            trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase,
-                    options.punctuations, options.partialTrainingStartingIteration);
-        }
     }
 
     public static void trainWithNN(Options options) throws Exception {
@@ -178,7 +103,7 @@ public class YaraParser {
                     .rootFirst, options.lowercase, maps);
             System.out.println("CoNLL data reading done!");
 
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab : maps.getLabelMap().keySet())
                 dependencyLabels.add(lab);
 
