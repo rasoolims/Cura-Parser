@@ -10,6 +10,7 @@ package Tests;
 
 import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Options;
+import YaraParser.Accessories.Utils;
 import YaraParser.Learning.Activation.ActivationType;
 import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Learning.NeuralNetwork.MLPClassifier;
@@ -188,6 +189,63 @@ public class GradientTest {
             }
         }
     }
+
+    @Test
+    public void TestWordEmbeddingUpdates() throws Exception {
+        for (ActivationType type : ActivationType.values()) {
+            writeText();
+            Options options = new Options();
+            options.activationType = type;
+            options.hiddenLayer1Size = 10;
+            options.inputFile = txtFilePath;
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);
+            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            for (int lab : maps.getLabelMap().keySet())
+                dependencyLabels.add(lab);
+            CoNLLReader reader = new CoNLLReader(options.inputFile);
+            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
+                    .rootFirst, options.lowercase, maps);
+            int wDim = 8;
+            int pDim = 4;
+            int lDim = 6;
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
+                    AveragedPerceptron(72, dependencyLabels.size()),
+                    options, dependencyLabels, 72, maps);
+            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+
+            double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+            for (int i = 0; i < network.getNumWordLayers(); i++)
+                savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+            for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+            for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                 i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+            MLPClassifier classifier = new MLPClassifier(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
+            network.preCompute();
+
+            NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                    .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
+                    .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
+            classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+            double[] oovEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[0]);
+            double[] nullEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[1]);
+            double[] rootEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[2]);
+            double[] simpleWordEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[3]);
+            for(int i=0; i<3; i++){
+               classifier.fit((ArrayList<NeuralTrainingInstance>) instances, i, true);
+           }
+
+            assert !Utils.equals(network.getMatrices().getWordEmbedding()[0], oovEmbedding);
+            assert !Utils.equals(network.getMatrices().getWordEmbedding()[1], nullEmbedding);
+            assert !Utils.equals(network.getMatrices().getWordEmbedding()[2], rootEmbedding);
+            assert !Utils.equals(network.getMatrices().getWordEmbedding()[3], simpleWordEmbedding);
+        }
+    }
+
 
     @Test
     public void TestPOSEmbeddingGradients() throws Exception {
