@@ -125,6 +125,6 @@ public class IndexMaps implements Serializable {
     public int dep2Int(String dep) {
         if (depRelationMap.containsKey(dep))
             return depRelationMap.get(dep);
-        return UnknownIndex;
+        return LabelUnknownIndex;
     }
 }
