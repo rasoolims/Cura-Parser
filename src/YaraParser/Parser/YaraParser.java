@@ -139,7 +139,6 @@ public class YaraParser {
                     options.dropoutProbForHiddenLayer);
 
 
-
             int step = 0;
             double bestModelUAS = 0;
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);

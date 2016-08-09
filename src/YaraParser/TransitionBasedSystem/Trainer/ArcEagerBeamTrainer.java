@@ -12,7 +12,6 @@ import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.InfStruct;
 import YaraParser.Structures.NeuralTrainingInstance;
-import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
@@ -209,8 +208,6 @@ public class ArcEagerBeamTrainer {
         if (partialTreeIter > i && isPartial)
             return;
 
-        Sentence sentence = goldConfiguration.getSentence();
-
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
         ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
@@ -262,7 +259,7 @@ public class ArcEagerBeamTrainer {
             TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
             if (options.numOfThreads == 1 || beam.size() == 1) {
-                beamSortOneThread(beam, beamPreserver, sentence);
+                beamSortOneThread(beam, beamPreserver);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(false, classifier, beam.get(b),
@@ -519,8 +516,7 @@ public class ArcEagerBeamTrainer {
         return bestScoringOracle;
     }
 
-    private void beamSortOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence
-            sentence) throws Exception {
+    private void beamSortOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver) throws Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
