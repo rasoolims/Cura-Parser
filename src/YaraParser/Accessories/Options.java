@@ -101,7 +101,7 @@ public class Options implements Serializable {
         UASEvalPerStep = 100;
         partialTrainingStartingIteration = 3;
 
-        punctuations = new HashSet<String>();
+        punctuations = new HashSet<>();
         punctuations.add("#");
         punctuations.add("''");
         punctuations.add("(");

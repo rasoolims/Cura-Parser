@@ -24,6 +24,7 @@ public class IndexMaps implements Serializable {
     public String[] revWords;
     public String[] revLabels;
     public String[] revPos;
+
     // for neural net
     private HashMap<String, Integer> wordMap;
     private HashMap<String, Integer> posMap;
@@ -102,7 +103,6 @@ public class IndexMaps implements Serializable {
         }
         return eDim;
     }
-
 
     public double[] embeddings(int wordIndex) {
         return embeddingsDictionary.get(wordIndex);

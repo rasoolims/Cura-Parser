@@ -246,9 +246,6 @@ public class CoNLLReader {
                 if (relation.equals("_"))
                     relation = "-";
 
-
-                if (headIndex == 0)
-                    relation = "ROOT";
                 if (!labeled)
                     relation = "~";
 

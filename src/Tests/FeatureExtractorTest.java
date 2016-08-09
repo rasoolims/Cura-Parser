@@ -10,16 +10,12 @@ package Tests;
 
 import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Options;
-import YaraParser.Learning.AveragedPerceptron;
-import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
-import YaraParser.Structures.NeuralTrainingInstance;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import YaraParser.TransitionBasedSystem.Parser.ArcEager;
-import YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
@@ -65,11 +61,6 @@ public class FeatureExtractorTest {
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
-        ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer("max_violation", new AveragedPerceptron(72, dependencyLabels.size()),
-                options, dependencyLabels, 72, maps);
-        MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, 64, 32, 32);
-        ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-
         Sentence sentence = dataSet.get(0).getSentence();//dummySentence(5,mlpNetwork.getNumWords()-2,mlpNetwork.getNumPos()-2);
         Configuration configuration = new Configuration(sentence, options.rootFirst);
 
