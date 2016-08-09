@@ -138,13 +138,14 @@ public class YaraParser {
             MLPClassifier classifier = new MLPClassifier(mlpNetwork, options.updaterType, 0.9, options.learningRate, 0.0001, options.numOfThreads,
                     options.dropoutProbForHiddenLayer);
 
-            int decayStep = (int) (options.decayStep * dataSet.size() / options.batchSize);
-            decayStep = decayStep == 0 ? 1 : decayStep;
-            System.out.println("Decay after every " + decayStep + " batches");
+
 
             int step = 0;
             double bestModelUAS = 0;
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
+            int decayStep = (int) (options.decayStep * allInstances.size() / options.batchSize);
+            decayStep = decayStep == 0 ? 1 : decayStep;
+            System.out.println("Decay after every " + decayStep + " batches");
             for (int i = 0; i < options.trainingIter; i++) {
                 System.out.println("reshuffling data for round " + i);
                 Collections.shuffle(allInstances);

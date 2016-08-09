@@ -244,7 +244,7 @@ public class Options implements Serializable {
                 options.predFile = args[i + 1];
             else if (args[i].equals("-e"))
                 options.wordEmbeddingFile = args[i + 1];
-            else if (args[i].startsWith("-a")) {
+            else if (args[i].equals("-a")) {
                 if (args[i + 1].equals("relu"))
                     options.activationType = ActivationType.RELU;
                 else if (args[i + 1].equals("cubic"))
@@ -262,7 +262,7 @@ public class Options implements Serializable {
                     options.updaterType = UpdaterType.ADAMAX;
                 else
                     throw new Exception("updater not supported");
-            } else if (args[i].startsWith("-avg")) {
+            } else if (args[i].equals("-avg")) {
                 if (args[i + 1].equals("both"))
                     options.averagingOption = AveragingOption.BOTH;
                 else if (args[i + 1].equals("no"))

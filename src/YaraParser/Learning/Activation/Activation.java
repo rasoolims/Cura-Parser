@@ -11,8 +11,7 @@ import java.io.Serializable;
  */
 
 public abstract class Activation implements Serializable {
-    public Activation() {
-    }
+    public Activation() {}
 
     public abstract double activate(double value);
 
