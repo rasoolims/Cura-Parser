@@ -129,7 +129,7 @@ public class GradientTest {
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab=0; lab< maps.relSize(); lab++)
+            for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
@@ -200,7 +200,7 @@ public class GradientTest {
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab=0; lab< maps.relSize(); lab++)
+            for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
@@ -236,7 +236,7 @@ public class GradientTest {
             double[] rootEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[2]);
             double[] simpleWordEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[3]);
             for (int i = 0; i < 3; i++) {
-                classifier.fit((ArrayList<NeuralTrainingInstance>) instances, i, true);
+                classifier.fit(instances, i, true);
             }
 
             assert !Utils.equals(network.getMatrices().getWordEmbedding()[0], oovEmbedding);
@@ -257,7 +257,7 @@ public class GradientTest {
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab=0; lab< maps.relSize(); lab++)
+            for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
@@ -328,7 +328,7 @@ public class GradientTest {
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab=0; lab< maps.relSize(); lab++)
+            for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
@@ -400,7 +400,7 @@ public class GradientTest {
             options.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab=0; lab< maps.relSize(); lab++)
+            for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
@@ -471,7 +471,7 @@ public class GradientTest {
             options.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab=0; lab< maps.relSize(); lab++)
+            for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
@@ -540,7 +540,7 @@ public class GradientTest {
             options.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab=0; lab< maps.relSize(); lab++)
+            for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
@@ -611,7 +611,7 @@ public class GradientTest {
             options.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab=0; lab< maps.relSize(); lab++)
+            for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
@@ -680,7 +680,7 @@ public class GradientTest {
             options.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-            for (int lab=0; lab< maps.relSize(); lab++)
+            for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options

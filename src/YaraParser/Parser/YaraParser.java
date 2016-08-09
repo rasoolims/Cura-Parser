@@ -16,7 +16,6 @@ import YaraParser.Learning.NeuralNetwork.MLPClassifier;
 import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Learning.Updater.UpdaterType;
 import YaraParser.Structures.IndexMaps;
-import YaraParser.Structures.InfStruct;
 import YaraParser.Structures.NeuralTrainingInstance;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
@@ -107,7 +106,7 @@ public class YaraParser {
             System.out.println("CoNLL data reading done!");
 
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab=0; lab< maps.relSize(); lab++)
+            for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
 
             int featureLength = options.useExtendedFeatures ? 72 : 26;
@@ -154,7 +153,7 @@ public class YaraParser {
 
                 while (true) {
                     step++;
-                    List<NeuralTrainingInstance> instances = allInstances.subList(s,e);
+                    List<NeuralTrainingInstance> instances = allInstances.subList(s, e);
                     classifier.fit(instances, step, step % (options.UASEvalPerStep / 10) == 0 ? true : false);
                     s = e;
                     e = Math.min(allInstances.size(), options.batchSize + e);

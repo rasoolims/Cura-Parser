@@ -6,7 +6,6 @@ import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 /**

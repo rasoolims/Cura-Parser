@@ -388,18 +388,12 @@ public class ArcEagerBeamTrainer {
                     newConfig.addAction(3 + dependency);
                     newConfig.addScore(score);
                 } else if (top > 0 && goldDependencies.containsKey(top) && goldDependencies.get(top).first == first) {
-                  try {
-                      int dependency = goldDependencies.get(top).second;
-                      double[] scores = classifier.leftArcScores(features, false);
-                      double score = scores[dependency];
-                      ArcEager.leftArc(newConfig.state, dependency);
-
-                      newConfig.addAction(3 + dependencyRelations.size() + dependency);
-                      newConfig.addScore(score);
-                  }catch (Exception ex){
-                      System.out.print("WHY?");
-                  }
-
+                    int dependency = goldDependencies.get(top).second;
+                    double[] scores = classifier.leftArcScores(features, false);
+                    double score = scores[dependency];
+                    ArcEager.leftArc(newConfig.state, dependency);
+                    newConfig.addAction(3 + dependencyRelations.size() + dependency);
+                    newConfig.addScore(score);
                 } else if (top >= 0 && state.hasHead(top)) {
                     if (reversedDependencies.containsKey(top)) {
                         if (reversedDependencies.get(top).size() == state.valence(top)) {
@@ -419,7 +413,6 @@ public class ArcEagerBeamTrainer {
                         newConfig.addAction(1);
                         newConfig.addScore(score);
                     }
-
                 } else if (state.bufferEmpty() && state.stackSize() == 1 && state.peek() == state.rootIndex) {
                     double score = classifier.reduceScore(features, false);
                     ArcEager.reduce(newConfig.state);

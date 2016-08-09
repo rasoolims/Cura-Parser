@@ -26,7 +26,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class FeatureExtractorTest {
     final String conllText = "1\tThe\t_\tDET\t_\t_\t4\tdet\t_\t_\n" +
@@ -60,7 +59,7 @@ public class FeatureExtractorTest {
 
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
-        for (int lab=0; lab< maps.relSize(); lab++)
+        for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
 
         CoNLLReader reader = new CoNLLReader(tmpPath);

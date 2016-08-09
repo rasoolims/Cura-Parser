@@ -7,7 +7,10 @@ import YaraParser.Structures.NeuralTrainingInstance;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.*;
 
 /**

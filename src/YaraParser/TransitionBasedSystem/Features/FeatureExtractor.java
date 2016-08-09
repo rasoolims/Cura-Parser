@@ -729,45 +729,45 @@ public class FeatureExtractor {
 
         if (0 < state.bufferSize()) {
             int b0Position = state.bufferHead();
-            b0w =(words[b0Position - 1]);
-            b0p =(tags[b0Position - 1]);
+            b0w = (words[b0Position - 1]);
+            b0p = (tags[b0Position - 1]);
 
             int leftMost = state.leftMostModifier(b0Position);
             if (leftMost >= 0) {
-                b0l1w =(words[leftMost - 1]);
-                b0l1p =(tags[leftMost - 1]);
-                b0l1l =(state.getDependency(leftMost));
+                b0l1w = (words[leftMost - 1]);
+                b0l1p = (tags[leftMost - 1]);
+                b0l1l = (state.getDependency(leftMost));
 
                 int l2 = state.secondLeftMostModifier(b0Position);
                 if (l2 >= 0) {
-                    b0l2w =(words[l2 - 1]);
-                    b0l2p =(tags[l2 - 1]);
-                    b0l2l =(state.getDependency(l2));
+                    b0l2w = (words[l2 - 1]);
+                    b0l2p = (tags[l2 - 1]);
+                    b0l2l = (state.getDependency(l2));
                 }
 
                 int secondLeftMost = state.leftMostModifier(leftMost);
                 if (secondLeftMost >= 0) {
-                    b0llw =(words[secondLeftMost - 1]);
-                    b0llp =(tags[secondLeftMost - 1]);
-                    b0lll =(state.getDependency(secondLeftMost));
+                    b0llw = (words[secondLeftMost - 1]);
+                    b0llp = (tags[secondLeftMost - 1]);
+                    b0lll = (state.getDependency(secondLeftMost));
                 }
             }
 
             if (1 < state.bufferSize()) {
                 int b1Position = state.getBufferItem(1);
-                b1w =(words[b1Position - 1]);
-                b1p =(tags[b1Position - 1]);
+                b1w = (words[b1Position - 1]);
+                b1p = (tags[b1Position - 1]);
 
                 if (2 < state.bufferSize()) {
                     int b2Position = state.getBufferItem(2);
-                    b2w =(words[b2Position - 1]);
-                    b2p =(tags[b2Position - 1]);
+                    b2w = (words[b2Position - 1]);
+                    b2p = (tags[b2Position - 1]);
 
                     if (3 < state.bufferSize()) {
                         int b3Position = state.getBufferItem(3);
 
-                        b3w =(words[b3Position - 1]);
-                        b3p =(tags[b3Position - 1]);
+                        b3w = (words[b3Position - 1]);
+                        b3p = (tags[b3Position - 1]);
                     }
                 }
             }
@@ -775,27 +775,27 @@ public class FeatureExtractor {
 
         if (0 < state.stackSize()) {
             int s0Position = state.peek();
-            s0w =(words[s0Position - 1]);
-            s0p =(tags[s0Position - 1]);
-            s0l =(state.getDependency(s0Position));
+            s0w = (words[s0Position - 1]);
+            s0p = (tags[s0Position - 1]);
+            s0l = (state.getDependency(s0Position));
 
             if (1 < state.stackSize()) {
                 int top1 = state.pop();
                 int s1Position = state.peek();
-                s1w =(words[s1Position - 1]);
-                s1p =(tags[s1Position - 1]);
+                s1w = (words[s1Position - 1]);
+                s1p = (tags[s1Position - 1]);
 
                 if (1 < state.stackSize()) {
                     int top2 = state.pop();
                     int s2Position = state.peek();
-                    s2w =(words[s2Position - 1]);
-                    s2p =(tags[s2Position - 1]);
+                    s2w = (words[s2Position - 1]);
+                    s2p = (tags[s2Position - 1]);
 
                     if (1 < state.stackSize()) {
                         int top3 = state.pop();
                         int s3Position = state.peek();
-                        s3w =(words[s3Position - 1]);
-                        s3p =(tags[s3Position - 1]);
+                        s3w = (words[s3Position - 1]);
+                        s3p = (tags[s3Position - 1]);
                         state.push(top3);
                     }
                     state.push(top2);
@@ -805,60 +805,60 @@ public class FeatureExtractor {
 
             int leftMost = state.leftMostModifier(s0Position);
             if (leftMost >= 0) {
-                s0l1p =(tags[leftMost - 1]);
-                s0l1w =(words[leftMost - 1]);
-                s0l1l =(state.getDependency(leftMost));
+                s0l1p = (tags[leftMost - 1]);
+                s0l1w = (words[leftMost - 1]);
+                s0l1l = (state.getDependency(leftMost));
 
                 int secondLeftMost = state.leftMostModifier(leftMost);
                 if (secondLeftMost >= 0) {
-                    s0llp =(tags[secondLeftMost - 1]);
-                    s0llw =(words[secondLeftMost - 1]);
-                    s0lll =(state.getDependency(secondLeftMost));
+                    s0llp = (tags[secondLeftMost - 1]);
+                    s0llw = (words[secondLeftMost - 1]);
+                    s0lll = (state.getDependency(secondLeftMost));
                 }
             }
 
             int rightMost = state.rightMostModifier(s0Position);
             if (rightMost >= 0) {
-                sr1p =(tags[rightMost - 1]);
-                sr1w =(words[rightMost - 1]);
-                sr1l =(state.getDependency(rightMost));
+                sr1p = (tags[rightMost - 1]);
+                sr1w = (words[rightMost - 1]);
+                sr1l = (state.getDependency(rightMost));
 
                 int secondRightMost = state.rightMostModifier(rightMost);
                 if (secondRightMost >= 0) {
-                    s0rrp =(tags[secondRightMost - 1]);
-                    s0rrw =(words[secondRightMost - 1]);
-                    s0rrl =(state.getDependency(secondRightMost));
+                    s0rrp = (tags[secondRightMost - 1]);
+                    s0rrw = (words[secondRightMost - 1]);
+                    s0rrl = (state.getDependency(secondRightMost));
                 }
             }
 
             int headIndex = state.getHead(s0Position);
             if (headIndex >= 0) {
-                sh0w =(words[headIndex - 1]);
-                sh0p =(tags[headIndex - 1]);
-                sh0l =(state.getDependency(headIndex));
+                sh0w = (words[headIndex - 1]);
+                sh0p = (tags[headIndex - 1]);
+                sh0l = (state.getDependency(headIndex));
             }
 
             if (leftMost >= 0) {
                 int l2 = state.secondLeftMostModifier(s0Position);
                 if (l2 >= 0) {
-                    s0l2w =(words[l2 - 1]);
-                    s0l2p =(tags[l2 - 1]);
-                    s0l2l =(state.getDependency(l2));
+                    s0l2w = (words[l2 - 1]);
+                    s0l2p = (tags[l2 - 1]);
+                    s0l2l = (state.getDependency(l2));
                 }
             }
             if (headIndex >= 0) {
                 if (state.hasHead(headIndex)) {
                     int h2 = state.getHead(headIndex);
-                    sh1w =(words[h2 - 1]);
-                    sh1p =(tags[h2 - 1]);
+                    sh1w = (words[h2 - 1]);
+                    sh1p = (tags[h2 - 1]);
                 }
             }
             if (rightMost >= 0) {
                 int r2 = state.secondRightMostModifier(s0Position);
                 if (r2 >= 0) {
-                    s0r2w =(words[r2 - 1]);
-                    s0r2p =(tags[r2 - 1]);
-                    s0r2l =(state.getDependency(r2));
+                    s0r2w = (words[r2 - 1]);
+                    s0r2p = (tags[r2 - 1]);
+                    s0r2l = (state.getDependency(r2));
                 }
             }
         }

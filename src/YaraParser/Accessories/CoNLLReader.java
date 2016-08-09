@@ -12,7 +12,10 @@ import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.TreeMap;
 
 public class CoNLLReader {
     /**
@@ -73,17 +76,17 @@ public class CoNLLReader {
         }
 
         depRelationMap.put(rootString, IndexMaps.LabelRootIndex);
-        int l = IndexMaps.LabelRootIndex+1;
-        for(String lab:labels){
-            if(!lab.equals(rootString)){
+        int l = IndexMaps.LabelRootIndex + 1;
+        for (String lab : labels) {
+            if (!lab.equals(rootString)) {
                 depRelationMap.put(lab, l++);
             }
         }
 
         posMap.put(rootString, IndexMaps.RootIndex);
         int p = IndexMaps.RootIndex + 1;
-        for(String pos:tags)
-            if(!pos.equals(rootString))
+        for (String pos : tags)
+            if (!pos.equals(rootString))
                 posMap.put(pos, p++);
 
 
@@ -118,17 +121,17 @@ public class CoNLLReader {
                 } else if (wordCount.get(word) <= rareMaxWordCount && str2clusterMap.containsKey(word)) {
                     String c = str2clusterMap.get(word);
 
-                   if(!wordMap.containsKey(c)) {
-                       wordMap.put(c, wi++);
-                       addedClusters.add(c);
-                   }
+                    if (!wordMap.containsKey(c)) {
+                        wordMap.put(c, wi++);
+                        addedClusters.add(c);
+                    }
                 }
             }
         }
 
-       Object[] wordsSet = str2clusterMap.keySet().toArray().clone();
-        for(Object word: wordsSet){
-            if(!addedClusters.contains(str2clusterMap.get(word)))
+        Object[] wordsSet = str2clusterMap.keySet().toArray().clone();
+        for (Object word : wordsSet) {
+            if (!addedClusters.contains(str2clusterMap.get(word)))
                 str2clusterMap.remove(word);
         }
 
@@ -230,8 +233,8 @@ public class CoNLLReader {
                 if (lowerCased)
                     word = word.toLowerCase();
                 int wi = maps.word2Int(word);
-                    if (wi == -1)
-                        oovTypes.add(word);
+                if (wi == -1)
+                    oovTypes.add(word);
 
                 String pos = splitLine[3].trim();
                 int pi = maps.pos2Int(pos);

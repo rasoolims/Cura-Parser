@@ -12,15 +12,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class IndexMaps implements Serializable {
-    public final String rootString;
     public static final int RootIndex = 2;
     public static final int UnknownIndex = 0;
     public static final int NullIndex = 1;
+    public static final int LabelRootIndex = 0;
     public static int LabelUnknownIndex;
     public static int LabelNullIndex;
-    public static final int LabelRootIndex = 0;
-
-
+    public final String rootString;
     public final HashSet<Integer> rareWords;
     public final HashMap<Integer, Integer> preComputeMap;
     public String[] revWords;
@@ -60,7 +58,7 @@ public class IndexMaps implements Serializable {
             revLabels[depRelationMap.get(label)] = label;
         }
         LabelUnknownIndex = depRelationMap.size();
-        LabelNullIndex = depRelationMap.size()+1;
+        LabelNullIndex = depRelationMap.size() + 1;
 
         embeddingsDictionary = new HashMap<>();
         this.rareWords = rareWords;
@@ -116,22 +114,22 @@ public class IndexMaps implements Serializable {
         return id;
     }
 
-    public int word2Int(String word){
-        if(wordMap.containsKey(word))
+    public int word2Int(String word) {
+        if (wordMap.containsKey(word))
             return wordMap.get(word);
-        if(str2clusterMap.containsKey(word))
+        if (str2clusterMap.containsKey(word))
             return wordMap.get(str2clusterMap.get(word));
         return UnknownIndex;
     }
 
-    public int pos2Int(String pos){
-        if(posMap.containsKey(pos))
+    public int pos2Int(String pos) {
+        if (posMap.containsKey(pos))
             return posMap.get(pos);
         return UnknownIndex;
     }
 
-    public int dep2Int(String dep){
-        if(depRelationMap.containsKey(dep))
+    public int dep2Int(String dep) {
+        if (depRelationMap.containsKey(dep))
             return depRelationMap.get(dep);
         return UnknownIndex;
     }
