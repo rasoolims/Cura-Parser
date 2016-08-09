@@ -85,7 +85,7 @@ public class State implements Cloneable {
     }
 
     public void addArc(int dependent, int head, int dependency) {
-        arcs[dependent] = new Pair<Integer, Integer>(head, dependency);
+        arcs[dependent] = new Pair<>(head, dependency);
         long value = 1L << (dependency);
 
         assert dependency < 64;
