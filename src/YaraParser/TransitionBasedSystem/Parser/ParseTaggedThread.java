@@ -1,7 +1,6 @@
 package YaraParser.TransitionBasedSystem.Parser;
 
 import YaraParser.Accessories.Pair;
-import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -85,10 +84,7 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
                 int w = i + 1;
                 int head = bestParse.state.getHead(w);
                 int dep = bestParse.state.getDependency(w);
-
-
                 String lemma = "_";
-
                 String fpos = "_";
 
                 if (head == bestParse.state.rootIndex)

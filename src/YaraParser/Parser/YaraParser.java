@@ -23,7 +23,6 @@ import YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -58,12 +57,9 @@ public class YaraParser {
         } else {
             System.out.println(options);
             if (options.train) {
-                // train(options);
-                //  createTrainData(options);
                 trainWithNN(options);
             } else if (options.parseTaggedFile || options.parseConllFile || options.parsePartialConll) {
-                parseNN(options);
-                // parse(options);
+                parse(options);
             } else if (options.evaluate) {
                 evaluate(options);
             } else {
@@ -81,13 +77,31 @@ public class YaraParser {
         }
     }
 
-    private static void parseNN(Options options) throws Exception {
-        FileInputStream fos = new FileInputStream(options.modelFile);
-        GZIPInputStream gz = new GZIPInputStream(fos);
-        ObjectInput reader = new ObjectInputStream(gz);
-        MLPNetwork mlpNetwork = (MLPNetwork) reader.readObject();
-        KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.inputFile, options.outputFile,
-                options.beamWidth, 1, false, "");
+    private static void parse(Options options) throws Exception {
+        if (options.outputFile.equals("") || options.inputFile.equals("")
+                || options.modelFile.equals("")) {
+            Options.showHelp();
+
+        } else {
+            FileInputStream fos = new FileInputStream(options.modelFile);
+            GZIPInputStream gz = new GZIPInputStream(fos);
+            ObjectInput reader = new ObjectInputStream(gz);
+            MLPNetwork mlpNetwork = (MLPNetwork) reader.readObject();
+            Options infoptions = (Options) reader.readObject();
+            KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads);
+
+            if (options.parseTaggedFile)
+                parser.parseTaggedFile(options.inputFile,
+                        options.outputFile, infoptions.rootFirst, options.beamWidth, infoptions.lowercase,
+                        options.separator, options.numOfThreads);
+            else if (options.parseConllFile)
+                parser.parseConllFile(options.inputFile,
+                        options.outputFile, infoptions.rootFirst, options.beamWidth, true, infoptions.lowercase, false, options.scorePath);
+            else if (options.parsePartialConll)
+                parser.parseConllFile(options.inputFile, options.outputFile, infoptions.rootFirst, options.beamWidth, infoptions.labeled,
+                        infoptions.lowercase, true, options.scorePath);
+            parser.shutDownLiveThreads();
+        }
     }
 
     public static void trainWithNN(Options options) throws Exception {
@@ -116,7 +130,7 @@ public class YaraParser {
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
 
-            MLPTrainer classifier = new MLPTrainer(mlpNetwork, options.updaterType, 0.9, options.learningRate, 0.0001, options.numOfThreads,
+            MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options.updaterType, 0.9, options.learningRate, 0.0001, options.numOfThreads,
                     options.dropoutProbForHiddenLayer);
 
 
@@ -135,14 +149,14 @@ public class YaraParser {
                 while (true) {
                     step++;
                     List<NeuralTrainingInstance> instances = allInstances.subList(s, e);
-                    classifier.fit(instances, step, step % (options.UASEvalPerStep / 10) == 0 ? true : false);
+                    neuralTrainer.fit(instances, step, step % (options.UASEvalPerStep / 10) == 0 ? true : false);
                     s = e;
                     e = Math.min(allInstances.size(), options.batchSize + e);
 
                     if (options.updaterType == UpdaterType.SGD) {
                         if (step % decayStep == 0) {
-                            classifier.setLearningRate(0.96 * classifier.getLearningRate());
-                            System.out.println("The new learning rate: " + classifier.getLearningRate());
+                            neuralTrainer.setLearningRate(0.96 * neuralTrainer.getLearningRate());
+                            System.out.println("The new learning rate: " + neuralTrainer.getLearningRate());
                         }
                     }
 
@@ -154,8 +168,9 @@ public class YaraParser {
 
                     if (step % options.UASEvalPerStep == 0) {
                         if (options.averagingOption != AveragingOption.ONLY) {
-                            KBeamArcEagerParser.parseNNConllFileNoParallel(mlpNetwork, options.devPath, options.modelFile + ".tmp",
-                                    options.beamWidth, 1, false, "");
+                            KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads);
+                            parser.parseConllFile(options.devPath, options.modelFile + ".tmp", options.rootFirst,
+                                    options.beamWidth, options.labeled, options.lowercase, false, "");
                             Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
                             if (eval.first > bestModelUAS) {
                                 bestModelUAS = eval.first;
@@ -164,14 +179,17 @@ public class YaraParser {
                                 GZIPOutputStream gz = new GZIPOutputStream(fos);
                                 ObjectOutput writer = new ObjectOutputStream(gz);
                                 writer.writeObject(mlpNetwork);
+                                writer.writeObject(dependencyLabels);
+                                writer.writeObject(options);
                                 writer.close();
                                 System.out.print("done!\n\n");
                             }
                         }
                         if (options.averagingOption != AveragingOption.NO) {
                             avgMlpNetwork.preCompute();
-                            KBeamArcEagerParser.parseNNConllFileNoParallel(avgMlpNetwork, options.devPath, options.modelFile + ".tmp",
-                                    options.beamWidth, 1, false, "");
+                            KBeamArcEagerParser parser = new KBeamArcEagerParser(avgMlpNetwork, options.numOfThreads);
+                            parser.parseConllFile(options.devPath, options.modelFile + ".tmp", options.rootFirst,
+                                    options.beamWidth, options.labeled, options.lowercase, false, "");
                             Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
                             if (eval.first > bestModelUAS) {
                                 bestModelUAS = eval.first;
@@ -180,6 +198,7 @@ public class YaraParser {
                                 GZIPOutputStream gz = new GZIPOutputStream(fos);
                                 ObjectOutput writer = new ObjectOutputStream(gz);
                                 writer.writeObject(avgMlpNetwork);
+                                writer.writeObject(options);
                                 writer.close();
                                 System.out.print("done!\n\n");
                             }
@@ -190,7 +209,7 @@ public class YaraParser {
                         break;
                 }
             }
-            classifier.shutDownLiveThreads();
+            neuralTrainer.shutDownLiveThreads();
         }
     }
 }

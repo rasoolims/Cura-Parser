@@ -264,7 +264,8 @@ public class CoNLLReader {
             configurationSet.add(new GoldConfiguration(currentSentence, goldDependencies));
         }
 
-        System.out.println("oov  " + oovTypes.size());
+        if(configurationSet.size()>0)
+            System.out.println("oov  " + oovTypes.size());
         return configurationSet;
     }
 

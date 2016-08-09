@@ -23,18 +23,15 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
     Configuration configuration;
     GoldConfiguration goldConfiguration;
     ArrayList<Integer> dependencyRelations;
-    int featureLength;
     int b;
 
     public PartialTreeBeamScorerThread(boolean isDecode, MLPNetwork network, GoldConfiguration
-            goldConfiguration, Configuration configuration, ArrayList<Integer> dependencyRelations, int
-                                               featureLength, int b) {
+            goldConfiguration, Configuration configuration, ArrayList<Integer> dependencyRelations, int b) {
         this.isDecode = isDecode;
         this.network = network;
         this.configuration = configuration;
         this.goldConfiguration = goldConfiguration;
         this.dependencyRelations = dependencyRelations;
-        this.featureLength = featureLength;
         this.b = b;
     }
 

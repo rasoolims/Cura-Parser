@@ -23,9 +23,6 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     MLPNetwork network;
 
     ArrayList<Integer> dependencyRelations;
-
-    int featureLength;
-
     Sentence sentence;
     boolean rootFirst;
     int beamWidth;
@@ -34,13 +31,12 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
 
     int id;
 
-    public ParseThread(int id, MLPNetwork network, ArrayList<Integer> dependencyRelations, int featureLength,
+    public ParseThread(int id, MLPNetwork network, ArrayList<Integer> dependencyRelations,
                        Sentence sentence,
                        boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
         this.id = id;
         this.network = network;
         this.dependencyRelations = dependencyRelations;
-        this.featureLength = featureLength;
         this.sentence = sentence;
         this.rootFirst = rootFirst;
         this.beamWidth = beamWidth;

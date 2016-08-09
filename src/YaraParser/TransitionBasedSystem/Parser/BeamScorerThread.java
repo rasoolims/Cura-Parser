@@ -21,17 +21,15 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
     MLPNetwork network;
     Configuration configuration;
     ArrayList<Integer> dependencyRelations;
-    int featureLength;
     int b;
     boolean rootFirst;
 
     public BeamScorerThread(boolean isDecode, MLPNetwork network, Configuration configuration,
-                            ArrayList<Integer> dependencyRelations, int featureLength, int b, boolean rootFirst) {
+                            ArrayList<Integer> dependencyRelations, int b, boolean rootFirst) {
         this.isDecode = isDecode;
         this.network = network;
         this.configuration = configuration;
         this.dependencyRelations = dependencyRelations;
-        this.featureLength = featureLength;
         this.b = b;
         this.rootFirst = rootFirst;
     }
