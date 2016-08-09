@@ -5,7 +5,7 @@
 
 package YaraParser.TransitionBasedSystem.Parser;
 
-import YaraParser.Learning.AveragedPerceptron;
+import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
@@ -19,18 +19,18 @@ import java.util.concurrent.Callable;
 public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamElement>> {
 
     boolean isDecode;
-    AveragedPerceptron classifier;
+    MLPNetwork network;
     Configuration configuration;
     GoldConfiguration goldConfiguration;
     ArrayList<Integer> dependencyRelations;
     int featureLength;
     int b;
 
-    public PartialTreeBeamScorerThread(boolean isDecode, AveragedPerceptron classifier, GoldConfiguration
+    public PartialTreeBeamScorerThread(boolean isDecode, MLPNetwork network, GoldConfiguration
             goldConfiguration, Configuration configuration, ArrayList<Integer> dependencyRelations, int
                                                featureLength, int b) {
         this.isDecode = isDecode;
-        this.classifier = classifier;
+        this.network = network;
         this.configuration = configuration;
         this.goldConfiguration = goldConfiguration;
         this.dependencyRelations = dependencyRelations;
@@ -54,18 +54,28 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
         boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
         boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-        Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+        int[] labels = new int[network.getSoftmaxLayerDim()];
+        if (!canShift) labels[0] = -1;
+        if (!canReduce) labels[1] = -1;
+        if (!canRightArc)
+            for (int i = 0; i < dependencyRelations.size(); i++)
+                labels[2 + i] = -1;
+        if (!canLeftArc)
+            for (int i = 0; i < dependencyRelations.size(); i++)
+                labels[dependencyRelations.size() + 2 + i] = -1;
+        int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+        double[] scores = network.output(features, labels);
 
         if (canShift) {
             if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
-                double score = classifier.shiftScore(features, isDecode);
+                double score = scores[0];
                 double addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 0, -1));
             }
         }
         if (canReduce) {
             if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
-                double score = classifier.reduceScore(features, isDecode);
+                double score = scores[1];
                 double addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 1, -1));
             }
@@ -73,20 +83,18 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         }
 
         if (canRightArc) {
-            double[] rightArcScores = classifier.rightArcScores(features, isDecode);
             for (int dependency : dependencyRelations) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
-                    double score = rightArcScores[dependency];
+                    double score = scores[2 + dependency];
                     double addedScore = score + prevScore;
                     elements.add(new BeamElement(addedScore, b, 2, dependency));
                 }
             }
         }
         if (canLeftArc) {
-            double[] leftArcScores = classifier.leftArcScores(features, isDecode);
             for (int dependency : dependencyRelations) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
-                    double score = leftArcScores[dependency];
+                    double score = scores[2 + dependencyRelations.size() + dependency];
                     double addedScore = score + prevScore;
                     elements.add(new BeamElement(addedScore, b, 3, dependency));
 
@@ -96,28 +104,26 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
 
         if (elements.size() == 0) {
             if (canShift) {
-                double score = classifier.shiftScore(features, isDecode);
+                double score = scores[0];
                 double addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 0, -1));
             }
             if (canReduce) {
-                double score = classifier.reduceScore(features, isDecode);
+                double score = scores[1];
                 double addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 1, -1));
             }
 
             if (canRightArc) {
-                double[] rightArcScores = classifier.rightArcScores(features, isDecode);
                 for (int dependency : dependencyRelations) {
-                    double score = rightArcScores[dependency];
+                    double score = scores[2 + dependency];
                     double addedScore = score + prevScore;
                     elements.add(new BeamElement(addedScore, b, 2, dependency));
                 }
             }
             if (canLeftArc) {
-                double[] leftArcScores = classifier.leftArcScores(features, isDecode);
                 for (int dependency : dependencyRelations) {
-                    double score = leftArcScores[dependency];
+                    double score = scores[2 + dependencyRelations.size() + dependency];
                     double addedScore = score + prevScore;
                     elements.add(new BeamElement(addedScore, b, 3, dependency));
                 }

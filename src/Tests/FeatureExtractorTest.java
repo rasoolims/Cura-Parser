@@ -67,14 +67,14 @@ public class FeatureExtractorTest {
         /**
          * actions = shift, shift, left-arc, left-arc, shift, right-arc, reduce, left-arc
          */
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
+        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
         assert baseFeatures[0] == IndexMaps.NullIndex;
         assert baseFeatures[4] == (sentence.getWords()[0]);
         assert baseFeatures[19] == IndexMaps.NullIndex;
         assert baseFeatures[23] == (sentence.getTags()[0]);
         assert baseFeatures[40] == IndexMaps.LabelNullIndex;
         ArcEager.shift(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
         assert baseFeatures[0] == (sentence.getWords()[0]);
         assert baseFeatures[4] == (sentence.getWords()[1]);
         assert baseFeatures[19] == (sentence.getTags()[0]);
@@ -86,7 +86,7 @@ public class FeatureExtractorTest {
         ArcEager.shift(configuration.state);
         ArcEager.shift(configuration.state);
         ArcEager.rightArc(configuration.state, 2);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
         assert baseFeatures[38] == (configuration.state.getDependency(5));
         ArcEager.reduce(configuration.state);
         ArcEager.leftArc(configuration.state, 0);

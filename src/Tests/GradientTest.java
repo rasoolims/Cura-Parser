@@ -12,9 +12,8 @@ import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Options;
 import YaraParser.Accessories.Utils;
 import YaraParser.Learning.Activation.ActivationType;
-import YaraParser.Learning.AveragedPerceptron;
-import YaraParser.Learning.NeuralNetwork.MLPTrainer;
 import YaraParser.Learning.NeuralNetwork.MLPNetwork;
+import YaraParser.Learning.NeuralNetwork.MLPTrainer;
 import YaraParser.Learning.NeuralNetwork.NetworkMatrices;
 import YaraParser.Learning.Updater.UpdaterType;
 import YaraParser.Structures.EmbeddingTypes;
@@ -128,7 +127,7 @@ public class GradientTest {
             options.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -138,9 +137,8 @@ public class GradientTest {
             int pDim = 4;
             int lDim = 6;
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(72, dependencyLabels.size()),
-                    options, dependencyLabels, 72, maps);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
@@ -199,7 +197,7 @@ public class GradientTest {
             options.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -209,9 +207,8 @@ public class GradientTest {
             int pDim = 4;
             int lDim = 6;
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(72, dependencyLabels.size()),
-                    options, dependencyLabels, 72, maps);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
@@ -256,7 +253,7 @@ public class GradientTest {
             options.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -266,9 +263,8 @@ public class GradientTest {
             int pDim = 4;
             int lDim = 6;
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(72, dependencyLabels.size()),
-                    options, dependencyLabels, 72, maps);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
@@ -327,7 +323,7 @@ public class GradientTest {
             options.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -337,9 +333,8 @@ public class GradientTest {
             int pDim = 4;
             int lDim = 6;
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(72, dependencyLabels.size()),
-                    options, dependencyLabels, 72, maps);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
@@ -399,7 +394,7 @@ public class GradientTest {
             options.inputFile = txtFilePath;
             options.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -409,9 +404,8 @@ public class GradientTest {
             int pDim = 4;
             int lDim = 6;
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(72, dependencyLabels.size()),
-                    options, dependencyLabels, 72, maps);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
@@ -470,7 +464,7 @@ public class GradientTest {
             options.inputFile = txtFilePath;
             options.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -480,9 +474,8 @@ public class GradientTest {
             int pDim = 4;
             int lDim = 6;
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(72, dependencyLabels.size()),
-                    options, dependencyLabels, 72, maps);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
@@ -539,7 +532,7 @@ public class GradientTest {
             options.inputFile = txtFilePath;
             options.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -549,9 +542,8 @@ public class GradientTest {
             int pDim = 4;
             int lDim = 6;
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(72, dependencyLabels.size()),
-                    options, dependencyLabels, 72, maps);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
@@ -610,7 +602,7 @@ public class GradientTest {
             options.inputFile = txtFilePath;
             options.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -620,9 +612,8 @@ public class GradientTest {
             int pDim = 4;
             int lDim = 6;
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(72, dependencyLabels.size()),
-                    options, dependencyLabels, 72, maps);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
@@ -679,7 +670,7 @@ public class GradientTest {
             options.inputFile = txtFilePath;
             options.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
@@ -689,9 +680,8 @@ public class GradientTest {
             int pDim = 4;
             int lDim = 6;
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(72, dependencyLabels.size()),
-                    options, dependencyLabels, 72, maps);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
@@ -712,7 +702,7 @@ public class GradientTest {
                     .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
 
             classifier.calculateCost(instances, instances.size(), gradients, savedGradients);
-            classifierMultiThread.cost((ArrayList<NeuralTrainingInstance>) instances);
+            classifierMultiThread.cost(instances);
 
             final NetworkMatrices gradientsMultiThread = classifierMultiThread.getGradients();
             double eps = 1e-15;

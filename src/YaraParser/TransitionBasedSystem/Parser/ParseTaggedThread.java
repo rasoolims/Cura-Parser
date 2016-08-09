@@ -1,6 +1,7 @@
 package YaraParser.TransitionBasedSystem.Parser;
 
 import YaraParser.Accessories.Pair;
+import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;

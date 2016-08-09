@@ -7,7 +7,7 @@
 package YaraParser.TransitionBasedSystem.Parser;
 
 import YaraParser.Accessories.Pair;
-import YaraParser.Learning.AveragedPerceptron;
+import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -20,7 +20,7 @@ import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
 public class ParseThread implements Callable<Pair<Configuration, Integer>> {
-    AveragedPerceptron classifier;
+    MLPNetwork network;
 
     ArrayList<Integer> dependencyRelations;
 
@@ -34,11 +34,11 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
 
     int id;
 
-    public ParseThread(int id, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
+    public ParseThread(int id, MLPNetwork network, ArrayList<Integer> dependencyRelations, int featureLength,
                        Sentence sentence,
                        boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
         this.id = id;
-        this.classifier = classifier;
+        this.network = network;
         this.dependencyRelations = dependencyRelations;
         this.featureLength = featureLength;
         this.sentence = sentence;
@@ -52,7 +52,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     public Pair<Configuration, Integer> call() throws Exception {
         if (!partial)
             return parse();
-        else return new Pair<Configuration, Integer>(parsePartial(), id);
+        else return new Pair<>(parsePartial(), id);
     }
 
     Pair<Configuration, Integer> parse() throws Exception {
@@ -72,7 +72,17 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
                     boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
                     boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-                    Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                    int[] labels = new int[network.getSoftmaxLayerDim()];
+                    if (!canShift) labels[0] = -1;
+                    if (!canReduce) labels[1] = -1;
+                    if (!canRightArc)
+                        for (int i = 0; i < dependencyRelations.size(); i++)
+                            labels[2 + i] = -1;
+                    if (!canLeftArc)
+                        for (int i = 0; i < dependencyRelations.size(); i++)
+                            labels[dependencyRelations.size() + 2 + i] = -1;
+                    int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+                    double[] scores = network.output(features, labels);
                     if (!canShift
                             && !canReduce
                             && !canRightArc
@@ -84,7 +94,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canShift) {
-                        double score = classifier.shiftScore(features, true);
+                        double score = scores[0];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -93,7 +103,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canReduce) {
-                        double score = classifier.reduceScore(features, true);
+                        double score = scores[1];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -102,9 +112,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canRightArc) {
-                        double[] rightArcScores = classifier.rightArcScores(features, true);
                         for (int dependency : dependencyRelations) {
-                            double score = rightArcScores[dependency];
+                            double score = scores[2 + dependency];
                             double addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -114,9 +123,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canLeftArc) {
-                        double[] leftArcScores = classifier.leftArcScores(features, true);
                         for (int dependency : dependencyRelations) {
-                            double score = leftArcScores[dependency];
+                            double score = scores[2 + dependencyRelations.size() + dependency];
                             double addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
@@ -160,14 +168,24 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             } else {
                 Configuration configuration = beam.get(0);
                 State currentState = configuration.state;
-                Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-                double bestScore = Double.NEGATIVE_INFINITY;
-                int bestAction = -1;
-
                 boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
                 boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
                 boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
                 boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
+                int[] labels = new int[network.getSoftmaxLayerDim()];
+                if (!canShift) labels[0] = -1;
+                if (!canReduce) labels[1] = -1;
+                if (!canRightArc)
+                    for (int i = 0; i < dependencyRelations.size(); i++)
+                        labels[2 + i] = -1;
+                if (!canLeftArc)
+                    for (int i = 0; i < dependencyRelations.size(); i++)
+                        labels[dependencyRelations.size() + 2 + i] = -1;
+                int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+                double[] scores = network.output(features, labels);
+                double bestScore = Double.NEGATIVE_INFINITY;
+                int bestAction = -1;
+
 
                 if (!canShift
                         && !canReduce
@@ -184,23 +202,22 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canShift) {
-                    double score = classifier.shiftScore(features, true);
+                    double score = scores[0];
                     if (score > bestScore) {
                         bestScore = score;
                         bestAction = 0;
                     }
                 }
                 if (canReduce) {
-                    double score = classifier.reduceScore(features, true);
+                    double score = scores[1];
                     if (score > bestScore) {
                         bestScore = score;
                         bestAction = 1;
                     }
                 }
                 if (canRightArc) {
-                    double[] rightArcScores = classifier.rightArcScores(features, true);
                     for (int dependency : dependencyRelations) {
-                        double score = rightArcScores[dependency];
+                        double score = scores[2 + dependency];
                         if (score > bestScore) {
                             bestScore = score;
                             bestAction = 3 + dependency;
@@ -208,9 +225,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
                 }
                 if (ArcEager.canDo(Actions.LeftArc, currentState)) {
-                    double[] leftArcScores = classifier.leftArcScores(features, true);
                     for (int dependency : dependencyRelations) {
-                        double score = leftArcScores[dependency];
+                        double score = scores[2 + dependencyRelations.size() + dependency];
                         if (score > bestScore) {
                             bestScore = score;
                             bestAction = 3 + dependencyRelations.size() + dependency;
@@ -250,7 +266,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 bestConfiguration = configuration;
             }
         }
-        return new Pair<Configuration, Integer>(bestConfiguration, id);
+        return new Pair<>(bestConfiguration, id);
     }
 
     public Configuration parsePartial() throws Exception {
@@ -322,7 +338,17 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-            Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            int[] labels = new int[network.getSoftmaxLayerDim()];
+            if (!canShift) labels[0] = -1;
+            if (!canReduce) labels[1] = -1;
+            if (!canRightArc)
+                for (int i = 0; i < dependencyRelations.size(); i++)
+                    labels[2 + i] = -1;
+            if (!canLeftArc)
+                for (int i = 0; i < dependencyRelations.size(); i++)
+                    labels[dependencyRelations.size() + 2 + i] = -1;
+            int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+            double[] scores = network.output(features, labels);
             if (!canShift
                     && !canReduce
                     && !canRightArc
@@ -335,7 +361,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
 
             if (canShift) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
-                    double score = classifier.shiftScore(features, true);
+                    double score = scores[0];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -346,7 +372,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
 
             if (canReduce) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
-                    double score = classifier.reduceScore(features, true);
+                    double score = scores[1];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -356,11 +382,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             }
 
             if (canRightArc) {
-                double[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
-                    if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState)
-                            == 0) {
-                        double score = rightArcScores[dependency];
+                    if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
+                        double score = scores[2 + dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -371,11 +395,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             }
 
             if (canLeftArc) {
-                double[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
-                    if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) ==
-                            0) {
-                        double score = leftArcScores[dependency];
+                    if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
+                        double score = scores[2 + dependencyRelations.size() + dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
@@ -395,7 +417,17 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
                 boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
                 boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-                Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                int[] labels = new int[network.getSoftmaxLayerDim()];
+                if (!canShift) labels[0] = -1;
+                if (!canReduce) labels[1] = -1;
+                if (!canRightArc)
+                    for (int i = 0; i < dependencyRelations.size(); i++)
+                        labels[2 + i] = -1;
+                if (!canLeftArc)
+                    for (int i = 0; i < dependencyRelations.size(); i++)
+                        labels[dependencyRelations.size() + 2 + i] = -1;
+                int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+                double[] scores = network.output(features, labels);
                 if (!canShift
                         && !canReduce
                         && !canRightArc
@@ -407,7 +439,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canShift) {
-                    double score = classifier.shiftScore(features, true);
+                    double score = scores[0];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -416,7 +448,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canReduce) {
-                    double score = classifier.reduceScore(features, true);
+                    double score = scores[1];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -425,9 +457,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canRightArc) {
-                    double[] rightArcScores = classifier.rightArcScores(features, true);
                     for (int dependency : dependencyRelations) {
-                        double score = rightArcScores[dependency];
+                        double score = scores[2 + dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -437,9 +468,8 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canLeftArc) {
-                    double[] leftArcScores = classifier.leftArcScores(features, true);
                     for (int dependency : dependencyRelations) {
-                        double score = leftArcScores[dependency];
+                        double score = scores[2 + dependencyRelations.size() + dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 

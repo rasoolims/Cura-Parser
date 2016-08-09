@@ -8,10 +8,8 @@ package YaraParser.TransitionBasedSystem.Parser;
 import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Options;
 import YaraParser.Accessories.Pair;
-import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
-import YaraParser.Structures.InfStruct;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -32,40 +30,24 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class KBeamArcEagerParser extends TransitionBasedParser {
-    /**
-     * Any kind of classifier that can give us scores
-     */
-    AveragedPerceptron classifier;
-
     ArrayList<Integer> dependencyRelations;
 
     int featureLength;
+    MLPNetwork network;
 
     IndexMaps maps;
 
     ExecutorService executor;
     CompletionService<ArrayList<BeamElement>> pool;
 
-    public KBeamArcEagerParser(AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations,
+    public KBeamArcEagerParser(ArrayList<Integer> dependencyRelations,MLPNetwork network,
                                int featureLength, IndexMaps maps, int numOfThreads) {
-        this.classifier = classifier;
         this.dependencyRelations = dependencyRelations;
+        this.network = network;
         this.featureLength = featureLength;
         this.maps = maps;
         executor = Executors.newFixedThreadPool(numOfThreads);
         pool = new ExecutorCompletionService<>(executor);
-    }
-
-    public static KBeamArcEagerParser createParser(String modelPath, int numOfThreads) throws Exception {
-        InfStruct infStruct = new InfStruct(modelPath);
-
-        ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
-        IndexMaps maps = infStruct.maps;
-        AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
-
-        int featureSize = averagedPerceptron.featureSize();
-        return new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, numOfThreads);
-
     }
 
     public static Configuration parseNeural(final MLPNetwork nn, Sentence sentence, boolean rootFirst,
@@ -130,7 +112,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                                                  ArrayList<Integer> dependencyRelations) throws Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
-            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
+            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
             State currentState = configuration.state;
             boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
@@ -323,8 +305,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
     }
 
-    private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence
-            sentence, boolean rootFirst, int beamWidth) throws Exception {
+    private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, int beamWidth) throws
+            Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -333,7 +315,18 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-            Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            int[] labels = new int[network.getSoftmaxLayerDim()];
+            if (!canShift) labels[0] = -1;
+            if (!canReduce) labels[1] = -1;
+            if (!canRightArc)
+                for (int i = 0; i < maps.relSize(); i++)
+                    labels[2 + i] = -1;
+            if (!canLeftArc)
+                for (int i = 0; i < maps.relSize(); i++)
+                    labels[maps.relSize() + 2 + i] = -1;
+            int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+            double[] scores = network.output(features, labels);
+
             if (!canShift
                     && !canReduce
                     && !canRightArc
@@ -346,7 +339,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canShift) {
-                double score = classifier.shiftScore(features, true);
+                double score = scores[0];
                 double addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -355,7 +348,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canReduce) {
-                double score = classifier.reduceScore(features, true);
+                double score = scores[1];
                 double addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -364,9 +357,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canRightArc) {
-                double[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
-                    double score = rightArcScores[dependency];
+                    double score = scores[2 + dependency];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -376,9 +368,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canLeftArc) {
-                double[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
-                    double score = leftArcScores[dependency];
+                    double score = scores[2 + maps.relSize() + dependency];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
@@ -399,10 +390,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
             if (numOfThreads == 1) {
-                parseWithOneThread(beam, beamPreserver, sentence, rootFirst, beamWidth);
+                parseWithOneThread(beam, beamPreserver, beamWidth);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
-                    pool.submit(new BeamScorerThread(true, classifier, beam.get(b),
+                    pool.submit(new BeamScorerThread(true, network, beam.get(b),
                             dependencyRelations, featureLength, b, rootFirst));
                 }
                 for (int b = 0; b < beam.size(); b++) {
@@ -469,7 +460,17 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-            Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            int[] labels = new int[network.getSoftmaxLayerDim()];
+            if (!canShift) labels[0] = -1;
+            if (!canReduce) labels[1] = -1;
+            if (!canRightArc)
+                for (int i = 0; i < maps.relSize(); i++)
+                    labels[2 + i] = -1;
+            if (!canLeftArc)
+                for (int i = 0; i < maps.relSize(); i++)
+                    labels[maps.relSize() + 2 + i] = -1;
+            int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+            double[] scores = network.output(features, labels);
             if (!canShift
                     && !canReduce
                     && !canRightArc
@@ -482,7 +483,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             if (canShift) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
-                    double score = classifier.shiftScore(features, true);
+                    double score = scores[0];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -493,7 +494,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             if (canReduce) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
-                    double score = classifier.reduceScore(features, true);
+                    double score = scores[1];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -503,11 +504,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canRightArc) {
-                double[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState)
                             == 0) {
-                        double score = rightArcScores[dependency];
+                        double score = scores[2 + dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -518,11 +518,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canLeftArc) {
-                double[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) ==
                             0) {
-                        double score = leftArcScores[dependency];
+                        double score = scores[2 + maps.relSize() + dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
@@ -543,7 +542,18 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
                 boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
                 boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-                Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                int[] labels = new int[network.getSoftmaxLayerDim()];
+                if (!canShift) labels[0] = -1;
+                if (!canReduce) labels[1] = -1;
+                if (!canRightArc)
+                    for (int i = 0; i < maps.relSize(); i++)
+                        labels[2 + i] = -1;
+                if (!canLeftArc)
+                    for (int i = 0; i < maps.relSize(); i++)
+                        labels[maps.relSize() + 2 + i] = -1;
+                int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+                double[] scores = network.output(features, labels);
+
                 if (!canShift
                         && !canReduce
                         && !canRightArc
@@ -555,7 +565,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 }
 
                 if (canShift) {
-                    double score = classifier.shiftScore(features, true);
+                    double score = scores[0];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -564,7 +574,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 }
 
                 if (canReduce) {
-                    double score = classifier.reduceScore(features, true);
+                    double score = scores[1];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -573,9 +583,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 }
 
                 if (canRightArc) {
-                    double[] rightArcScores = classifier.rightArcScores(features, true);
                     for (int dependency : dependencyRelations) {
-                        double score = rightArcScores[dependency];
+                        double score = scores[2 + dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -585,9 +594,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 }
 
                 if (canLeftArc) {
-                    double[] leftArcScores = classifier.leftArcScores(features, true);
                     for (int dependency : dependencyRelations) {
-                        double score = leftArcScores[dependency];
+                        double score = scores[2 + dependencyRelations.size() + dependency];
                         double addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
@@ -607,18 +615,17 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             isNonProjective = true;
         }
 
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
         while (!ArcEager.isTerminal(beam)) {
-            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+            TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             if (numOfThreads == 1) {
-                parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth,
-                        rootFirst);
+                parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth, rootFirst);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
-                    pool.submit(new PartialTreeBeamScorerThread(true, classifier, goldConfiguration, beam.get(b),
+                    pool.submit(new PartialTreeBeamScorerThread(true, network, goldConfiguration, beam.get(b),
                             dependencyRelations, featureLength, b));
                 }
                 for (int b = 0; b < beam.size(); b++) {
@@ -677,11 +684,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     public void parseConllFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean
             labeled, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
         if (numThreads == 1)
-            parseConllFileNoParallel(inputFile, outputFile, rootFirst, beamWidth, labeled, lowerCased, numThreads,
-                    partial, scorePath);
+            parseConllFileNoParallel(inputFile, outputFile, rootFirst, beamWidth, labeled, lowerCased, numThreads, partial, scorePath);
         else
-            parseConllFileParallel(inputFile, outputFile, rootFirst, beamWidth, lowerCased, numThreads, partial,
-                    scorePath);
+            parseConllFileParallel(inputFile, outputFile, rootFirst, beamWidth, lowerCased, numThreads, partial, scorePath);
     }
 
     /**
@@ -720,8 +725,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     System.err.print(dataCount + " ... ");
                 Configuration bestParse;
                 if (partial)
-                    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst,
-                            beamWidth, numOfThreads);
+                    bestParse = parsePartial(goldConfiguration, goldConfiguration.getSentence(), rootFirst, beamWidth, numOfThreads);
                 else bestParse = parse(goldConfiguration.getSentence(), rootFirst, beamWidth, numOfThreads);
 
                 int[] words = goldConfiguration.getSentence().getWords();
@@ -814,8 +818,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         int count = 0;
         int lineNum = 0;
         while ((line = reader.readLine()) != null) {
-            pool.submit(new ParseTaggedThread(lineNum++, line, separator, rootFirst, lowerCased, maps, beamWidth,
-                    this));
+            pool.submit(new ParseTaggedThread(lineNum++, line, separator, rootFirst, lowerCased, maps, beamWidth, this));
 
             if (lineNum % 1000 == 0) {
                 String[] outs = new String[lineNum];
@@ -892,7 +895,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             Configuration[] confs = new Configuration[data.size()];
 
             for (GoldConfiguration goldConfiguration : data) {
-                ParseThread thread = new ParseThread(index, classifier, dependencyRelations, featureLength,
+                ParseThread thread = new ParseThread(index, network, dependencyRelations, featureLength,
                         goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration, partial);
                 pool.submit(thread);
                 index++;

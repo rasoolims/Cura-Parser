@@ -10,10 +10,9 @@ import YaraParser.Accessories.Evaluator;
 import YaraParser.Accessories.Options;
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.Activation.ActivationType;
-import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Learning.AveragingOption;
-import YaraParser.Learning.NeuralNetwork.MLPTrainer;
 import YaraParser.Learning.NeuralNetwork.MLPNetwork;
+import YaraParser.Learning.NeuralNetwork.MLPTrainer;
 import YaraParser.Learning.Updater.UpdaterType;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.NeuralTrainingInstance;
@@ -38,12 +37,12 @@ public class YaraParser {
             options.inputFile = "/Users/msr/Desktop/data/dev_smal.conll";
             options.devPath = "/Users/msr/Desktop/data/train_smal.conll";
             options.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
-           // options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
+            // options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
             options.modelFile = "/tmp/model";
             options.labeled = true;
             options.hiddenLayer1Size = 200;
             options.learningRate = 0.001;
-            options.batchSize = 128;
+            options.batchSize = 1024;
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
@@ -109,28 +108,10 @@ public class YaraParser {
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
 
-            int featureLength = options.useExtendedFeatures ? 72 : 26;
             System.out.println("size of training data (#sens): " + dataSet.size());
-
-            HashMap<String, Integer> labels = new HashMap<>();
-            int labIndex = 0;
-            labels.put("sh", labIndex++);
-            labels.put("rd", labIndex++);
-            labels.put("us", labIndex++);
-            for (int label : dependencyLabels) {
-                if (options.labeled) {
-                    labels.put("ra_" + label, 3 + label);
-                    labels.put("la_" + label, 3 + dependencyLabels.size() + label);
-                } else {
-                    labels.put("ra_" + label, 3);
-                    labels.put("la_" + label, 4);
-                }
-            }
-
             System.out.println("Embedding dimension " + wDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                    AveragedPerceptron(featureLength, dependencyLabels.size()),
-                    options, dependencyLabels, featureLength, maps);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels, maps);
 
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);

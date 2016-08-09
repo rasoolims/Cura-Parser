@@ -2,7 +2,6 @@ package Tests;
 
 import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Options;
-import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.NeuralTrainingInstance;
@@ -130,9 +129,8 @@ public class MLPNetworkTest {
         MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
         network.preCompute();
 
-        ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new
-                AveragedPerceptron(72, dependencyLabels.size()),
-                options, dependencyLabels, 72, maps);
+        ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                options, dependencyLabels, maps);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         MLPNetwork clonedNetwork = network.clone();
 
