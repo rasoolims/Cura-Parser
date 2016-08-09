@@ -77,7 +77,7 @@ public class ArcEagerBeamTrainer {
         ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
         beam.add(initialConfiguration);
 
-        HashMap<Configuration, Double> oracles = new HashMap<Configuration, Double>();
+        HashMap<Configuration, Double> oracles = new HashMap<>();
 
         oracles.put(firstOracle, 0.0);
 
@@ -88,7 +88,7 @@ public class ArcEagerBeamTrainer {
              *  generating new oracles
              *  it keeps the oracles which are in the terminal state
              */
-            HashMap<Configuration, Double> newOracles = new HashMap<Configuration, Double>();
+            HashMap<Configuration, Double> newOracles = new HashMap<>();
 
             Configuration currentConfig = null;
             for (Configuration conf : oracles.keySet()) {
@@ -140,8 +140,7 @@ public class ArcEagerBeamTrainer {
          * Actions: 0=shift, 1=reduce, 2=unshift, ra_dep=3+dep, la_dep=3+dependencyRelations.size()+dep
          */
         ExecutorService executor = Executors.newFixedThreadPool(options.numOfThreads);
-        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<ArrayList<BeamElement>>
-                (executor);
+        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(executor);
 
 
         for (int i = 1; i <= maxIteration; i++) {
@@ -210,7 +209,7 @@ public class ArcEagerBeamTrainer {
 
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(options.beamWidth);
         beam.add(initialConfiguration);
 
         /**
@@ -220,7 +219,7 @@ public class ArcEagerBeamTrainer {
          * TACL 1 (2013): 403-414.
          * for the mean while we just use zero-cost oracles
          */
-        HashMap<Configuration, Double> oracles = new HashMap<Configuration, Double>();
+        HashMap<Configuration, Double> oracles = new HashMap<>();
 
         oracles.put(firstOracle, 0.0);
 
@@ -243,7 +242,7 @@ public class ArcEagerBeamTrainer {
              *  generating new oracles
              *  it keeps the oracles which are in the terminal state
              */
-            HashMap<Configuration, Double> newOracles = new HashMap<Configuration, Double>();
+            HashMap<Configuration, Double> newOracles = new HashMap<>();
 
             if (options.useDynamicOracle || isPartial) {
                 bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
@@ -256,7 +255,7 @@ public class ArcEagerBeamTrainer {
             }
             oracles = newOracles;
 
-            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+            TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             if (options.numOfThreads == 1 || beam.size() == 1) {
                 beamSortOneThread(beam, beamPreserver);
@@ -279,7 +278,7 @@ public class ArcEagerBeamTrainer {
             } else {
                 oracleInBeam = false;
 
-                ArrayList<Configuration> repBeam = new ArrayList<Configuration>(options.beamWidth);
+                ArrayList<Configuration> repBeam = new ArrayList<>(options.beamWidth);
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
                     if (repBeam.size() >= options.beamWidth)
                         break;
@@ -317,18 +316,18 @@ public class ArcEagerBeamTrainer {
                 if (beam.size() > 0 && oracles.size() > 0) {
                     Configuration bestConfig = beam.get(0);
                     if (oracles.containsKey(bestConfig)) {
-                        oracles = new HashMap<Configuration, Double>();
+                        oracles = new HashMap<>();
                         oracles.put(bestConfig, 0.0);
                     } else {
                         if (options.useRandomOracleSelection) { // choosing randomly, otherwise using latent
                             // structured Perceptron
-                            List<Configuration> keys = new ArrayList<Configuration>(oracles.keySet());
+                            List<Configuration> keys = new ArrayList<>(oracles.keySet());
                             Configuration randomKey = keys.get(randGen.nextInt(keys.size()));
-                            oracles = new HashMap<Configuration, Double>();
+                            oracles = new HashMap<>();
                             oracles.put(randomKey, 0.0);
                             bestScoringOracle = randomKey;
                         } else {
-                            oracles = new HashMap<Configuration, Double>();
+                            oracles = new HashMap<>();
                             oracles.put(bestScoringOracle, 0.0);
                         }
                     }
@@ -343,7 +342,7 @@ public class ArcEagerBeamTrainer {
                         // (beam.get(0).getScore(true) - bestScoringOracle.getScore(true));
                         if (violation > maxViol) {
                             maxViol = violation;
-                            maxViolPair = new Pair<Configuration, Configuration>(beam.get(0), bestScoringOracle);
+                            maxViolPair = new Pair<>(beam.get(0), bestScoringOracle);
                         }
                     }
                 } else
