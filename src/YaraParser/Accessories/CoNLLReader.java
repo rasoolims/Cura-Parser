@@ -178,7 +178,6 @@ public class CoNLLReader {
         return new IndexMaps(rootString, wordMap, posMap, depRelationMap, rareWords, preComputeMap, str2clusterMap);
     }
 
-
     /**
      * @param limit it is used if we want to read part of the data
      * @return
@@ -302,13 +301,8 @@ public class CoNLLReader {
 
                 int headIndex = Integer.parseInt(splitLine[6]);
                 String relation = splitLine[7];
-
-                if (headIndex == 0) {
-                    relation = "ROOT";
-                }
-
                 if (pos.length() > 0)
-                    goldDependencies.put(wordIndex, new Pair<Integer, String>(headIndex, relation));
+                    goldDependencies.put(wordIndex, new Pair<>(headIndex, relation));
             }
         }
 
