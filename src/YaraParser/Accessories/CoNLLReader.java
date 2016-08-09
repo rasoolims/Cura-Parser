@@ -40,11 +40,7 @@ public class CoNLLReader {
         HashMap<String, Integer> wordMap = new HashMap<>();
         HashMap<String, Integer> depRelationMap = new HashMap<>();
         HashMap<String, Integer> posMap = new HashMap<>();
-
-        int wc = 3; // 0 for OOV, 1 for null, 2 for ROOT!
-
         String rootString = "ROOT";
-
         HashMap<String, Integer> wordCount = new HashMap<>();
         HashSet<String> labels = new HashSet<>();
         HashSet<String> tags = new HashSet<>();
@@ -89,7 +85,6 @@ public class CoNLLReader {
             if (!pos.equals(rootString))
                 posMap.put(pos, p++);
 
-
         if (clusterFile.length() > 0) {
             reader = new BufferedReader(new FileReader(clusterFile));
             while ((line = reader.readLine()) != null) {
@@ -101,7 +96,6 @@ public class CoNLLReader {
                 }
             }
         }
-
 
         HashSet<Integer> rareWords = new HashSet<>();
 
@@ -305,7 +299,6 @@ public class CoNLLReader {
                     goldDependencies.put(wordIndex, new Pair<>(headIndex, relation));
             }
         }
-
 
         if (tags.size() > 0) {
             treeSet.add(new CompactTree(goldDependencies, tags));
