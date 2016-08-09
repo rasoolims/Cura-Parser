@@ -117,7 +117,7 @@ public class MLPClassifier {
         cost += regCoef * regCost;
     }
 
-    public void fit(ArrayList<NeuralTrainingInstance> instances, int iteration, boolean print) throws Exception {
+    public void fit(List<NeuralTrainingInstance> instances, int iteration, boolean print) throws Exception {
         DecimalFormat format = new DecimalFormat("##.00");
         DecimalFormat format4 = new DecimalFormat("##.0000");
 
@@ -135,13 +135,13 @@ public class MLPClassifier {
         }
     }
 
-    public void cost(ArrayList<NeuralTrainingInstance> instances) throws Exception {
+    public void cost(List<NeuralTrainingInstance> instances) throws Exception {
         submitThreads(instances);
         mergeCosts(instances);
         samples += instances.size();
     }
 
-    private void submitThreads(ArrayList<NeuralTrainingInstance> instances) {
+    private void submitThreads(List<NeuralTrainingInstance> instances) {
         int chunkSize = instances.size() / numThreads;
         int s = 0;
         int e = Math.min(instances.size(), chunkSize);
@@ -152,7 +152,7 @@ public class MLPClassifier {
         }
     }
 
-    private void mergeCosts(ArrayList<NeuralTrainingInstance> instances) throws Exception {
+    private void mergeCosts(List<NeuralTrainingInstance> instances) throws Exception {
         Pair<Pair<Double, Double>, NetworkMatrices> firstResult = pool.take().get();
         gradients = firstResult.second;
 

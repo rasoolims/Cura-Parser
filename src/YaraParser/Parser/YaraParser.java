@@ -26,6 +26,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -101,8 +102,8 @@ public class YaraParser {
                 wDim = maps.readEmbeddings(options.wordEmbeddingFile);
 
             CoNLLReader reader = new CoNLLReader(options.inputFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
-                    .rootFirst, options.lowercase, maps);
+            ArrayList<GoldConfiguration> dataSet =
+                    reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             System.out.println("CoNLL data reading done!");
 
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -144,18 +145,19 @@ public class YaraParser {
 
             int step = 0;
             double bestModelUAS = 0;
+            ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             for (int i = 0; i < options.trainingIter; i++) {
                 System.out.println("reshuffling data for round " + i);
-                Collections.shuffle(dataSet);
+                Collections.shuffle(allInstances);
                 int s = 0;
-                int e = Math.min(dataSet.size(), options.batchSize);
+                int e = Math.min(allInstances.size(), options.batchSize);
 
                 while (true) {
                     step++;
-                    ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, s, e, 0);
+                    List<NeuralTrainingInstance> instances = allInstances.subList(s,e);
                     classifier.fit(instances, step, step % (options.UASEvalPerStep / 10) == 0 ? true : false);
                     s = e;
-                    e = Math.min(dataSet.size(), options.batchSize + e);
+                    e = Math.min(allInstances.size(), options.batchSize + e);
 
                     if (options.updaterType == UpdaterType.SGD) {
                         if (step % decayStep == 0) {
@@ -204,7 +206,7 @@ public class YaraParser {
                         }
                     }
 
-                    if (s >= dataSet.size())
+                    if (s >= allInstances.size())
                         break;
                 }
             }
