@@ -85,10 +85,15 @@ public class IndexMaps implements Serializable {
         String line;
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split(" ");
-            if (wordMap.containsKey(spl[0])) {
+            int wordIndex = -1;
+            if (wordMap.containsKey(spl[0]))
+                wordIndex = wordMap.get(spl[0]);
+            else if (wordMap.containsKey(spl[0].toLowerCase()))
+                wordIndex = wordMap.get(spl[0].toLowerCase());
+
+            if (wordIndex != -1) {
                 double[] e = new double[spl.length - 1];
                 eDim = e.length;
-                int wordIndex = wordMap.get(spl[0]);
                 for (int i = 0; i < e.length; i++) {
                     e[i] = Double.parseDouble(spl[i + 1]);
                 }

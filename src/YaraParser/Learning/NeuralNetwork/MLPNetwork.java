@@ -131,28 +131,30 @@ public class MLPNetwork implements Serializable {
             }
         }
 
+        double stdDev = 0.01;
+        double reluBiasInit = 0.2;
         for (int i = 0; i < numPos; i++) {
             for (int j = 0; j < posEmbeddingDim; j++) {
-                matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * 0.01);
+                matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < numDepLabels; i++) {
             for (int j = 0; j < labelEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * 0.01);
+                matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < hiddenLayerDim; i++) {
-            matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, 0.2);
+            matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, reluBiasInit);
             for (int j = 0; j < hiddenLayerIntDim; j++) {
-                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * 0.01);
+                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < softmaxLayerDim; i++) {
             for (int j = 0; j < hiddenLayerDim; j++) {
-                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * 0.01);
+                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * stdDev);
             }
         }
     }
