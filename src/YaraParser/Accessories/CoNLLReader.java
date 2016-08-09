@@ -184,8 +184,7 @@ public class CoNLLReader {
      * @return
      */
     public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled,
-                                                 boolean rootFirst, boolean lowerCased, IndexMaps maps) throws
-            Exception {
+                                                 boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
         ArrayList<GoldConfiguration> configurationSet = new ArrayList<>();
         HashSet<String> oovTypes = new HashSet<>();
 
@@ -205,8 +204,8 @@ public class CoNLLReader {
                             if (goldDependencies.get(gold).first.equals(0))
                                 goldDependencies.get(gold).setFirst(tokens.size() + 1);
                         }
-                        tokens.add(0);
-                        tags.add(0);
+                        tokens.add(IndexMaps.RootIndex);
+                        tags.add(IndexMaps.RootIndex);
                     }
                     Sentence currentSentence = new Sentence(tokens, tags);
                     GoldConfiguration goldConfiguration = new GoldConfiguration(currentSentence, goldDependencies);
@@ -267,8 +266,8 @@ public class CoNLLReader {
                     if (goldDependencies.get(gold).first.equals(0))
                         goldDependencies.get(gold).setFirst(goldDependencies.size() + 1);
                 }
-                tokens.add(0);
-                tags.add(0);
+                tokens.add(IndexMaps.RootIndex);
+                tags.add(IndexMaps.RootIndex);
             }
             sentenceCounter++;
             Sentence currentSentence = new Sentence(tokens, tags);
@@ -293,8 +292,8 @@ public class CoNLLReader {
                     CompactTree goldConfiguration = new CompactTree(goldDependencies, tags);
                     treeSet.add(goldConfiguration);
                 }
-                tags = new ArrayList<String>();
-                goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
+                tags = new ArrayList<>();
+                goldDependencies = new HashMap<>();
             } else {
                 String[] splitLine = line.split("\t");
                 if (splitLine.length < 8)

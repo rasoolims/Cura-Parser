@@ -757,15 +757,12 @@ public class FeatureExtractor {
                 int b1Position = state.getBufferItem(1);
                 b1w = (words[b1Position - 1]);
                 b1p = (tags[b1Position - 1]);
-
                 if (2 < state.bufferSize()) {
                     int b2Position = state.getBufferItem(2);
                     b2w = (words[b2Position - 1]);
                     b2p = (tags[b2Position - 1]);
-
                     if (3 < state.bufferSize()) {
                         int b3Position = state.getBufferItem(3);
-
                         b3w = (words[b3Position - 1]);
                         b3p = (tags[b3Position - 1]);
                     }
