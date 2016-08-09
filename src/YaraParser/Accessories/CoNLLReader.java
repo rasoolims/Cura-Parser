@@ -225,7 +225,7 @@ public class CoNLLReader {
                 if (lowerCased)
                     word = word.toLowerCase();
                 int wi = maps.word2Int(word);
-                if (wi == -1)
+                if (wi == IndexMaps.UnknownIndex)
                     oovTypes.add(word);
 
                 String pos = splitLine[3].trim();
