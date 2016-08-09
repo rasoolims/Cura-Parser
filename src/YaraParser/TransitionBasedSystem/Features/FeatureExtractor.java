@@ -656,73 +656,73 @@ public class FeatureExtractor {
         State state = configuration.state;
         Sentence sentence = configuration.sentence;
 
-        int b0w = 1;
-        int b0p = 1;
+        int b0w = IndexMaps.NullIndex;
+        int b0p = IndexMaps.NullIndex;
 
-        int b1w = 1;
-        int b1p = 1;
+        int b1w = IndexMaps.NullIndex;
+        int b1p = IndexMaps.NullIndex;
 
-        int b2w = 1;
-        int b2p = 1;
+        int b2w = IndexMaps.NullIndex;
+        int b2p = IndexMaps.NullIndex;
 
-        int b3w = 1;
-        int b3p = 1;
+        int b3w = IndexMaps.NullIndex;
+        int b3p = IndexMaps.NullIndex;
 
-        int s0w = 1;
-        int s0p = 1;
-        int s0l = 1;
+        int s0w = IndexMaps.NullIndex;
+        int s0p = IndexMaps.NullIndex;
+        int s0l = IndexMaps.LabelNullIndex;
 
-        int s1w = 1;
-        int s1p = 1;
+        int s1w = IndexMaps.NullIndex;
+        int s1p = IndexMaps.NullIndex;
 
-        int s2w = 1;
-        int s2p = 1;
+        int s2w = IndexMaps.NullIndex;
+        int s2p = IndexMaps.NullIndex;
 
-        int s3w = 1;
-        int s3p = 1;
+        int s3w = IndexMaps.NullIndex;
+        int s3p = IndexMaps.NullIndex;
 
-        int b0l1w = 1;
-        int b0l1p = 1;
-        int b0l1l = 1;
+        int b0l1w = IndexMaps.NullIndex;
+        int b0l1p = IndexMaps.NullIndex;
+        int b0l1l = IndexMaps.LabelNullIndex;
 
-        int b0l2w = 1;
-        int b0l2p = 1;
-        int b0l2l = 1;
+        int b0l2w = IndexMaps.NullIndex;
+        int b0l2p = IndexMaps.NullIndex;
+        int b0l2l = IndexMaps.LabelNullIndex;
 
-        int b0llw = 1;
-        int b0llp = 1;
-        int b0lll = 1;
+        int b0llw = IndexMaps.NullIndex;
+        int b0llp = IndexMaps.NullIndex;
+        int b0lll = IndexMaps.LabelNullIndex;
 
-        int sr1p = 1;
-        int sr1w = 1;
-        int sr1l = 1;
+        int sr1p = IndexMaps.NullIndex;
+        int sr1w = IndexMaps.NullIndex;
+        int sr1l = IndexMaps.LabelNullIndex;
 
-        int s0rrp = 1;
-        int s0rrw = 1;
-        int s0rrl = 1;
+        int s0rrp = IndexMaps.NullIndex;
+        int s0rrw = IndexMaps.NullIndex;
+        int s0rrl = IndexMaps.LabelNullIndex;
 
-        int sh0w = 1;
-        int sh0p = 1;
-        int sh0l = 1;
+        int sh0w = IndexMaps.NullIndex;
+        int sh0p = IndexMaps.NullIndex;
+        int sh0l = IndexMaps.LabelNullIndex;
 
-        int s0l1p = 1;
-        int s0l1w = 1;
-        int s0l1l = 1;
+        int s0l1p = IndexMaps.NullIndex;
+        int s0l1w = IndexMaps.NullIndex;
+        int s0l1l = IndexMaps.LabelNullIndex;
 
-        int s0llp = 1;
-        int s0llw = 1;
-        int s0lll = 1;
+        int s0llp = IndexMaps.NullIndex;
+        int s0llw = IndexMaps.NullIndex;
+        int s0lll = IndexMaps.LabelNullIndex;
 
-        int s0r2w = 1;
-        int s0r2p = 1;
-        int s0r2l = 1;
+        int s0r2w = IndexMaps.NullIndex;
+        int s0r2p = IndexMaps.NullIndex;
+        int s0r2l = IndexMaps.LabelNullIndex;
 
-        int sh1w = 1;
-        int sh1p = 1;
+        int sh1w = IndexMaps.NullIndex;
+        int sh1p = IndexMaps.NullIndex;
 
-        int s0l2w = 1;
-        int s0l2p = 1;
-        int s0l2l = 1;
+        int s0l2w = IndexMaps.NullIndex;
+        int s0l2p = IndexMaps.NullIndex;
+        int s0l2l = IndexMaps.LabelNullIndex;
 
         int[] words = sentence.getWords();
         int[] tags = sentence.getTags();
