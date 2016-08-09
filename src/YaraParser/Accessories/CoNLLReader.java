@@ -12,10 +12,7 @@ import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.TreeMap;
+import java.util.*;
 
 public class CoNLLReader {
     /**
@@ -35,39 +32,26 @@ public class CoNLLReader {
 
     public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased, String clusterFile,
                                           int rareMaxWordCount) throws Exception {
-        HashMap<String, Integer> stringMap = new HashMap<String, Integer>();
-        HashMap<Integer, Integer> labelMap = new HashMap<Integer, Integer>();
         HashMap<String, String> str2clusterMap = new HashMap<>();
 
-        HashMap<Integer, Integer> wordMap = new HashMap<Integer, Integer>();
-        HashMap<Integer, Integer> depRelationMap = new HashMap<Integer, Integer>();
-        HashMap<Integer, Integer> posMap = new HashMap<Integer, Integer>();
+        HashMap<String, Integer> wordMap = new HashMap<>();
+        HashMap<String, Integer> depRelationMap = new HashMap<>();
+        HashMap<String, Integer> posMap = new HashMap<>();
 
-        wordMap.put(0, 2);
         int wc = 3; // 0 for OOV, 1 for null, 2 for ROOT!
 
-
         String rootString = "ROOT";
-        int wi = 1;
-        int labelCount = 3;
-        if (labeled) {
-            wi = 1;
-            stringMap.put(rootString, 0);
-            labelMap.put(0, 0);
-            depRelationMap.put(0, 2);
-        } else {
-            stringMap.put(rootString, 0);
-            wi = 0;
-            labelCount = 2;
-        }
 
         HashMap<String, Integer> wordCount = new HashMap<>();
+        HashSet<String> labels = new HashSet<>();
+        HashSet<String> tags = new HashSet<>();
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
         String line;
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
                 String word = spl[1];
+                String pos = spl[3];
                 if (lowercased)
                     word = word.toLowerCase();
                 if (wordCount.containsKey(word))
@@ -83,38 +67,24 @@ public class CoNLLReader {
                     label = "-";
                 if (!labeled)
                     label = "~";
-                if (!stringMap.containsKey(label)) {
-                    labelMap.put(wi, labelCount);
-                    depRelationMap.put(wi, labelCount);
-                    labelCount++;
-                    stringMap.put(label, wi++);
-                }
+                labels.add(label);
+                tags.add(pos);
             }
         }
 
-        reader = new BufferedReader(new FileReader(filePath));
-        while ((line = reader.readLine()) != null) {
-            String[] spl = line.trim().split("\t");
-            if (spl.length > 7) {
-                String pos = spl[3];
-                if (!stringMap.containsKey(pos)) {
-                    stringMap.put(pos, wi++);
-                }
+        depRelationMap.put(rootString, IndexMaps.LabelRootIndex);
+        int l = IndexMaps.LabelRootIndex+1;
+        for(String lab:labels){
+            if(!lab.equals(rootString)){
+                depRelationMap.put(lab, l++);
             }
         }
 
-        posMap.put(0, 2);
-        int posCount = 3;// 0 for OOV, 1 for null, 2 for root!
-        reader = new BufferedReader(new FileReader(filePath));
-        while ((line = reader.readLine()) != null) {
-            String[] spl = line.trim().split("\t");
-            if (spl.length > 7) {
-                String pos = spl[3];
-                if (!posMap.containsKey(stringMap.get(pos))) {
-                    posMap.put(stringMap.get(pos), posCount++);
-                }
-            }
-        }
+        posMap.put(rootString, IndexMaps.RootIndex);
+        int p = IndexMaps.RootIndex + 1;
+        for(String pos:tags)
+            if(!pos.equals(rootString))
+                posMap.put(pos, p++);
 
 
         if (clusterFile.length() > 0) {
@@ -129,10 +99,13 @@ public class CoNLLReader {
             }
         }
 
+
         HashSet<Integer> rareWords = new HashSet<>();
 
         // todo indexing may be false
-        int addedCluster = 0;
+        int wi = IndexMaps.RootIndex;
+        wordMap.put(rootString, wi++);
+        HashSet<String> addedClusters = new HashSet<>();
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
@@ -140,43 +113,23 @@ public class CoNLLReader {
                 String word = spl[1];
                 if (lowercased)
                     word = word.toLowerCase();
-                if (wordCount.get(word) > rareMaxWordCount && !stringMap.containsKey(word)) {
-                    stringMap.put(word, wi++);
+                if (wordCount.get(word) > rareMaxWordCount && !wordMap.containsKey(word)) {
+                    wordMap.put(word, wi++);
                 } else if (wordCount.get(word) <= rareMaxWordCount && str2clusterMap.containsKey(word)) {
                     String c = str2clusterMap.get(word);
 
-                    if (!wordCount.containsKey(c)) {
-                        wordCount.put(c, 1);
-                        addedCluster++;
-                    } else
-                        wordCount.put(c, wordCount.get(c) + 1);
-
-                    if (!stringMap.containsKey(c)) {
-                        stringMap.put(c, wi++);
-                    }
+                   if(!wordMap.containsKey(c)) {
+                       wordMap.put(c, wi++);
+                       addedClusters.add(c);
+                   }
                 }
             }
         }
 
-        reader = new BufferedReader(new FileReader(filePath));
-        while ((line = reader.readLine()) != null) {
-            String[] spl = line.trim().split("\t");
-            if (spl.length > 7) {
-                String word = spl[1];
-                if (lowercased)
-                    word = word.toLowerCase();
-                if (wordCount.get(word) > rareMaxWordCount && !wordMap.containsKey(stringMap.get(word))) {
-                    if (wordCount.get(word) == 1)
-                        rareWords.add(wc);
-                    wordMap.put(stringMap.get(word), wc++);
-                } else if (wordCount.get(word) <= rareMaxWordCount && str2clusterMap.containsKey(word)) {
-                    String c = str2clusterMap.get(word);
-                    int key = stringMap.get(c);
-                    if (!wordMap.containsKey(key)) {
-                        wordMap.put(key, wc++);
-                    }
-                }
-            }
+       Object[] wordsSet = str2clusterMap.keySet().toArray().clone();
+        for(Object word: wordsSet){
+            if(!addedClusters.contains(str2clusterMap.get(word)))
+                str2clusterMap.remove(word);
         }
 
         int word2cluster = 0;
@@ -188,14 +141,14 @@ public class CoNLLReader {
                     word2cluster++;
             }
         }
-        System.out.println("#rare_types: " + rare + " out of " + (wordCount.size() - addedCluster));
+        System.out.println("#rare_types: " + rare + " out of " + (wordCount.size()));
         System.out.println("#word2cluster: " + word2cluster + " out of " + rare);
-        System.out.println("#word2cluster (distinct): " + addedCluster);
+        System.out.println("#word2cluster (distinct): " + addedClusters.size());
 
         TreeMap<Integer, HashSet<Integer>> sortedCounts = new TreeMap<>();
         for (String word : wordCount.keySet()) {
-            if (stringMap.containsKey(word) && wordMap.containsKey(stringMap.get(word))) {
-                int id = wordMap.get(stringMap.get(word));
+            if (wordMap.containsKey(word) && wordMap.containsKey(wordMap.get(word))) {
+                int id = wordMap.get(wordMap.get(word));
                 int count = wordCount.get(word);
                 if (!sortedCounts.containsKey(count))
                     sortedCounts.put(count, new HashSet<Integer>());
@@ -219,7 +172,7 @@ public class CoNLLReader {
             }
         }
 
-        return new IndexMaps(stringMap, labelMap, rootString, wordMap, posMap, depRelationMap, rareWords, preComputeMap, str2clusterMap);
+        return new IndexMaps(rootString, wordMap, posMap, depRelationMap, rareWords, preComputeMap, str2clusterMap);
     }
 
 
@@ -230,15 +183,14 @@ public class CoNLLReader {
     public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled,
                                                  boolean rootFirst, boolean lowerCased, IndexMaps maps) throws
             Exception {
-        HashMap<String, Integer> wordMap = maps.getStringMap();
-        ArrayList<GoldConfiguration> configurationSet = new ArrayList<GoldConfiguration>();
+        ArrayList<GoldConfiguration> configurationSet = new ArrayList<>();
         HashSet<String> oovTypes = new HashSet<>();
 
         String line;
-        ArrayList<Integer> tokens = new ArrayList<Integer>();
-        ArrayList<Integer> tags = new ArrayList<Integer>();
+        ArrayList<Integer> tokens = new ArrayList<>();
+        ArrayList<Integer> tags = new ArrayList<>();
 
-        HashMap<Integer, Pair<Integer, Integer>> goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
+        HashMap<Integer, Pair<Integer, Integer>> goldDependencies = new HashMap<>();
         int sentenceCounter = 0;
         while ((line = fileReader.readLine()) != null) {
             line = line.trim();
@@ -257,13 +209,13 @@ public class CoNLLReader {
                     GoldConfiguration goldConfiguration = new GoldConfiguration(currentSentence, goldDependencies);
                     if (keepNonProjective || !goldConfiguration.isNonprojective())
                         configurationSet.add(goldConfiguration);
-                    goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
-                    tokens = new ArrayList<Integer>();
-                    tags = new ArrayList<Integer>();
+                    goldDependencies = new HashMap<>();
+                    tokens = new ArrayList<>();
+                    tags = new ArrayList<>();
                 } else {
-                    goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
-                    tokens = new ArrayList<Integer>();
-                    tags = new ArrayList<Integer>();
+                    goldDependencies = new HashMap<>();
+                    tokens = new ArrayList<>();
+                    tags = new ArrayList<>();
                 }
                 if (sentenceCounter >= limit) {
                     System.out.println("buffer full..." + configurationSet.size());
@@ -277,20 +229,12 @@ public class CoNLLReader {
                 String word = splitLine[1].trim();
                 if (lowerCased)
                     word = word.toLowerCase();
-                String pos = splitLine[3].trim();
-
-                int wi;
-                if (wordMap.containsKey(word)) {
-                    wi = wordMap.get(word);
-                } else {
-                    wi = maps.clusterIdForWord(word);
+                int wi = maps.word2Int(word);
                     if (wi == -1)
                         oovTypes.add(word);
-                }
 
-                int pi = -1;
-                if (wordMap.containsKey(pos))
-                    pi = wordMap.get(pos);
+                String pos = splitLine[3].trim();
+                int pi = maps.pos2Int(pos);
 
                 tags.add(pi);
                 tokens.add(wi);
@@ -306,12 +250,9 @@ public class CoNLLReader {
                 if (!labeled)
                     relation = "~";
 
-                int ri = 0;
-                if (wordMap.containsKey(relation))
-                    ri = wordMap.get(relation);
-                if (headIndex == -1)
-                    ri = -1;
-
+                int ri = -1;
+                if (headIndex != -1)
+                    ri = maps.dep2Int(relation);
 
                 if (headIndex >= 0)
                     goldDependencies.put(wordIndex, new Pair<>(headIndex, ri));

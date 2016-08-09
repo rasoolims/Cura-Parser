@@ -9,6 +9,7 @@ import YaraParser.Accessories.CoNLLReader;
 import YaraParser.Accessories.Evaluator;
 import YaraParser.Accessories.Options;
 import YaraParser.Accessories.Pair;
+import YaraParser.Learning.Activation.ActivationType;
 import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Learning.AveragingOption;
 import YaraParser.Learning.NeuralNetwork.MLPClassifier;
@@ -41,15 +42,16 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = false;
             options.hiddenLayer1Size = 200;
-            options.learningRate = 0.01;
+            options.learningRate = 0.001;
             options.batchSize = 320;
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
             options.numOfThreads = 1;
             options.UASEvalPerStep = 10;
-            options.updaterType = UpdaterType.ADAGRAD;
+            options.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
+            options.activationType = ActivationType.RELU;
         }
 
         if (options.showHelp) {
@@ -104,7 +106,7 @@ public class YaraParser {
             System.out.println("CoNLL data reading done!");
 
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab : maps.getLabelMap().keySet())
+            for (int lab=0; lab< maps.relSize(); lab++)
                 dependencyLabels.add(lab);
 
             int featureLength = options.useExtendedFeatures ? 72 : 26;

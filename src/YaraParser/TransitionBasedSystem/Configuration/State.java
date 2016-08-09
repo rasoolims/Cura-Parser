@@ -6,6 +6,7 @@
 package YaraParser.TransitionBasedSystem.Configuration;
 
 import YaraParser.Accessories.Pair;
+import YaraParser.Structures.IndexMaps;
 
 import java.util.ArrayDeque;
 
@@ -217,7 +218,7 @@ public class State implements Cloneable {
     public int getDependency(int index) {
         if (arcs[index] != null)
             return arcs[index].second;
-        return -1;
+        return IndexMaps.LabelNullIndex;
     }
 
     public void setMaxSentenceSize(int maxSentenceSize) {
@@ -238,7 +239,7 @@ public class State implements Cloneable {
     @Override
     public State clone() {
         State state = new State(arcs.length - 1);
-        state.stack = new ArrayDeque<Integer>(stack);
+        state.stack = new ArrayDeque<>(stack);
 
         for (int dependent = 0; dependent < arcs.length; dependent++) {
             if (arcs[dependent] != null) {

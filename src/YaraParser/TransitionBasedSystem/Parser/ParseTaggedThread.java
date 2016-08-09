@@ -41,8 +41,6 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
 
     @Override
     public Pair<String, Integer> call() throws Exception {
-        HashMap<String, Integer> wordMap = maps.getStringMap();
-
         line = line.trim();
         String[] wrds = line.split(" ");
         String[] words = new String[wrds.length];
@@ -63,14 +61,8 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
             words[i] = word;
             posTags[i++] = pos;
 
-            int wi = -1;
-            if (wordMap.containsKey(word))
-                wi = wordMap.get(word);
-
-            int pi = -1;
-            if (wordMap.containsKey(pos))
-                pi = wordMap.get(pos);
-
+            int wi = maps.word2Int(word);
+            int pi = maps.pos2Int(pos);
             tokens.add(wi);
             tags.add(pi);
         }
@@ -101,7 +93,7 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
 
                 if (head == bestParse.state.rootIndex)
                     head = 0;
-                String label = head == 0 ? maps.rootString : maps.revStrings[dep];
+                String label = head == 0 ? maps.rootString : maps.revLabels[dep];
 
                 String output = w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" +
                         label + "\t_\t_\n";
@@ -110,8 +102,8 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
             if (words.length > 0)
                 finalOutput.append("\n");
 
-            return new Pair<String, Integer>(finalOutput.toString(), lineNum);
+            return new Pair<>(finalOutput.toString(), lineNum);
         }
-        return new Pair<String, Integer>("", lineNum);
+        return new Pair<>("", lineNum);
     }
 }

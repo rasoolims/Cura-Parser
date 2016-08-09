@@ -5,6 +5,7 @@
 
 package YaraParser.TransitionBasedSystem.Configuration;
 
+import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.Sentence;
 
 import java.io.Serializable;

@@ -119,7 +119,7 @@ public class MLPNetworkTest {
         options.inputFile = txtFilePath;
         IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
         ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
-        for (int lab : maps.getLabelMap().keySet())
+        for (int lab=0; lab< maps.relSize(); lab++)
             dependencyLabels.add(lab);
         CoNLLReader reader = new CoNLLReader(options.inputFile);
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options

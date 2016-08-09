@@ -53,7 +53,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         this.featureLength = featureLength;
         this.maps = maps;
         executor = Executors.newFixedThreadPool(numOfThreads);
-        pool = new ExecutorCompletionService<ArrayList<BeamElement>>(executor);
+        pool = new ExecutorCompletionService<>(executor);
     }
 
     public static KBeamArcEagerParser createParser(String modelPath, int numOfThreads) throws Exception {
@@ -103,7 +103,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     newConfig.addAction(3 + label);
                 } else if (action == 3) {
                     ArcEager.leftArc(newConfig.state, label);
-                    newConfig.addAction(3 + maps.getLabelMap().size() + label);
+                    newConfig.addAction(3 + maps.relSize() + label);
                 } else if (action == 4) {
                     ArcEager.unShift(newConfig.state);
                     newConfig.addAction(2);
@@ -211,8 +211,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     public static void parseNNConllFileNoParallel(final MLPNetwork nnInf, String inputFile, String outputFile,
                                                   int beamWidth, int numOfThreads, boolean partial, String scorePath)
             throws Exception {
-
-
         Options options = nnInf.options;
         IndexMaps maps = nnInf.maps;
         ArrayList<Integer> dependencyLabels = nnInf.depLabels;
@@ -265,7 +263,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (head == bestParse.state.rootIndex)
                         head = 0;
 
-                    String label = head == 0 ? maps.rootString : maps.revStrings[dep];
+                    String label = head == 0 ? maps.rootString : maps.revLabels[dep];
                     String output = head + "\t" + label + "\n";
                     finalOutput.append(output);
                 }
@@ -743,7 +741,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (head == bestParse.state.rootIndex)
                         head = 0;
 
-                    String label = head == 0 ? maps.rootString : maps.revStrings[dep];
+                    String label = head == 0 ? maps.rootString : maps.revLabels[dep];
                     String output = head + "\t" + label + "\n";
                     finalOutput.append(output);
                 }
@@ -930,7 +928,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (head == bestParse.state.rootIndex)
                         head = 0;
 
-                    String label = head == 0 ? maps.rootString : maps.revStrings[dep];
+                    String label = head == 0 ? maps.rootString : maps.revLabels[dep];
                     String output = head + "\t" + label + "\n";
                     finalOutput.append(output);
                 }

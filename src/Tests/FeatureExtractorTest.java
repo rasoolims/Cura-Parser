@@ -60,7 +60,7 @@ public class FeatureExtractorTest {
 
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
-        for (int lab : maps.getLabelMap().keySet())
+        for (int lab=0; lab< maps.relSize(); lab++)
             dependencyLabels.add(lab);
 
         CoNLLReader reader = new CoNLLReader(tmpPath);
@@ -79,16 +79,16 @@ public class FeatureExtractorTest {
          */
         int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
         assert baseFeatures[0] == 1;
-        assert baseFeatures[4] == maps.getNeuralWordKey(sentence.getWords()[0]);
+        assert baseFeatures[4] == (sentence.getWords()[0]);
         assert baseFeatures[19] == 1;
-        assert baseFeatures[23] == maps.getNeuralPOSKey(sentence.getTags()[0]);
+        assert baseFeatures[23] == (sentence.getTags()[0]);
         assert baseFeatures[40] == 1;
         ArcEager.shift(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
-        assert baseFeatures[0] == maps.getNeuralWordKey(sentence.getWords()[0]);
-        assert baseFeatures[4] == maps.getNeuralWordKey(sentence.getWords()[1]);
-        assert baseFeatures[19] == maps.getNeuralPOSKey(sentence.getTags()[0]);
-        assert baseFeatures[23] == maps.getNeuralPOSKey(sentence.getTags()[1]);
+        assert baseFeatures[0] == (sentence.getWords()[0]);
+        assert baseFeatures[4] == (sentence.getWords()[1]);
+        assert baseFeatures[19] == (sentence.getTags()[0]);
+        assert baseFeatures[23] == (sentence.getTags()[1]);
         assert baseFeatures[40] == 1;
         ArcEager.shift(configuration.state);
         ArcEager.leftArc(configuration.state, 1);
@@ -97,7 +97,7 @@ public class FeatureExtractorTest {
         ArcEager.shift(configuration.state);
         ArcEager.rightArc(configuration.state, 2);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps);
-        assert baseFeatures[38] == maps.getNeuralDepRelationKey(configuration.state.getDependency(5));
+        assert baseFeatures[38] == (configuration.state.getDependency(5));
         ArcEager.reduce(configuration.state);
         ArcEager.leftArc(configuration.state, 0);
     }
@@ -106,23 +106,5 @@ public class FeatureExtractorTest {
         BufferedWriter writer = new BufferedWriter(new FileWriter(tmpPath));
         writer.write(conllText);
         writer.close();
-    }
-
-    private Sentence dummySentence(int length, int numOfPos, int numOfWords) {
-        ArrayList<Integer> tokens = new ArrayList<>();
-        ArrayList<Integer> pos = new ArrayList<>();
-        ArrayList<Integer> dummyB = new ArrayList<>();
-
-        Random random = new Random(0);
-        for (int i = 0; i < length; i++) {
-            tokens.add(random.nextInt(numOfWords));
-            pos.add(random.nextInt(numOfPos));
-            dummyB.add(-1);
-        }
-        tokens.add(0);
-        pos.add(0);
-        dummyB.add(-1);
-        return new Sentence(tokens, pos);
-
     }
 }
