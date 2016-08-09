@@ -92,8 +92,7 @@ public class IndexMaps implements Serializable {
                 for (int i = 0; i < e.length; i++) {
                     e[i] = Double.parseDouble(spl[i + 1]);
                 }
-                // adding 2 for unknown and null
-                embeddingsDictionary.put(wordIndex + 2, e);
+                embeddingsDictionary.put(wordIndex, e);
             }
         }
         return eDim;
@@ -102,16 +101,6 @@ public class IndexMaps implements Serializable {
 
     public double[] embeddings(int wordIndex) {
         return embeddingsDictionary.get(wordIndex);
-    }
-
-    public int clusterIdForWord(String word) {
-        int id = -1;
-        if (str2clusterMap.containsKey(word)) {
-            String c = str2clusterMap.get(word);
-            if (wordMap.containsKey(c))
-                return wordMap.get(wordMap.get(c));
-        }
-        return id;
     }
 
     public int word2Int(String word) {
