@@ -21,7 +21,7 @@ import java.util.concurrent.*;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
-public class MLPClassifier {
+public class MLPTrainer {
     MLPNetwork net;
 
     /**
@@ -47,7 +47,7 @@ public class MLPClassifier {
     private double regCoef;
     private double dropoutProb;
 
-    public MLPClassifier(MLPNetwork net, UpdaterType updaterType, double momentum, double learningRate, double regCoef, int numThreads, double
+    public MLPTrainer(MLPNetwork net, UpdaterType updaterType, double momentum, double learningRate, double regCoef, int numThreads, double
             dropoutProb)
             throws Exception {
         this.net = net;

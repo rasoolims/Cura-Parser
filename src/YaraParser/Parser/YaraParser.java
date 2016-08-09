@@ -12,7 +12,7 @@ import YaraParser.Accessories.Pair;
 import YaraParser.Learning.Activation.ActivationType;
 import YaraParser.Learning.AveragedPerceptron;
 import YaraParser.Learning.AveragingOption;
-import YaraParser.Learning.NeuralNetwork.MLPClassifier;
+import YaraParser.Learning.NeuralNetwork.MLPTrainer;
 import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Learning.Updater.UpdaterType;
 import YaraParser.Structures.IndexMaps;
@@ -38,12 +38,12 @@ public class YaraParser {
             options.inputFile = "/Users/msr/Desktop/data/dev_smal.conll";
             options.devPath = "/Users/msr/Desktop/data/train_smal.conll";
             options.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
-            options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
+           // options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
             options.modelFile = "/tmp/model";
-            options.labeled = false;
+            options.labeled = true;
             options.hiddenLayer1Size = 200;
             options.learningRate = 0.001;
-            options.batchSize = 320;
+            options.batchSize = 128;
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
@@ -135,7 +135,7 @@ public class YaraParser {
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
 
-            MLPClassifier classifier = new MLPClassifier(mlpNetwork, options.updaterType, 0.9, options.learningRate, 0.0001, options.numOfThreads,
+            MLPTrainer classifier = new MLPTrainer(mlpNetwork, options.updaterType, 0.9, options.learningRate, 0.0001, options.numOfThreads,
                     options.dropoutProbForHiddenLayer);
 
 
