@@ -24,7 +24,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -41,7 +40,7 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = true;
             options.hiddenLayer1Size = 200;
-            options.learningRate = 0.01;
+            options.learningRate = 0.001;
             options.batchSize = 1024;
             options.trainingIter = 3000;
             options.beamWidth = 1;
@@ -154,7 +153,7 @@ public class YaraParser {
                     try {
                         neuralTrainer.fit(instances, step, step % (options.UASEvalPerStep / 10) == 0 ? true : false);
                     } catch (Exception ex) {
-                        System.err.println("Exception occurred: "+ex.getMessage());
+                        System.err.println("Exception occurred: " + ex.getMessage());
                         System.exit(1);
                     }
                     s = e;

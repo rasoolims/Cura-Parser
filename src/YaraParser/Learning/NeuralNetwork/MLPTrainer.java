@@ -169,7 +169,7 @@ public class MLPTrainer {
             cost += result.first.first;
             correct += result.first.second;
         }
-        if(Double.isNaN(cost))
+        if (Double.isNaN(cost))
             throw new Exception("cost is not a number");
     }
 
