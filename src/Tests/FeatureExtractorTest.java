@@ -65,10 +65,6 @@ public class FeatureExtractorTest {
         writeConllFile(conllText);
 
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
-        ArrayList<Integer> dependencyLabels = new ArrayList<>();
-        for (int lab = 0; lab < maps.relSize(); lab++)
-            dependencyLabels.add(lab);
-
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
@@ -112,10 +108,6 @@ public class FeatureExtractorTest {
         writeConllFile(shortConllText);
 
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
-        ArrayList<Integer> dependencyLabels = new ArrayList<>();
-        for (int lab = 0; lab < maps.relSize(); lab++)
-            dependencyLabels.add(lab);
-
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
@@ -259,10 +251,6 @@ public class FeatureExtractorTest {
         writeConllFile(shortConllOOVText);
 
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", 1);
-        ArrayList<Integer> dependencyLabels = new ArrayList<>();
-        for (int lab = 0; lab < maps.relSize(); lab++)
-            dependencyLabels.add(lab);
-
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
