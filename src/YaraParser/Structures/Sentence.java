@@ -43,7 +43,6 @@ public class Sentence implements Comparable {
         return tags;
     }
 
-
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Sentence) {
