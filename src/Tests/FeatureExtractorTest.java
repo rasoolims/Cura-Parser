@@ -245,7 +245,6 @@ public class FeatureExtractorTest {
         assert baseFeatures[16] == maps.word2Int("Terms");
     }
 
-
     @Test
     public void testOOVFeatureConsistency() throws Exception {
         writeConllFile(shortConllOOVText);
