@@ -125,6 +125,8 @@ public class YaraParser {
             System.out.println("size of training data (#sens): " + dataSet.size());
             System.out.println("Embedding dimension " + wDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels, maps);
+            ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
+            maps.constructPreComputeMap(allInstances, 19, 10000);
 
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
@@ -136,7 +138,6 @@ public class YaraParser {
 
             int step = 0;
             double bestModelUAS = 0;
-            ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             int decayStep = (int) (options.decayStep * allInstances.size() / options.batchSize);
             decayStep = decayStep == 0 ? 1 : decayStep;
             System.out.println("Decay after every " + decayStep + " batches");

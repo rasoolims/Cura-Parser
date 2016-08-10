@@ -136,14 +136,15 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
-                savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
                 savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers() + network.getNumPosLayers();
@@ -206,14 +207,15 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
-                savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
                 savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers() + network.getNumPosLayers();
@@ -262,14 +264,15 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
-                savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
                 savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers() + network.getNumPosLayers();
@@ -332,14 +335,15 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
-                savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
                 savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers() + network.getNumPosLayers();
@@ -403,14 +407,15 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
-                savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
                 savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers() + network.getNumPosLayers();
@@ -473,14 +478,15 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
-                savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
                 savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers() + network.getNumPosLayers();
@@ -541,14 +547,15 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
-                savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
                 savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers() + network.getNumPosLayers();
@@ -611,14 +618,15 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
-                savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
                 savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers() + network.getNumPosLayers();
@@ -679,14 +687,15 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
-                savedGradients[i] = new double[network.maps.preComputeMap.size()][network.getHiddenLayerDim()];
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
                 savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
             for (int i = network.getNumWordLayers() + network.getNumPosLayers();

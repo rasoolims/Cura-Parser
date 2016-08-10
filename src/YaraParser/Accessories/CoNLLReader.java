@@ -15,7 +15,6 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.TreeMap;
 
 public class CoNLLReader {
     /**
@@ -141,35 +140,7 @@ public class CoNLLReader {
         System.out.println("#rare_types: " + rare + " out of " + (wordCount.size()));
         System.out.println("#word2cluster: " + word2cluster + " out of " + rare);
         System.out.println("#word2cluster (distinct): " + addedClusters.size());
-
-        TreeMap<Integer, HashSet<Integer>> sortedCounts = new TreeMap<>();
-        for (String word : wordCount.keySet()) {
-            if (wordMap.containsKey(word) && wordMap.containsKey(wordMap.get(word))) {
-                int id = wordMap.get(wordMap.get(word));
-                int count = wordCount.get(word);
-                if (!sortedCounts.containsKey(count))
-                    sortedCounts.put(count, new HashSet<Integer>());
-                sortedCounts.get(count).add(id);
-            }
-        }
-
-        HashMap<Integer, Integer> preComputeMap = new HashMap<>();
-        int wCount = 0;
-        preComputeMap.put(IndexMaps.UnknownIndex, wCount++);
-        preComputeMap.put(IndexMaps.NullIndex, wCount++);
-        preComputeMap.put(IndexMaps.RootIndex, wCount++);
-
-        for (int count : sortedCounts.descendingKeySet()) {
-            HashSet<Integer> ids = sortedCounts.get(count);
-            for (int id : ids) {
-                if (id > 2)
-                    preComputeMap.put(id, wCount++);
-                if (wCount >= 1000)
-                    break;
-            }
-        }
-
-        return new IndexMaps(rootString, wordMap, posMap, depRelationMap, rareWords, preComputeMap, str2clusterMap);
+        return new IndexMaps(rootString, wordMap, posMap, depRelationMap, rareWords, str2clusterMap);
     }
 
     /**

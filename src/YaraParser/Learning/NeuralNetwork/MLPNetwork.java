@@ -171,7 +171,7 @@ public class MLPNetwork implements Serializable {
 
         saved = new double[numWordLayers + numPosLayers + numDepLayers][][];
         for (int i = 0; i < numWordLayers; i++)
-            saved[i] = new double[maps.preComputeMap.size()][hiddenLayerDim];
+            saved[i] = new double[maps.preComputeMap[i].size()][hiddenLayerDim];
         for (int i = numWordLayers; i < numWordLayers + numPosLayers; i++)
             saved[i] = new double[numPos][hiddenLayerDim];
         for (int i = numWordLayers + numPosLayers; i < numWordLayers + numPosLayers + numDepLayers; i++)
@@ -179,8 +179,8 @@ public class MLPNetwork implements Serializable {
 
         int offset = 0;
         for (int pos = 0; pos < numWordLayers; pos++) {
-            for (int tok : maps.preComputeMap.keySet()) {
-                int id = maps.preComputeMap.get(tok);
+            for (int tok : maps.preComputeMap[pos].keySet()) {
+                int id = maps.preComputeMap[pos].get(tok);
                 for (int h = 0; h < hiddenLayerDim; h++) {
                     for (int k = 0; k < wordEmbedDim; k++) {
                         saved[pos][id][h] += hiddenLayer[h][offset + k] * wordEmbeddings[tok][k];
@@ -235,10 +235,10 @@ public class MLPNetwork implements Serializable {
                 embedding = posEmbeddings;
             else embedding = labelEmbeddings;
 
-            if (saved != null && (j >= numWordLayers || maps.preComputeMap.containsKey(tok))) {
+            if (saved != null && (j >= numWordLayers || maps.preComputeMap[j].containsKey(tok))) {
                 int id = tok;
                 if (j < numWordLayers)
-                    id = maps.preComputeMap.get(tok);
+                    id = maps.preComputeMap[j].get(tok);
                 double[] s = saved[j][id];
                 for (int i = 0; i < hidden.length; i++) {
                     hidden[i] += s[i];

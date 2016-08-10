@@ -1,10 +1,14 @@
 package YaraParser.Structures;
 
+import YaraParser.Accessories.Pair;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.TreeMap;
 
 public class IndexMaps implements Serializable {
     public static final int RootIndex = 2;
@@ -15,7 +19,7 @@ public class IndexMaps implements Serializable {
     public static int LabelNullIndex;
     public final String rootString;
     public final HashSet<Integer> rareWords;
-    public final HashMap<Integer, Integer> preComputeMap;
+    public HashMap<Integer, Integer>[] preComputeMap;
     public String[] revWords;
     public String[] revLabels;
     public String[] revPos;
@@ -29,7 +33,7 @@ public class IndexMaps implements Serializable {
 
 
     public IndexMaps(String rootString, HashMap<String, Integer> wordMap, HashMap<String, Integer> posMap, HashMap<String, Integer> depRelationMap,
-                     HashSet<Integer> rareWords, HashMap<Integer, Integer> preComputeMap, HashMap<String, String> str2clusterMap) {
+                     HashSet<Integer> rareWords, HashMap<String, String> str2clusterMap) {
         this.wordMap = wordMap;
         this.rootString = rootString;
         this.posMap = posMap;
@@ -57,7 +61,6 @@ public class IndexMaps implements Serializable {
 
         embeddingsDictionary = new HashMap<>();
         this.rareWords = rareWords;
-        this.preComputeMap = preComputeMap;
     }
 
     public int vocabSize() {
@@ -102,7 +105,7 @@ public class IndexMaps implements Serializable {
         return embeddingsDictionary.get(wordIndex);
     }
 
-    public void emptyEmbeddings(){
+    public void emptyEmbeddings() {
         embeddingsDictionary = null;
     }
 
@@ -126,5 +129,50 @@ public class IndexMaps implements Serializable {
         if (depRelationMap.containsKey(dep))
             return depRelationMap.get(dep);
         return LabelUnknownIndex;
+    }
+
+    public void constructPreComputeMap(List<NeuralTrainingInstance> instances, int numWordLayer, int maxNumber) {
+        HashMap<Integer, Integer>[] counts = new HashMap[numWordLayer];
+        preComputeMap = new HashMap[numWordLayer];
+
+        for (int i = 0; i < counts.length; i++) {
+            counts[i] = new HashMap<>();
+            preComputeMap[i] = new HashMap<>();
+        }
+
+        for (NeuralTrainingInstance instance : instances) {
+            int[] feats = instance.getFeatures();
+            for (int i = 0; i < numWordLayer; i++) {
+                int f = feats[i];
+                if (counts[i].containsKey(f))
+                    counts[i].put(f, counts[i].get(f) + 1);
+                else
+                    counts[i].put(f, 1);
+            }
+        }
+
+        TreeMap<Integer, HashSet<Pair<Integer, Integer>>> sortedCounts = new TreeMap<>();
+        for (int i = 0; i < counts.length; i++) {
+            for (int f : counts[i].keySet()) {
+                int count = counts[i].get(f);
+                if (!sortedCounts.containsKey(count))
+                    sortedCounts.put(count, new HashSet<Pair<Integer, Integer>>());
+                sortedCounts.get(count).add(new Pair<>(i, f));
+            }
+        }
+
+        int c = 0;
+        int[] slotcounter = new int[preComputeMap.length];
+
+        for (int count : sortedCounts.descendingKeySet()) {
+            for (Pair<Integer, Integer> p : sortedCounts.get(count)) {
+                c++;
+                preComputeMap[p.first].put(p.second, slotcounter[p.first]);
+                slotcounter[p.first] += 1;
+            }
+            if (c >= maxNumber)
+                break;
+        }
+
     }
 }

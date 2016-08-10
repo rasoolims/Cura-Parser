@@ -58,7 +58,7 @@ public class Pair<T1, T2> implements Comparable, Cloneable, Serializable {
         if (equals(o))
             return 0;
         int diff = hashCode() - o.hashCode();
-        if(diff!=0) return diff;
+        if (diff != 0) return diff;
         return 1;
     }
 }

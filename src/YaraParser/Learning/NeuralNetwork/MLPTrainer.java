@@ -199,7 +199,7 @@ public class MLPTrainer {
         double[][] lE = net.matrices.getLabelEmbedding();
         for (int index = 0; index < net.numWordLayers; index++) {
             for (int tok : wordsSeen[index]) {
-                int id = net.maps.preComputeMap.get(tok);
+                int id = net.maps.preComputeMap[index].get(tok);
                 double[] embedding = wE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
                     double delta = savedGradients[index][id][h];
@@ -278,10 +278,10 @@ public class MLPTrainer {
                 else
                     embedding = labelEmbeddings[tok];
 
-                if (net.saved != null && (j >= net.numWordLayers || net.maps.preComputeMap.containsKey(tok))) {
+                if (net.saved != null && (j >= net.numWordLayers || net.maps.preComputeMap[j].containsKey(tok))) {
                     int id = tok;
                     if (j < net.numWordLayers)
-                        id = net.maps.preComputeMap.get(tok);
+                        id = net.maps.preComputeMap[j].get(tok);
                     double[] s = net.saved[j][id];
                     for (int h : hiddenNodesToUse) {
                         hidden[h] += s[h];
@@ -352,9 +352,9 @@ public class MLPTrainer {
 
             offset = 0;
             for (int index = 0; index < net.getNumWordLayers(); index++) {
-                if (net.maps.preComputeMap.containsKey(features[index])) {
+                if (net.maps.preComputeMap[index].containsKey(features[index])) {
                     featuresSeen[index].add(features[index]);
-                    int id = net.maps.preComputeMap.get(features[index]);
+                    int id = net.maps.preComputeMap[index].get(features[index]);
                     for (int h : hiddenNodesToUse) {
                         savedGradients[index][id][h] += hiddenGrad[h];
                     }
@@ -409,7 +409,7 @@ public class MLPTrainer {
         private double[][][] instantiateSavedGradients() {
             double[][][] savedGradients = new double[net.numWordLayers + net.numPosLayers + net.numDepLayers][][];
             for (int i = 0; i < net.numWordLayers; i++)
-                savedGradients[i] = new double[net.maps.preComputeMap.size()][net.hiddenLayerDim];
+                savedGradients[i] = new double[net.maps.preComputeMap[i].size()][net.hiddenLayerDim];
             for (int i = net.numWordLayers; i < net.numWordLayers + net.numPosLayers; i++)
                 savedGradients[i] = new double[net.numPos][net.hiddenLayerDim];
             for (int i = net.numWordLayers + net.numPosLayers;
