@@ -117,7 +117,7 @@ public class MLPNetworkTest {
         options.hiddenLayer1Size = 10;
         options.inputFile = txtFilePath;
         IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
-        ArrayList<Integer> dependencyLabels = new ArrayList<Integer>();
+        ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
         CoNLLReader reader = new CoNLLReader(options.inputFile);

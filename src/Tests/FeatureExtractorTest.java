@@ -72,7 +72,7 @@ public class FeatureExtractorTest {
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
-        Sentence sentence = dataSet.get(0).getSentence();//dummySentence(5,mlpNetwork.getNumWords()-2,mlpNetwork.getNumPos()-2);
+        Sentence sentence = dataSet.get(0).getSentence();
         Configuration configuration = new Configuration(sentence, options.rootFirst);
 
         /**
@@ -119,7 +119,7 @@ public class FeatureExtractorTest {
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
-        Sentence sentence = dataSet.get(0).getSentence();//dummySentence(5,mlpNetwork.getNumWords()-2,mlpNetwork.getNumPos()-2);
+        Sentence sentence = dataSet.get(0).getSentence();
         Configuration configuration = new Configuration(sentence, options.rootFirst);
 
         int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
@@ -266,7 +266,7 @@ public class FeatureExtractorTest {
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
-        Sentence sentence = dataSet.get(0).getSentence();//dummySentence(5,mlpNetwork.getNumWords()-2,mlpNetwork.getNumPos()-2);
+        Sentence sentence = dataSet.get(0).getSentence();
         Configuration configuration = new Configuration(sentence, options.rootFirst);
 
         int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
