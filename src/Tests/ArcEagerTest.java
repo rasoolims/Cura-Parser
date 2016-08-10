@@ -25,7 +25,7 @@ import java.util.ArrayList;
 public class ArcEagerTest {
     final String shortConllText = "1\tTerms\t_\tNOUN\t_\t_\t4\tnsubjpass\t_\t_\n" +
             "2\twere\t_\tVERB\t_\t_\t4\tauxpass\t_\t_\n" +
-            "3\tn't\t_\tADV\t_\t_\t4\tneg\t_\t_\n" +
+            "3\tn't\t_\tADV\t_\t_\t2\tneg\t_\t_\n" +
             "4\tdisclosed\t_\tVERB\t_\t_\t0\tROOT\t_\t_\n" +
             "5\t.\t_\t.\t_\t_\t4\tp\t_\t_";
     final String tmpPath = "/tmp/f.txt";

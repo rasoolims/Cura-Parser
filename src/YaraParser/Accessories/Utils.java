@@ -55,4 +55,24 @@ public class Utils {
         }
         return true;
     }
+
+    public static boolean equals(int[][] o1, int[][] o2) {
+        if (o1.length != o2.length)
+            return false;
+        for (int i = 0; i < o1.length; i++) {
+            if (!equals(o1[i], o2[i]))
+                return false;
+        }
+        return true;
+    }
+
+    public static boolean equals(int[] o1, int[] o2) {
+        if (o1.length != o2.length)
+            return false;
+        for (int i = 0; i < o1.length; i++) {
+            if (o1[i] != o2[i])
+                return false;
+        }
+        return true;
+    }
 }
