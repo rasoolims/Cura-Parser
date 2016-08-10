@@ -155,9 +155,9 @@ public class CoNLLReader {
 
         HashMap<Integer, Integer> preComputeMap = new HashMap<>();
         int wCount = 0;
-        preComputeMap.put(0, wCount++);
-        preComputeMap.put(1, wCount++);
-        preComputeMap.put(2, wCount++);
+        preComputeMap.put(IndexMaps.UnknownIndex, wCount++);
+        preComputeMap.put(IndexMaps.NullIndex, wCount++);
+        preComputeMap.put(IndexMaps.RootIndex, wCount++);
 
         for (int count : sortedCounts.descendingKeySet()) {
             HashSet<Integer> ids = sortedCounts.get(count);
