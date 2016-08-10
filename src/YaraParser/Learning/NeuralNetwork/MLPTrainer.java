@@ -162,12 +162,15 @@ public class MLPTrainer {
         cost += firstResult.first.first;
         correct += firstResult.first.second;
 
+
         for (int i = 1; i < Math.min(instances.size(), numThreads); i++) {
             Pair<Pair<Double, Double>, NetworkMatrices> result = pool.take().get();
             gradients.mergeMatricesInPlaceForNonSaved(result.second);
             cost += result.first.first;
             correct += result.first.second;
         }
+        if(Double.isNaN(cost))
+            throw new Exception("cost is not a number");
     }
 
     public double getLearningRate() {

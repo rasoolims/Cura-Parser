@@ -70,8 +70,8 @@ public class Evaluator {
         DecimalFormat format = new DecimalFormat("##.00");
         double labeledAccuracy = 100.0 * labMatch / all;
         double unlabaledAccuracy = 100.0 * unlabMatch / all;
-        System.out.println("Labeled accuracy: " + format.format(labeledAccuracy));
-        System.out.println("Unlabeled accuracy:  " + format.format(unlabaledAccuracy));
+        System.out.println("las: " + format.format(labeledAccuracy));
+        System.out.println("uas: " + format.format(unlabaledAccuracy));
         double labExact = 100.0 * fullLabMatch / numTree;
         double ulabExact = 100.0 * fullULabMatch / numTree;
         System.out.println("Labeled exact match:  " + format.format(labExact));
