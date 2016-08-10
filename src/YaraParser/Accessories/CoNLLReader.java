@@ -225,7 +225,7 @@ public class CoNLLReader {
             if (!rootFirst) {
                 for (int gold : goldDependencies.keySet()) {
                     if (goldDependencies.get(gold).first.equals(0))
-                        goldDependencies.get(gold).setFirst(goldDependencies.size() + 1);
+                        goldDependencies.get(gold).setFirst(tokens.size() + 1);
                 }
                 tokens.add(IndexMaps.RootIndex);
                 tags.add(IndexMaps.RootIndex);
