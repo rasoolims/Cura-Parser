@@ -155,7 +155,7 @@ public class GradientTest {
             network.preCompute();
 
             NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                    .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                     .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
             classifier.calculateCost(instances, 1, gradients, savedGradients);
 
@@ -226,7 +226,7 @@ public class GradientTest {
             network.preCompute();
 
             NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                    .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                     .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
             classifier.calculateCost(instances, 1, gradients, savedGradients);
 
@@ -283,13 +283,13 @@ public class GradientTest {
             network.preCompute();
 
             NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                    .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                     .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
             classifier.calculateCost(instances, 1, gradients, savedGradients);
 
             double eps = 0.000001;
             for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++) {
-                for (int slot = 0; slot < network.getPosEmbeddingDim(); slot++) {
+                for (int slot = 0; slot < network.getPosEmbedDim(); slot++) {
                     int tok = instances.get(0).getFeatures()[i];
                     double gradForTok = gradients.getPosEmbedding()[tok][slot] / instances.size();
 
@@ -354,14 +354,14 @@ public class GradientTest {
             network.preCompute();
 
             NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                    .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                     .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
             classifier.calculateCost(instances, 1, gradients, savedGradients);
 
             double eps = 0.000001;
             for (int i = network.getNumWordLayers() + network.getNumPosLayers(); i < network.getNumWordLayers() + network.getNumPosLayers() + network
                     .getNumDepLayers(); i++) {
-                for (int slot = 0; slot < network.getLabelEmbedDim(); slot++) {
+                for (int slot = 0; slot < network.getDepEmbedDim(); slot++) {
                     int tok = instances.get(0).getFeatures()[i];
                     double gradForTok = gradients.getLabelEmbedding()[tok][slot] / instances.size();
 
@@ -426,7 +426,7 @@ public class GradientTest {
             network.preCompute();
 
             NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                    .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                     .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
             classifier.calculateCost(instances, 1, gradients, savedGradients);
 
@@ -497,7 +497,7 @@ public class GradientTest {
             network.preCompute();
 
             NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                    .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                     .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
             classifier.calculateCost(instances, 1, gradients, savedGradients);
 
@@ -566,7 +566,7 @@ public class GradientTest {
             network.preCompute();
 
             NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                    .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                     .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
             classifier.calculateCost(instances, 1, gradients, savedGradients);
 
@@ -637,7 +637,7 @@ public class GradientTest {
             network.preCompute();
 
             NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                    .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                     .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
             classifier.calculateCost(instances, 1, gradients, savedGradients);
 
@@ -707,7 +707,7 @@ public class GradientTest {
             network.preCompute();
 
             NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                    .getPosEmbeddingDim(), network.getNumDepLabels(), network.getLabelEmbedDim(), network.getHiddenLayerDim(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                     .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
 
             classifier.calculateCost(instances, instances.size(), gradients, savedGradients);

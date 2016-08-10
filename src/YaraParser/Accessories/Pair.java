@@ -8,7 +8,6 @@ package YaraParser.Accessories;
 import java.io.Serializable;
 
 public class Pair<T1, T2> implements Comparable, Cloneable, Serializable {
-
     public T1 first;
     public T2 second;
 
@@ -23,7 +22,7 @@ public class Pair<T1, T2> implements Comparable, Cloneable, Serializable {
 
     @Override
     public Pair<T1, T2> clone() {
-        return new Pair<T1, T2>(first, second);
+        return new Pair<>(first, second);
     }
 
     @Override

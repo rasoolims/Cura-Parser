@@ -87,14 +87,14 @@ public class MLPTrainer {
         }
 
         for (int i = 0; i < net.numPos; i++) {
-            for (int j = 0; j < net.posEmbeddingDim; j++) {
+            for (int j = 0; j < net.posEmbedDim; j++) {
                 regCost += Math.pow(posEmbeddings[i][j], 2);
                 gradients.modify(EmbeddingTypes.POS, i, j, regCoef * 2 * posEmbeddings[i][j]);
             }
         }
 
         for (int i = 0; i < net.numDepLabels; i++) {
-            for (int j = 0; j < net.labelEmbedDim; j++) {
+            for (int j = 0; j < net.depEmbedDim; j++) {
                 regCost += Math.pow(labelEmbeddings[i][j], 2);
                 gradients.modify(EmbeddingTypes.DEPENDENCY, i, j, regCoef * 2 * labelEmbeddings[i][j]);
             }
@@ -223,7 +223,7 @@ public class MLPTrainer {
                     }
                 }
             }
-            offset += net.posEmbeddingDim;
+            offset += net.posEmbedDim;
         }
 
         for (int index = net.numWordLayers + net.numPosLayers; index < net.numWordLayers + net.numPosLayers + net.numDepLayers; index++) {
@@ -237,7 +237,7 @@ public class MLPTrainer {
                     }
                 }
             }
-            offset += net.labelEmbedDim;
+            offset += net.depEmbedDim;
         }
     }
 
@@ -395,7 +395,7 @@ public class MLPTrainer {
         public CostThread(List<NeuralTrainingInstance> instances, int batchSize) {
             this.instances = instances;
             this.batchSize = batchSize;
-            g = new NetworkMatrices(net.numWords, net.wordEmbedDim, net.numPos, net.posEmbeddingDim, net.numDepLabels, net.labelEmbedDim,
+            g = new NetworkMatrices(net.numWords, net.wordEmbedDim, net.numPos, net.posEmbedDim, net.numDepLabels, net.depEmbedDim,
                     net.hiddenLayerDim, net.hiddenLayerIntDim, net.softmaxLayerDim);
             savedGradients = instantiateSavedGradients();
         }

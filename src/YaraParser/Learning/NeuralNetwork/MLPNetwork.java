@@ -33,13 +33,13 @@ public class MLPNetwork implements Serializable {
     final int numPosLayers = 19;
     final int numDepLayers = 11;
     final int numDepLabels;
-    final int labelEmbedDim;
+    final int depEmbedDim;
     final int wordEmbedDim;
     final int hiddenLayerDim;
     final int hiddenLayerIntDim;
     final int numWords;
     final int numPos;
-    final int posEmbeddingDim;
+    final int posEmbedDim;
     final int softmaxLayerDim;
     //todo make them private.
     NetworkMatrices matrices;
@@ -52,37 +52,37 @@ public class MLPNetwork implements Serializable {
         softmaxLayerDim = 2 * (depLabels.size() + 1);
         numWords = maps.vocabSize() + 2;
         numDepLabels = maps.relSize() + 2;
-        labelEmbedDim = lDim;
+        depEmbedDim = lDim;
         wordEmbedDim = wDim;
         hiddenLayerDim = options.hiddenLayer1Size;
         numPos = maps.posSize() + 2;
-        posEmbeddingDim = pDim;
+        posEmbedDim = pDim;
 
         this.activationType = options.activationType;
         activation = activationType == ActivationType.RELU ? new Relu() : new Cubic();
 
-        hiddenLayerIntDim = numPosLayers * wDim + numPosLayers * posEmbeddingDim + numDepLayers * labelEmbedDim;
-        matrices = new NetworkMatrices(numWords, wDim, numPos, posEmbeddingDim, numDepLabels, labelEmbedDim, hiddenLayerDim,
+        hiddenLayerIntDim = numPosLayers * wDim + numPosLayers * posEmbedDim + numDepLayers * depEmbedDim;
+        matrices = new NetworkMatrices(numWords, wDim, numPos, posEmbedDim, numDepLabels, depEmbedDim, hiddenLayerDim,
                 hiddenLayerIntDim, softmaxLayerDim);
         initializeLayers();
         addPretrainedWordEmbeddings(maps);
         preCompute();
     }
 
-    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int numDepLabels, int labelEmbedDim, int wordEmbedDim, int
-            hiddenLayerDim, int hiddenLayerIntDim, int numWords, int numPos, int posEmbeddingDim, int softmaxLayerDim, NetworkMatrices matrices,
+    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int numDepLabels, int depEmbedDim, int wordEmbedDim, int
+            hiddenLayerDim, int hiddenLayerIntDim, int numWords, int numPos, int posEmbedDim, int softmaxLayerDim, NetworkMatrices matrices,
                       double[][][] saved, ActivationType activationType) {
         this.maps = maps;
         this.options = options;
         this.depLabels = depLabels;
         this.numDepLabels = numDepLabels;
-        this.labelEmbedDim = labelEmbedDim;
+        this.depEmbedDim = depEmbedDim;
         this.wordEmbedDim = wordEmbedDim;
         this.hiddenLayerDim = hiddenLayerDim;
         this.hiddenLayerIntDim = hiddenLayerIntDim;
         this.numWords = numWords;
         this.numPos = numPos;
-        this.posEmbeddingDim = posEmbeddingDim;
+        this.posEmbedDim = posEmbedDim;
         this.softmaxLayerDim = softmaxLayerDim;
         this.matrices = matrices;
         this.saved = saved;
@@ -132,16 +132,18 @@ public class MLPNetwork implements Serializable {
         }
 
         double stdDev = 0.01;
+        double pEmbedStdDev = Math.pow(1.0 / posEmbedDim, 0.5);
+        double lEmbedStdDev = Math.pow(1.0 / depEmbedDim, 0.5);
         double reluBiasInit = 0.2;
         for (int i = 0; i < numPos; i++) {
-            for (int j = 0; j < posEmbeddingDim; j++) {
-                matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * stdDev);
+            for (int j = 0; j < posEmbedDim; j++) {
+                matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * pEmbedStdDev);
             }
         }
 
         for (int i = 0; i < numDepLabels; i++) {
-            for (int j = 0; j < labelEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * stdDev);
+            for (int j = 0; j < depEmbedDim; j++) {
+                matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * lEmbedStdDev);
             }
         }
 
@@ -194,24 +196,24 @@ public class MLPNetwork implements Serializable {
             for (int tok = 0; tok < numPos; tok++) {
                 int indOffset = numWordLayers;
                 for (int h = 0; h < hiddenLayerDim; h++) {
-                    for (int k = 0; k < posEmbeddingDim; k++) {
+                    for (int k = 0; k < posEmbedDim; k++) {
                         saved[pos + indOffset][tok][h] += hiddenLayer[h][offset + k] * posEmbeddings[tok][k];
                     }
                 }
             }
-            offset += posEmbeddingDim;
+            offset += posEmbedDim;
         }
 
         for (int pos = 0; pos < numDepLayers; pos++) {
             for (int tok = 0; tok < numDepLabels; tok++) {
                 int indOffset = numWordLayers + numPosLayers;
                 for (int h = 0; h < hiddenLayerDim; h++) {
-                    for (int k = 0; k < labelEmbedDim; k++) {
+                    for (int k = 0; k < depEmbedDim; k++) {
                         saved[pos + indOffset][tok][h] += hiddenLayer[h][offset + k] * labelEmbeddings[tok][k];
                     }
                 }
             }
-            offset += labelEmbedDim;
+            offset += depEmbedDim;
         }
     }
 
@@ -309,8 +311,8 @@ public class MLPNetwork implements Serializable {
         return numDepLabels;
     }
 
-    public int getLabelEmbedDim() {
-        return labelEmbedDim;
+    public int getDepEmbedDim() {
+        return depEmbedDim;
     }
 
     public int getWordEmbedDim() {
@@ -333,8 +335,8 @@ public class MLPNetwork implements Serializable {
         return numPos;
     }
 
-    public int getPosEmbeddingDim() {
-        return posEmbeddingDim;
+    public int getPosEmbedDim() {
+        return posEmbedDim;
     }
 
     public int getSoftmaxLayerDim() {
@@ -352,8 +354,8 @@ public class MLPNetwork implements Serializable {
      */
     public MLPNetwork clone() {
         try {
-            MLPNetwork network = new MLPNetwork(maps, options, depLabels, numDepLabels, labelEmbedDim, wordEmbedDim, hiddenLayerDim,
-                    hiddenLayerIntDim, numWords, numPos, posEmbeddingDim, softmaxLayerDim, null, null, activationType);
+            MLPNetwork network = new MLPNetwork(maps, options, depLabels, numDepLabels, depEmbedDim, wordEmbedDim, hiddenLayerDim,
+                    hiddenLayerIntDim, numWords, numPos, posEmbedDim, softmaxLayerDim, null, null, activationType);
             network.matrices = matrices.clone();
             return network;
         } catch (Exception ex) {
