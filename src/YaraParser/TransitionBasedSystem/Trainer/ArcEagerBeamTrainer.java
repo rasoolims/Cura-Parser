@@ -8,7 +8,6 @@ package YaraParser.TransitionBasedSystem.Trainer;
 import YaraParser.Accessories.Options;
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.NeuralNetwork.MLPNetwork;
-import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.NeuralTrainingInstance;
 import YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -26,14 +25,12 @@ public class ArcEagerBeamTrainer {
     private ArrayList<Integer> dependencyRelations;
 
     private Random randGen;
-    private IndexMaps maps;
 
-    public ArcEagerBeamTrainer(String updateMode, Options options, ArrayList<Integer> dependencyRelations, IndexMaps maps) {
+    public ArcEagerBeamTrainer(String updateMode, Options options, ArrayList<Integer> dependencyRelations) {
         this.updateMode = updateMode;
         this.options = options;
         this.dependencyRelations = dependencyRelations;
         randGen = new Random();
-        this.maps = maps;
     }
 
     public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropoutProb)
@@ -45,8 +42,7 @@ public class ArcEagerBeamTrainer {
         return instances;
     }
 
-    private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances,
-                             double dropoutProb) throws Exception {
+    private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances, double dropoutProb) throws Exception {
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
         ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
@@ -226,7 +222,7 @@ public class ArcEagerBeamTrainer {
                     for (int dependency : dependencyRelations) {
                         if (goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
                             Configuration newConfig = configuration.clone();
-                            double score = scores[2 + maps.relSize() + dependency];
+                            double score = scores[2 + dependencyRelations.size() + dependency];
                             ArcEager.leftArc(newConfig.state, dependency);
                             newConfig.addAction(3 + dependencyRelations.size() + dependency);
                             newConfig.addScore(score);
@@ -276,11 +272,11 @@ public class ArcEagerBeamTrainer {
             if (!canShift) labels[0] = -1;
             if (!canReduce) labels[1] = -1;
             if (!canRightArc)
-                for (int i = 0; i < maps.relSize(); i++)
+                for (int i = 0; i < dependencyRelations.size(); i++)
                     labels[2 + i] = -1;
             if (!canLeftArc)
-                for (int i = 0; i < maps.relSize(); i++)
-                    labels[maps.relSize() + 2 + i] = -1;
+                for (int i = 0; i < dependencyRelations.size(); i++)
+                    labels[dependencyRelations.size() + 2 + i] = -1;
             int[] features = FeatureExtractor.extractBaseFeatures(configuration);
             double[] scores = network.output(features, labels);
 
@@ -313,7 +309,7 @@ public class ArcEagerBeamTrainer {
             }
             if (canLeftArc) {
                 for (int dependency : dependencyRelations) {
-                    double score = scores[2 + maps.relSize() + dependency];
+                    double score = scores[2 + dependencyRelations.size() + dependency];
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
