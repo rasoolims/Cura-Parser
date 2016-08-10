@@ -24,13 +24,10 @@ public class ArcEagerBeamTrainer {
     private String updateMode;
     private ArrayList<Integer> dependencyRelations;
 
-    private Random randGen;
-
     public ArcEagerBeamTrainer(String updateMode, Options options, ArrayList<Integer> dependencyRelations) {
         this.updateMode = updateMode;
         this.options = options;
         this.dependencyRelations = dependencyRelations;
-        randGen = new Random();
     }
 
     public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropoutProb)
