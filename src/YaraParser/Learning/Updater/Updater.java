@@ -16,7 +16,7 @@ public abstract class Updater {
     MLPNetwork mlpNetwork;
     double learningRate;
     NetworkMatrices gradientHistory;
-    // only for ADAM
+    // only for ADAM/ADAMAX
     NetworkMatrices gradientHistoryVariance;
     // iteration.
     int t;

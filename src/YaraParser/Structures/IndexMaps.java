@@ -1,8 +1,3 @@
-/**
- * Copyright 2014, Yahoo! Inc.
- * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- */
-
 package YaraParser.Structures;
 
 import java.io.BufferedReader;
@@ -34,8 +29,7 @@ public class IndexMaps implements Serializable {
 
 
     public IndexMaps(String rootString, HashMap<String, Integer> wordMap, HashMap<String, Integer> posMap, HashMap<String, Integer> depRelationMap,
-                     HashSet<Integer> rareWords, HashMap<Integer, Integer> preComputeMap,
-                     HashMap<String, String> str2clusterMap) {
+                     HashSet<Integer> rareWords, HashMap<Integer, Integer> preComputeMap, HashMap<String, String> str2clusterMap) {
         this.wordMap = wordMap;
         this.rootString = rootString;
         this.posMap = posMap;
