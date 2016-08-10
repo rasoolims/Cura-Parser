@@ -41,7 +41,7 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = true;
             options.hiddenLayer1Size = 200;
-            options.learningRate = 1;
+            options.learningRate = 0.01;
             options.batchSize = 1024;
             options.trainingIter = 3000;
             options.beamWidth = 1;

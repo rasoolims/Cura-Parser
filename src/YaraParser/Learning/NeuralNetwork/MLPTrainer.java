@@ -327,7 +327,8 @@ public class MLPTrainer {
             }
 
             for (int i = 0; i < probs.length; i++) {
-                probs[i] /= sum;
+                if (label[i] >= 0)
+                    probs[i] /= sum;
             }
 
             cost -= Math.log(probs[gold]);
