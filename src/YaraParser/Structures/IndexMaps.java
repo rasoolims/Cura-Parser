@@ -108,6 +108,10 @@ public class IndexMaps implements Serializable {
         return embeddingsDictionary.get(wordIndex);
     }
 
+    public void emptyEmbeddings(){
+        embeddingsDictionary = null;
+    }
+
     public int word2Int(String word) {
         if (wordMap.containsKey(word))
             return wordMap.get(word);
