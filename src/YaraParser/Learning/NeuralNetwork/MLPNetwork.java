@@ -124,39 +124,39 @@ public class MLPNetwork implements Serializable {
 
     private void initializeLayers() throws Exception {
         Random random = new Random();
-        double wEmbedVar = Math.pow(1.0 / wordEmbedDim, 0.5);
+        double wEmbedStdDev = Math.pow(1.0 / wordEmbedDim, 0.5);
         for (int i = 0; i < numWords; i++) {
             for (int j = 0; j < wordEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * wEmbedVar);
+                matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * wEmbedStdDev);
             }
         }
 
-        double var = 1e-4;
-        double pEmbedVar = Math.pow(1.0 / posEmbedDim, 0.5);
-        double lEmbedVar = Math.pow(1.0 / depEmbedDim, 0.5);
+        double stdDev = 1e-2;
+        double pEmbedStdDev = Math.pow(1.0 / posEmbedDim, 0.5);
+        double lEmbedStdDev = Math.pow(1.0 / depEmbedDim, 0.5);
         double reluBiasInit = 0.2;
         for (int i = 0; i < numPos; i++) {
             for (int j = 0; j < posEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * pEmbedVar);
+                matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * pEmbedStdDev);
             }
         }
 
         for (int i = 0; i < numDepLabels; i++) {
             for (int j = 0; j < depEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * lEmbedVar);
+                matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * lEmbedStdDev);
             }
         }
 
         for (int i = 0; i < hiddenLayerDim; i++) {
             matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, reluBiasInit);
             for (int j = 0; j < hiddenLayerIntDim; j++) {
-                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * var);
+                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < softmaxLayerDim; i++) {
             for (int j = 0; j < hiddenLayerDim; j++) {
-                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * var);
+                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * stdDev);
             }
         }
     }
