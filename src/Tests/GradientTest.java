@@ -32,6 +32,7 @@ import java.util.List;
 public class GradientTest {
 
     final String txtFilePath = "/tmp/tmp.tmp";
+    final String embedFilePath = "/tmp/tmp2.tmp";
     final String conllText = "1\tThe\t_\tDT\tDT\t_\t2\tdet\t_\t_\n" +
             "2\tbill\t_\tNN\tNN\t_\t3\tnsubj\t_\t_\n" +
             "3\tintends\t_\tVBZ\tVBZ\t_\t0\troot\t_\t_\n" +
@@ -118,6 +119,7 @@ public class GradientTest {
             "21\tlater\t_\tRB\tRB\t_\t16\tadvmod\t_\t_\n" +
             "22\t.\t_\t.\t.\t_\t3\tpunct\t_\t_\n";
 
+
     @Test
     public void TestWordEmbeddingGradients() throws Exception {
         for (ActivationType type : ActivationType.values()) {
@@ -190,10 +192,141 @@ public class GradientTest {
     }
 
     @Test
+    public void TestPretrainedWordEmbeddingGradients() throws Exception {
+        for (ActivationType type : ActivationType.values()) {
+            writeText();
+            writeWordEmbedText();
+            Options options = new Options();
+            options.wordEmbeddingFile = embedFilePath;
+            options.activationType = type;
+            options.hiddenLayer1Size = 10;
+            options.inputFile = txtFilePath;
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
+            for (int lab = 0; lab < maps.relSize(); lab++)
+                dependencyLabels.add(lab);
+            CoNLLReader reader = new CoNLLReader(options.inputFile);
+            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
+                    .rootFirst, options.lowercase, maps);
+            int wDim = 8;
+            int pDim = 4;
+            int lDim = 6;
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels);
+            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+
+            double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+            for (int i = 0; i < network.getNumWordLayers(); i++)
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+            for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+            for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                 i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+            MLPTrainer classifier = new MLPTrainer(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
+            network.preCompute();
+
+            NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                    .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
+            classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+            double eps = 0.000001;
+            for (int i = 0; i < network.getNumWordLayers(); i++) {
+                for (int slot = 0; slot < network.getWordEmbedDim(); slot++) {
+                    int tok = instances.get(0).getFeatures()[i];
+                    double gradForTok = gradients.getWordEmbedding()[tok][slot] / instances.size();
+
+                    MLPNetwork plusNetwork = network.clone();
+                    purturb(plusNetwork.getMatrices(), EmbeddingTypes.WORD, tok, slot, eps);
+                    plusNetwork.preCompute();
+                    MLPNetwork negNetwork = network.clone();
+                    purturb(negNetwork.getMatrices(), EmbeddingTypes.WORD, tok, slot, -eps);
+                    negNetwork.preCompute();
+                    double diff = 0;
+
+                    for (NeuralTrainingInstance instance : instances) {
+                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                        int goldLabel = instance.gold();
+                        diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                    }
+                    diff /= (2 * eps * instances.size());
+
+                    System.out.println(gradForTok + "\t" + diff);
+                    assert Math.abs(gradForTok - diff) <= 0.0000001;
+                }
+            }
+        }
+    }
+
+    @Test
     public void TestWordEmbeddingUpdates() throws Exception {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             Options options = new Options();
+            options.activationType = type;
+            options.hiddenLayer1Size = 10;
+            options.inputFile = txtFilePath;
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
+            for (int lab = 0; lab < maps.relSize(); lab++)
+                dependencyLabels.add(lab);
+            CoNLLReader reader = new CoNLLReader(options.inputFile);
+            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
+                    .rootFirst, options.lowercase, maps);
+            int wDim = 8;
+            int pDim = 4;
+            int lDim = 6;
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                    options, dependencyLabels);
+            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 19, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+
+            double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+            for (int i = 0; i < network.getNumWordLayers(); i++)
+                savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+            for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+            for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                 i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+            MLPTrainer classifier = new MLPTrainer(network, UpdaterType.SGD, 0.9, 0.1, 1e-4, 1, 0);
+            network.preCompute();
+
+            NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                    .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                    .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
+            classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+            double[] oovEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[0]);
+            double[] nullEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[1]);
+            double[] rootEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[2]);
+            double[] simpleWordEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[3]);
+            for (int i = 0; i < 3; i++) {
+                classifier.fit(instances, i, true);
+            }
+
+            assert !Utils.equals(network.getMatrices().getWordEmbedding()[0], oovEmbedding);
+            assert !Utils.equals(network.getMatrices().getWordEmbedding()[1], nullEmbedding);
+            assert !Utils.equals(network.getMatrices().getWordEmbedding()[2], rootEmbedding);
+            assert !Utils.equals(network.getMatrices().getWordEmbedding()[3], simpleWordEmbedding);
+        }
+    }
+
+    @Test
+    public void TesPretrainedtWordEmbeddingUpdates() throws Exception {
+        for (ActivationType type : ActivationType.values()) {
+            writeText();
+            writeWordEmbedText();
+            Options options = new Options();
+            options.wordEmbeddingFile = embedFilePath;
             options.activationType = type;
             options.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
@@ -766,6 +899,14 @@ public class GradientTest {
     private void writeText() throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter(txtFilePath));
         writer.write(conllText);
+        writer.close();
+    }
+
+    private void writeWordEmbedText() throws Exception {
+        String embedText = "the\t0.1\t-.01\t.5\t.6\t-.36\t.001\t.45\t-.4\nto\t0.1\t-.01\t.3\t-.6\t-.56\t.021\t.41\t.4\nfail\t0.3\t-.011\t.51\t" +
+                ".26\t-.36\t.1\t-.45\t-.4\n";
+        BufferedWriter writer = new BufferedWriter(new FileWriter(embedFilePath));
+        writer.write(embedText);
         writer.close();
     }
 }

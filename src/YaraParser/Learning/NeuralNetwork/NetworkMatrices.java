@@ -77,7 +77,7 @@ public class NetworkMatrices implements Serializable {
             throw new Exception("Embedding type not supported");
 
         if (Double.isNaN(newValue))
-            throw new Exception("Modify matrix value to NAN for "+t);
+            throw new Exception("Modify matrix value to NAN for " + t);
     }
 
     public double[][] getWordEmbedding() {

@@ -129,32 +129,32 @@ public class MLPNetwork implements Serializable {
 
         for (int i = 0; i < numWords; i++) {
             for (int j = 0; j < wordEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian()* stdDev);
+                matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < numPos; i++) {
             for (int j = 0; j < posEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian()* stdDev);
+                matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < numDepLabels; i++) {
             for (int j = 0; j < depEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.DEPENDENCY, i, j,random.nextGaussian()* stdDev);
+                matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < hiddenLayerDim; i++) {
             matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, reluBiasInit);
             for (int j = 0; j < hiddenLayerIntDim; j++) {
-                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian()* stdDev);
+                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < softmaxLayerDim; i++) {
             for (int j = 0; j < hiddenLayerDim; j++) {
-                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian()* stdDev);
+                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * stdDev);
             }
         }
     }
