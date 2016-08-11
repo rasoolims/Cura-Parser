@@ -1,7 +1,7 @@
 package YaraParser.Learning.NeuralNetwork;
 
 import YaraParser.Accessories.Utils;
-import YaraParser.Structures.EmbeddingTypes;
+import YaraParser.Structures.Enums.EmbeddingTypes;
 
 import java.io.Serializable;
 import java.util.ArrayList;

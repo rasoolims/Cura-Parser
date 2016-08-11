@@ -10,10 +10,10 @@ package YaraParser.Learning.NeuralNetwork;
 
 import YaraParser.Accessories.Options;
 import YaraParser.Learning.Activation.Activation;
-import YaraParser.Learning.Activation.ActivationType;
+import YaraParser.Learning.Activation.Enums.ActivationType;
 import YaraParser.Learning.Activation.Cubic;
 import YaraParser.Learning.Activation.Relu;
-import YaraParser.Structures.EmbeddingTypes;
+import YaraParser.Structures.Enums.EmbeddingTypes;
 import YaraParser.Structures.IndexMaps;
 
 import java.io.Serializable;

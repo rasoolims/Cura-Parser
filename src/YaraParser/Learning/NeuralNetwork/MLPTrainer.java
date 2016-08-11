@@ -2,7 +2,8 @@ package YaraParser.Learning.NeuralNetwork;
 
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.Updater.*;
-import YaraParser.Structures.EmbeddingTypes;
+import YaraParser.Learning.Updater.Enums.UpdaterType;
+import YaraParser.Structures.Enums.EmbeddingTypes;
 import YaraParser.Structures.NeuralTrainingInstance;
 
 import java.text.DecimalFormat;

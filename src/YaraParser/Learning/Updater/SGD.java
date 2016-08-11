@@ -1,7 +1,7 @@
 package YaraParser.Learning.Updater;
 
 import YaraParser.Learning.NeuralNetwork.MLPNetwork;
-import YaraParser.Structures.EmbeddingTypes;
+import YaraParser.Structures.Enums.EmbeddingTypes;
 
 /**
  * Created by Mohammad Sadegh Rasooli.

@@ -1,4 +1,4 @@
-package YaraParser.Learning.Updater;
+package YaraParser.Learning.Updater.Enums;
 
 /**
  * Created by Mohammad Sadegh Rasooli.

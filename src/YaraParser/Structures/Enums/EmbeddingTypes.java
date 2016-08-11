@@ -1,4 +1,4 @@
-package YaraParser.Structures;
+package YaraParser.Structures.Enums;
 
 /**
  * Created by Mohammad Sadegh Rasooli.

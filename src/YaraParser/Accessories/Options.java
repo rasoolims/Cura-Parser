@@ -5,9 +5,9 @@
 
 package YaraParser.Accessories;
 
-import YaraParser.Learning.Activation.ActivationType;
+import YaraParser.Learning.Activation.Enums.ActivationType;
 import YaraParser.Learning.AveragingOption;
-import YaraParser.Learning.Updater.UpdaterType;
+import YaraParser.Learning.Updater.Enums.UpdaterType;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
