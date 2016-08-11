@@ -30,7 +30,6 @@ import java.util.List;
 
 
 public class GradientTest {
-
     final String txtFilePath = "/tmp/tmp.tmp";
     final String embedFilePath = "/tmp/tmp2.tmp";
     final String conllText = "1\tThe\t_\tDT\tDT\t_\t2\tdet\t_\t_\n" +
@@ -321,7 +320,7 @@ public class GradientTest {
     }
 
     @Test
-    public void TesPretrainedtWordEmbeddingUpdates() throws Exception {
+    public void TestPretrainedtWordEmbeddingUpdates() throws Exception {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             writeWordEmbedText();

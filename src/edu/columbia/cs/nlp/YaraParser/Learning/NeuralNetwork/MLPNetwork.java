@@ -260,23 +260,28 @@ public class MLPNetwork implements Serializable {
 
         double[] probs = new double[softmaxLayerBias.length];
         double sum = 0;
+        int argmax = 0;
         for (int i = 0; i < probs.length; i++) {
             if (labels[i] >= 0) {
                 for (int j = 0; j < hidden.length; j++) {
                     probs[i] += softmaxLayer[i][j] * hidden[j];
                 }
                 probs[i] += softmaxLayerBias[i];
-                probs[i] = Math.exp(probs[i]);
-                sum += probs[i];
+                if (probs[i] > probs[argmax])
+                    argmax = i;
             }
         }
 
-        double smallNumber = -Double.MAX_VALUE / probs.length;
+        double max = probs[argmax];
         for (int i = 0; i < probs.length; i++) {
-            probs[i] /= sum;
-            if (probs[i] != 0.0)
-                probs[i] = Math.log(probs[i]);
-            else probs[i] = smallNumber;
+            if (labels[i] >= 0) {
+                probs[i] = probs[i] - max;
+                sum += Math.exp(probs[i]);
+            }
+        }
+
+        for (int i = 0; i < probs.length; i++) {
+            probs[i] -= Math.log(sum);
         }
         return probs;
     }

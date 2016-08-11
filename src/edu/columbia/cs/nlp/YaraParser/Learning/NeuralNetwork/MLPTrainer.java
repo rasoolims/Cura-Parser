@@ -121,7 +121,7 @@ public class MLPTrainer {
         cost += regCoef * regCost;
     }
 
-    public void fit(List<NeuralTrainingInstance> instances, int iteration, boolean print) throws Exception {
+    public double fit(List<NeuralTrainingInstance> instances, int iteration, boolean print) throws Exception {
         DecimalFormat format = new DecimalFormat("##.00");
         DecimalFormat format4 = new DecimalFormat("##.0000");
 
@@ -130,13 +130,15 @@ public class MLPTrainer {
         updater.update(gradients);
         net.preCompute();
 
+        double acc = correct / samples;
         if (print) {
             System.out.println(getCurrentTimeStamp() + " ---  iteration " + iteration + " --- size " +
-                    samples + " --- Correct " + format.format(100. * correct / samples) + " --- cost: " + format4.format(cost / samples));
+                    samples + " --- Correct " + format.format(100. * acc) + " --- cost: " + format4.format(cost / samples));
             cost = 0;
             samples = 0;
             correct = 0;
         }
+        return acc;
     }
 
     public void cost(List<NeuralTrainingInstance> instances) throws Exception {
