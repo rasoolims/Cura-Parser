@@ -40,7 +40,7 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.labeled = true;
             options.hiddenLayer1Size = 200;
-            options.learningRate = 0.001;
+            options.learningRate = 0.1;
             options.batchSize = 1024;
             options.trainingIter = 3000;
             options.beamWidth = 1;
@@ -48,7 +48,7 @@ public class YaraParser {
             options.numOfThreads = 2;
             options.decayStep = 10;
             options.UASEvalPerStep = 50;
-            options.updaterType = UpdaterType.ADAM;
+            options.updaterType = UpdaterType.SGD;
             options.averagingOption = AveragingOption.BOTH;
             options.activationType = ActivationType.RELU;
         }

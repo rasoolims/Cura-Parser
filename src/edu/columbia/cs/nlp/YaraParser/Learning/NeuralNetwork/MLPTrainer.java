@@ -54,7 +54,8 @@ public class MLPTrainer {
         random = new Random();
         this.dropoutProb = dropoutProb;
         if (updaterType == UpdaterType.SGD)
-            updater = new SGD(net, learningRate, momentum);
+            // todo
+            updater = new SGD(net, learningRate, momentum, false);
         else if (updaterType == UpdaterType.ADAGRAD)
             updater = new Adagrad(net, learningRate, 1e-6);
         else if (updaterType == UpdaterType.ADAM)
