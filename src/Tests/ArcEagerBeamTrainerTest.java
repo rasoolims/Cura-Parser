@@ -79,12 +79,12 @@ public class ArcEagerBeamTrainerTest {
         ArcEager.reduce(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
-        assert instances.get(index).gold() ==  2 + dependencyLabels.size() + maps.dep2Int("auxpass");
+        assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("auxpass");
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.leftArc(configuration.state, maps.dep2Int("auxpass"));
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
-        assert instances.get(index).gold() ==  2 + dependencyLabels.size() + maps.dep2Int("nsubjpass");
+        assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("nsubjpass");
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
 
@@ -104,8 +104,8 @@ public class ArcEagerBeamTrainerTest {
         ArcEager.reduce(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
-        assert instances.get(index).gold() ==  2 + dependencyLabels.size() + maps.dep2Int("ROOT");
-        assert instances.get(index).gold() ==  2 + dependencyLabels.size() + IndexMaps.LabelRootIndex;
+        assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("ROOT");
+        assert instances.get(index).gold() == 2 + dependencyLabels.size() + IndexMaps.LabelRootIndex;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.leftArc(configuration.state, maps.dep2Int("ROOT"));
 

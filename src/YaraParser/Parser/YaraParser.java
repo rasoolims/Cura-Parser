@@ -154,6 +154,7 @@ public class YaraParser {
                         neuralTrainer.fit(instances, step, step % (options.UASEvalPerStep / 10) == 0 ? true : false);
                     } catch (Exception ex) {
                         System.err.println("Exception occurred: " + ex.getMessage());
+                        ex.printStackTrace();
                         System.exit(1);
                     }
                     s = e;

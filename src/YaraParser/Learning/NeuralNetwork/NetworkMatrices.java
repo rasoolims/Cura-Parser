@@ -49,24 +49,35 @@ public class NetworkMatrices implements Serializable {
     }
 
     public void modify(EmbeddingTypes t, int i, int j, double change) throws Exception {
-        if (t.equals(EmbeddingTypes.WORD))
-            wordEmbedding[i][j] += change;
-        else if (t.equals(EmbeddingTypes.POS))
-            posEmbedding[i][j] += change;
-        else if (t.equals(EmbeddingTypes.DEPENDENCY))
-            labelEmbedding[i][j] += change;
-        else if (t.equals(EmbeddingTypes.HIDDENLAYER))
-            hiddenLayer[i][j] += change;
-        else if (t.equals(EmbeddingTypes.HIDDENLAYERBIAS)) {
+        double newValue;
+        if (t.equals(EmbeddingTypes.WORD)) {
+            newValue = wordEmbedding[i][j] + change;
+            wordEmbedding[i][j] = newValue;
+        } else if (t.equals(EmbeddingTypes.POS)) {
+            newValue = posEmbedding[i][j] + change;
+            posEmbedding[i][j] = newValue;
+        } else if (t.equals(EmbeddingTypes.DEPENDENCY)) {
+            newValue = labelEmbedding[i][j] + change;
+            labelEmbedding[i][j] = newValue;
+        } else if (t.equals(EmbeddingTypes.HIDDENLAYER)) {
+            newValue = hiddenLayer[i][j] + change;
+            hiddenLayer[i][j] = newValue;
+        } else if (t.equals(EmbeddingTypes.HIDDENLAYERBIAS)) {
             assert j == -1;
-            hiddenLayerBias[i] += change;
-        } else if (t.equals(EmbeddingTypes.SOFTMAX))
-            softmaxLayer[i][j] += change;
-        else if (t.equals(EmbeddingTypes.SOFTMAXBIAS)) {
+            newValue = hiddenLayerBias[i] + change;
+            hiddenLayerBias[i] = newValue;
+        } else if (t.equals(EmbeddingTypes.SOFTMAX)) {
+            newValue = softmaxLayer[i][j] + change;
+            softmaxLayer[i][j] = newValue;
+        } else if (t.equals(EmbeddingTypes.SOFTMAXBIAS)) {
             assert j == -1;
-            softmaxLayerBias[i] += change;
+            newValue = softmaxLayerBias[i] + change;
+            softmaxLayerBias[i] = newValue;
         } else
             throw new Exception("Embedding type not supported");
+
+        if (Double.isNaN(newValue))
+            throw new Exception("Modify matrix value to NAN for "+t);
     }
 
     public double[][] getWordEmbedding() {

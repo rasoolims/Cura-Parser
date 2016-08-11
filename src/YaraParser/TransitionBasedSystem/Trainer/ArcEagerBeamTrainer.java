@@ -17,7 +17,10 @@ import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
 import YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.TreeSet;
 
 public class ArcEagerBeamTrainer {
     Options options;
