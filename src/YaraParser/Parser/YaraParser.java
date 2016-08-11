@@ -46,6 +46,7 @@ public class YaraParser {
             options.beamWidth = 1;
             options.useDynamicOracle = false;
             options.numOfThreads = 2;
+            options.decayStep  = 10;
             options.UASEvalPerStep = 50;
             options.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
@@ -132,7 +133,7 @@ public class YaraParser {
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
             maps.emptyEmbeddings();
 
-            MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options.updaterType, 0.9, options.learningRate, 0.0001, options.numOfThreads,
+            MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options.updaterType, 0.9, options.learningRate, 1e-8, options.numOfThreads,
                     options.dropoutProbForHiddenLayer);
 
 

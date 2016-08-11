@@ -5,6 +5,7 @@
 
 package YaraParser.TransitionBasedSystem.Features;
 
+import YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -35,6 +36,9 @@ public class FeatureExtractor {
         int s0r2w = IndexMaps.NullIndex;
         int sh1w = IndexMaps.NullIndex;
         int s0l2w = IndexMaps.NullIndex;
+        int b0bw =  IndexMaps.NullIndex;
+        int s0bw =  IndexMaps.NullIndex;
+        int s0aw =  IndexMaps.NullIndex;
 
         int b0p = IndexMaps.NullIndex;
         int b1p = IndexMaps.NullIndex;
@@ -55,6 +59,9 @@ public class FeatureExtractor {
         int s0r2p = IndexMaps.NullIndex;
         int sh1p = IndexMaps.NullIndex;
         int s0l2p = IndexMaps.NullIndex;
+        int b0bp =  IndexMaps.NullIndex;
+        int s0bp =  IndexMaps.NullIndex;
+        int s0ap =  IndexMaps.NullIndex;
 
         int s0l = IndexMaps.LabelNullIndex;
         int b0l1l = IndexMaps.LabelNullIndex;
@@ -75,6 +82,11 @@ public class FeatureExtractor {
             int b0Position = state.bufferHead();
             b0w = (words[b0Position - 1]);
             b0p = (tags[b0Position - 1]);
+
+            if(b0Position>1){
+                b0bw = words[b0Position-2];
+                b0bp = tags[b0Position-2];
+            }
 
             int leftMost = state.leftMostModifier(b0Position);
             if (leftMost >= 0) {
@@ -119,6 +131,16 @@ public class FeatureExtractor {
             s0w = (words[s0Position - 1]);
             s0p = (tags[s0Position - 1]);
             s0l = (state.getDependency(s0Position));
+
+            if(s0Position>1){
+                s0bw = words[s0Position-2];
+                s0bp = tags[s0Position-2];
+            }
+
+            if(s0Position<words.length){
+                s0aw = words[s0Position];
+                s0ap = tags[s0Position];
+            }
 
             if (1 < state.stackSize()) {
                 int top1 = state.pop();
@@ -203,7 +225,7 @@ public class FeatureExtractor {
                 }
             }
         }
-        int[] baseFeatureIds = new int[49];
+        int[] baseFeatureIds = new int[MLPNetwork.numWordLayers+MLPNetwork.numPosLayers+MLPNetwork.numDepLayers];
 
         int index = 0;
         baseFeatureIds[index++] = s0w;
@@ -225,6 +247,9 @@ public class FeatureExtractor {
         baseFeatureIds[index++] = b0llw;
         baseFeatureIds[index++] = s0llw;
         baseFeatureIds[index++] = s0rrw;
+        baseFeatureIds[index++] = b0bw;
+        baseFeatureIds[index++] = s0bw;
+        baseFeatureIds[index++] = s0aw;
 
         baseFeatureIds[index++] = s0p;
         baseFeatureIds[index++] = s1p;
@@ -245,6 +270,9 @@ public class FeatureExtractor {
         baseFeatureIds[index++] = b0llp;
         baseFeatureIds[index++] = s0llp;
         baseFeatureIds[index++] = s0rrp;
+        baseFeatureIds[index++] = b0bp;
+        baseFeatureIds[index++] = s0bp;
+        baseFeatureIds[index++] = s0ap;
 
         baseFeatureIds[index++] = s0l;
         baseFeatureIds[index++] = sh0l;
