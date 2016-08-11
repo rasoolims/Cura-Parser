@@ -3,7 +3,7 @@
  * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
  */
 
-package YaraParser.TransitionBasedSystem.Parser;
+package YaraParser.TransitionBasedSystem.Parser.ArcEager;
 
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.State;
@@ -11,7 +11,7 @@ import YaraParser.TransitionBasedSystem.Configuration.State;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ArcEager extends TransitionBasedParser {
+public class ArcEager {
     public static void shift(State state) throws Exception {
         state.push(state.bufferHead());
         state.incrementBufferHead();

@@ -8,8 +8,8 @@ package YaraParser.TransitionBasedSystem.Configuration;
 
 import YaraParser.Accessories.Pair;
 import YaraParser.Structures.Sentence;
-import YaraParser.TransitionBasedSystem.Parser.Actions;
-import YaraParser.TransitionBasedSystem.Parser.ArcEager;
+import YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
+import YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
 
 import java.util.HashMap;
 import java.util.HashSet;

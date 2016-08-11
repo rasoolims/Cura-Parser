@@ -4,7 +4,7 @@
  */
 
 
-package YaraParser.TransitionBasedSystem.Parser;
+package YaraParser.TransitionBasedSystem.Parser.Threading;
 
 import YaraParser.Accessories.Pair;
 import YaraParser.Learning.NeuralNetwork.MLPNetwork;
@@ -14,6 +14,8 @@ import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
+import YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
+import YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -31,12 +33,11 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
 
     int id;
 
-    public ParseThread(int id, MLPNetwork network, ArrayList<Integer> dependencyRelations,
-                       Sentence sentence,
+    public ParseThread(int id, MLPNetwork network, Sentence sentence,
                        boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
         this.id = id;
         this.network = network;
-        this.dependencyRelations = dependencyRelations;
+        this.dependencyRelations = network.getDepLabels();
         this.sentence = sentence;
         this.rootFirst = rootFirst;
         this.beamWidth = beamWidth;
@@ -272,15 +273,15 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             isNonProjective = true;
         }
 
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
         while (!ArcEager.isTerminal(beam)) {
-            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+            TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth);
 
-            ArrayList<Configuration> repBeam = new ArrayList<Configuration>(beamWidth);
+            ArrayList<Configuration> repBeam = new ArrayList<>(beamWidth);
             for (BeamElement beamElement : beamPreserver.descendingSet()) {
                 if (repBeam.size() >= beamWidth)
                     break;

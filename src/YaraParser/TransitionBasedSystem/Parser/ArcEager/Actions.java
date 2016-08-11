@@ -1,4 +1,4 @@
-package YaraParser.TransitionBasedSystem.Parser;
+package YaraParser.TransitionBasedSystem.Parser.ArcEager;
 
 /**
  * Created by Mohammad Sadegh Rasooli.

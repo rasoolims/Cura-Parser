@@ -14,8 +14,8 @@ import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Configuration.State;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
-import YaraParser.TransitionBasedSystem.Parser.Actions;
-import YaraParser.TransitionBasedSystem.Parser.ArcEager;
+import YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
+import YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
 
 import java.util.*;
 

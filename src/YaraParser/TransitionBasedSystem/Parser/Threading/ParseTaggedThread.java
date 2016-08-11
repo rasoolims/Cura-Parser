@@ -1,9 +1,10 @@
-package YaraParser.TransitionBasedSystem.Parser;
+package YaraParser.TransitionBasedSystem.Parser.Threading;
 
 import YaraParser.Accessories.Pair;
 import YaraParser.Structures.IndexMaps;
 import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
+import YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
 
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
@@ -102,4 +103,6 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
         }
         return new Pair<>("", lineNum);
     }
+
+
 }

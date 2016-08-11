@@ -15,7 +15,7 @@ import YaraParser.Structures.Sentence;
 import YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
-import YaraParser.TransitionBasedSystem.Parser.ArcEager;
+import YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
 import org.junit.Test;
 
 import java.io.BufferedWriter;

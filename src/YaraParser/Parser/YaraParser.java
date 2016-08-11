@@ -45,8 +45,8 @@ public class YaraParser {
             options.trainingIter = 3000;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
-            options.numOfThreads = 1;
-            options.UASEvalPerStep = 10;
+            options.numOfThreads = 2;
+            options.UASEvalPerStep = 50;
             options.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
             options.activationType = ActivationType.RELU;
@@ -95,11 +95,11 @@ public class YaraParser {
                         options.outputFile, infoptions.rootFirst, options.beamWidth, infoptions.lowercase,
                         options.separator, options.numOfThreads);
             else if (options.parseConllFile)
-                parser.parseConllFile(options.inputFile,
-                        options.outputFile, infoptions.rootFirst, options.beamWidth, true, infoptions.lowercase, false, options.scorePath);
+                parser.parseConll(options.inputFile, options.outputFile, infoptions.rootFirst, options.beamWidth, infoptions.lowercase,
+                        options.numOfThreads, false, options.scorePath);
             else if (options.parsePartialConll)
-                parser.parseConllFile(options.inputFile, options.outputFile, infoptions.rootFirst, options.beamWidth, infoptions.labeled,
-                        infoptions.lowercase, true, options.scorePath);
+                parser.parseConll(options.inputFile, options.outputFile, infoptions.rootFirst, options.beamWidth, infoptions.lowercase,
+                        options.numOfThreads, true, options.scorePath);
             parser.shutDownLiveThreads();
         }
     }
@@ -175,8 +175,8 @@ public class YaraParser {
                     if (step % options.UASEvalPerStep == 0) {
                         if (options.averagingOption != AveragingOption.ONLY) {
                             KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads);
-                            parser.parseConllFile(options.devPath, options.modelFile + ".tmp", options.rootFirst,
-                                    options.beamWidth, options.labeled, options.lowercase, false, "");
+                            parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
+                                    options.beamWidth, options.lowercase, options.numOfThreads, false, "");
                             Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
                             if (eval.first > bestModelUAS) {
                                 bestModelUAS = eval.first;
@@ -194,8 +194,8 @@ public class YaraParser {
                         if (options.averagingOption != AveragingOption.NO) {
                             avgMlpNetwork.preCompute();
                             KBeamArcEagerParser parser = new KBeamArcEagerParser(avgMlpNetwork, options.numOfThreads);
-                            parser.parseConllFile(options.devPath, options.modelFile + ".tmp", options.rootFirst,
-                                    options.beamWidth, options.labeled, options.lowercase, false, "");
+                            parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
+                                    options.beamWidth, options.lowercase, options.numOfThreads, false, "");
                             Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
                             if (eval.first > bestModelUAS) {
                                 bestModelUAS = eval.first;
