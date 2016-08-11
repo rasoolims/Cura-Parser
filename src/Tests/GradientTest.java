@@ -245,7 +245,6 @@ public class GradientTest {
         }
     }
 
-
     @Test
     public void TestPOSEmbeddingGradients() throws Exception {
         for (ActivationType type : ActivationType.values()) {
@@ -359,8 +358,8 @@ public class GradientTest {
             classifier.calculateCost(instances, 1, gradients, savedGradients);
 
             double eps = 0.000001;
-            for (int i = network.getNumWordLayers() + network.getNumPosLayers(); i < network.getNumWordLayers() + network.getNumPosLayers() + network
-                    .getNumDepLayers(); i++) {
+            for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                 i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++) {
                 for (int slot = 0; slot < network.getDepEmbedDim(); slot++) {
                     int tok = instances.get(0).getFeatures()[i];
                     double gradForTok = gradients.getLabelEmbedding()[tok][slot] / instances.size();
@@ -745,7 +744,6 @@ public class GradientTest {
             }
         }
     }
-
 
     private void purturb(NetworkMatrices matrices, EmbeddingTypes type, int tokNum, int slotNum, double eps) {
         if (type == EmbeddingTypes.WORD) {
