@@ -24,14 +24,14 @@ import java.util.Random;
  * Manual MLP model
  */
 public class MLPNetwork implements Serializable {
+    public static final int numWordLayers = 22;
+    public static final int numPosLayers = 22;
+    public static final int numDepLayers = 11;
     final public IndexMaps maps;
     final public Options options;
     final public ArrayList<Integer> depLabels;
     public final Activation activation;
     public final ActivationType activationType;
-    public static final int numWordLayers = 22;
-    public static final int numPosLayers = 22;
-    public static final int numDepLayers = 11;
     final int numDepLabels;
     final int depEmbedDim;
     final int wordEmbedDim;

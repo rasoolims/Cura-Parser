@@ -47,7 +47,8 @@ public class MLPTrainer {
     private double regCoef;
     private double dropoutProb;
 
-    public MLPTrainer(MLPNetwork net, UpdaterType updaterType, double momentum, double learningRate, double regCoef, int numThreads, double dropoutProb) throws Exception {
+    public MLPTrainer(MLPNetwork net, UpdaterType updaterType, double momentum, double learningRate, double regCoef, int numThreads, double
+            dropoutProb) throws Exception {
         this.net = net;
         random = new Random();
         this.dropoutProb = dropoutProb;

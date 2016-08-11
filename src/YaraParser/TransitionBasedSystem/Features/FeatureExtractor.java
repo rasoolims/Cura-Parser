@@ -36,9 +36,9 @@ public class FeatureExtractor {
         int s0r2w = IndexMaps.NullIndex;
         int sh1w = IndexMaps.NullIndex;
         int s0l2w = IndexMaps.NullIndex;
-        int b0bw =  IndexMaps.NullIndex;
-        int s0bw =  IndexMaps.NullIndex;
-        int s0aw =  IndexMaps.NullIndex;
+        int b0bw = IndexMaps.NullIndex;
+        int s0bw = IndexMaps.NullIndex;
+        int s0aw = IndexMaps.NullIndex;
 
         int b0p = IndexMaps.NullIndex;
         int b1p = IndexMaps.NullIndex;
@@ -59,9 +59,9 @@ public class FeatureExtractor {
         int s0r2p = IndexMaps.NullIndex;
         int sh1p = IndexMaps.NullIndex;
         int s0l2p = IndexMaps.NullIndex;
-        int b0bp =  IndexMaps.NullIndex;
-        int s0bp =  IndexMaps.NullIndex;
-        int s0ap =  IndexMaps.NullIndex;
+        int b0bp = IndexMaps.NullIndex;
+        int s0bp = IndexMaps.NullIndex;
+        int s0ap = IndexMaps.NullIndex;
 
         int s0l = IndexMaps.LabelNullIndex;
         int b0l1l = IndexMaps.LabelNullIndex;
@@ -83,9 +83,9 @@ public class FeatureExtractor {
             b0w = (words[b0Position - 1]);
             b0p = (tags[b0Position - 1]);
 
-            if(b0Position>1){
-                b0bw = words[b0Position-2];
-                b0bp = tags[b0Position-2];
+            if (b0Position > 1) {
+                b0bw = words[b0Position - 2];
+                b0bp = tags[b0Position - 2];
             }
 
             int leftMost = state.leftMostModifier(b0Position);
@@ -132,12 +132,12 @@ public class FeatureExtractor {
             s0p = (tags[s0Position - 1]);
             s0l = (state.getDependency(s0Position));
 
-            if(s0Position>1){
-                s0bw = words[s0Position-2];
-                s0bp = tags[s0Position-2];
+            if (s0Position > 1) {
+                s0bw = words[s0Position - 2];
+                s0bp = tags[s0Position - 2];
             }
 
-            if(s0Position<words.length){
+            if (s0Position < words.length) {
                 s0aw = words[s0Position];
                 s0ap = tags[s0Position];
             }
@@ -225,7 +225,7 @@ public class FeatureExtractor {
                 }
             }
         }
-        int[] baseFeatureIds = new int[MLPNetwork.numWordLayers+MLPNetwork.numPosLayers+MLPNetwork.numDepLayers];
+        int[] baseFeatureIds = new int[MLPNetwork.numWordLayers + MLPNetwork.numPosLayers + MLPNetwork.numDepLayers];
 
         int index = 0;
         baseFeatureIds[index++] = s0w;

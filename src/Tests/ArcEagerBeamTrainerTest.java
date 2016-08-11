@@ -60,32 +60,32 @@ public class ArcEagerBeamTrainerTest {
         int index = 0;
         int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
         assert instances.get(index).gold() == 0;
-        for(int i=1;i<instances.get(index).getLabel().length;i++)
-            assert instances.get(index).getLabel()[i]==-1;
+        for (int i = 1; i < instances.get(index).getLabel().length; i++)
+            assert instances.get(index).getLabel()[i] == -1;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
 
         ArcEager.shift(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
         assert instances.get(index).gold() == 0;
-        assert instances.get(index).getLabel()[1]==-1;
-        for(int i=2;i<instances.get(index).getLabel().length;i++)
-            assert instances.get(index).getLabel()[i]==0;
+        assert instances.get(index).getLabel()[1] == -1;
+        for (int i = 2; i < instances.get(index).getLabel().length; i++)
+            assert instances.get(index).getLabel()[i] == 0;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.shift(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
         assert instances.get(index).gold() == 2 + maps.dep2Int("neg");
-        assert instances.get(index).getLabel()[1]==-1;
-        for(int i=0;i<instances.get(index).getLabel().length;i++)
-            if(i!=instances.get(index).gold() && i!=1)
-            assert instances.get(index).getLabel()[i]==0;
+        assert instances.get(index).getLabel()[1] == -1;
+        for (int i = 0; i < instances.get(index).getLabel().length; i++)
+            if (i != instances.get(index).gold() && i != 1)
+                assert instances.get(index).getLabel()[i] == 0;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.rightArc(configuration.state, maps.dep2Int("neg"));
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
         assert instances.get(index).gold() == 1;
-        for(int i=0;i<instances.get(index).getLabel().length;i++) {
+        for (int i = 0; i < instances.get(index).getLabel().length; i++) {
             if (i != instances.get(index).gold()) {
                 if (i < 2 + dependencyLabels.size())
                     assert instances.get(index).getLabel()[i] == 0;
@@ -97,10 +97,10 @@ public class ArcEagerBeamTrainerTest {
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
         assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("auxpass");
-        assert instances.get(index).getLabel()[1]==-1;
-        for(int i=0;i<instances.get(index).getLabel().length;i++) {
+        assert instances.get(index).getLabel()[1] == -1;
+        for (int i = 0; i < instances.get(index).getLabel().length; i++) {
             if (i != instances.get(index).gold()) {
-                if (i !=1)
+                if (i != 1)
                     assert instances.get(index).getLabel()[i] == 0;
             }
         }
@@ -130,9 +130,9 @@ public class ArcEagerBeamTrainerTest {
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
         assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("ROOT");
         assert instances.get(index).gold() == 2 + dependencyLabels.size() + IndexMaps.LabelRootIndex;
-        for(int i=0;i<instances.get(index).getLabel().length;i++) {
+        for (int i = 0; i < instances.get(index).getLabel().length; i++) {
             if (i != instances.get(index).gold()) {
-                if (i >=1 && i<2+dependencyLabels.size())
+                if (i >= 1 && i < 2 + dependencyLabels.size())
                     assert instances.get(index).getLabel()[i] == -1;
             }
         }

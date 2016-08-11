@@ -46,7 +46,7 @@ public class YaraParser {
             options.beamWidth = 1;
             options.useDynamicOracle = false;
             options.numOfThreads = 2;
-            options.decayStep  = 10;
+            options.decayStep = 10;
             options.UASEvalPerStep = 50;
             options.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
