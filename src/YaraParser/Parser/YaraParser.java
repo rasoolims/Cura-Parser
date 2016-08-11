@@ -126,7 +126,7 @@ public class YaraParser {
             System.out.println("Embedding dimension " + wDim);
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels);
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
-            maps.constructPreComputeMap(allInstances, 19, 10000);
+            maps.constructPreComputeMap(allInstances, MLPNetwork.numWordLayers, 10000);
 
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);

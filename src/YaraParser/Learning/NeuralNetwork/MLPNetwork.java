@@ -29,9 +29,9 @@ public class MLPNetwork implements Serializable {
     final public ArrayList<Integer> depLabels;
     public final Activation activation;
     public final ActivationType activationType;
-    final int numWordLayers = 19;
-    final int numPosLayers = 19;
-    final int numDepLayers = 11;
+    public static final int numWordLayers = 19;
+    public static final int numPosLayers = 19;
+    public static final int numDepLayers = 11;
     final int numDepLabels;
     final int depEmbedDim;
     final int wordEmbedDim;

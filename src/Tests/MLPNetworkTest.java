@@ -128,7 +128,7 @@ public class MLPNetworkTest {
         int lDim = 6;
         ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-        maps.constructPreComputeMap(instances, 19, 10000);
+        maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
 
         MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
         network.preCompute();
