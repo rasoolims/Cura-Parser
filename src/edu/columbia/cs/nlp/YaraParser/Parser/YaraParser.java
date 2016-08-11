@@ -38,17 +38,18 @@ public class YaraParser {
             options.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
             // options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
             options.modelFile = "/tmp/model";
+            options.outputFile = "/tmp/model.out";
             options.labeled = true;
             options.hiddenLayer1Size = 200;
-            options.learningRate = 0.1;
+            options.learningRate = 0.001;
             options.batchSize = 1024;
-            options.trainingIter = 3000;
+            options.trainingIter = 6;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
             options.numOfThreads = 2;
             options.decayStep = 10;
-            options.UASEvalPerStep = 50;
-            options.updaterType = UpdaterType.SGD;
+            options.UASEvalPerStep = 3;
+            options.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
             options.activationType = ActivationType.RELU;
         }
@@ -152,7 +153,7 @@ public class YaraParser {
                     step++;
                     List<NeuralTrainingInstance> instances = allInstances.subList(s, e);
                     try {
-                        neuralTrainer.fit(instances, step, step % (options.UASEvalPerStep / 10) == 0 ? true : false);
+                        neuralTrainer.fit(instances, step, step % (Math.max(1, options.UASEvalPerStep / 10)) == 0 ? true : false);
                     } catch (Exception ex) {
                         System.err.println("Exception occurred: " + ex.getMessage());
                         ex.printStackTrace();
@@ -187,7 +188,6 @@ public class YaraParser {
                                 GZIPOutputStream gz = new GZIPOutputStream(fos);
                                 ObjectOutput writer = new ObjectOutputStream(gz);
                                 writer.writeObject(mlpNetwork);
-                                writer.writeObject(dependencyLabels);
                                 writer.writeObject(options);
                                 writer.close();
                                 System.out.print("done!\n\n");

@@ -9,6 +9,8 @@ package edu.columbia.cs.nlp.YaraParser.Accessories;
  */
 
 public class Utils {
+    public static final double SmallDouble = Double.MAX_VALUE * 10;
+
     public static double[][] clone(double[][] object) {
         double[][] cloned = new double[object.length][];
         for (int i = 0; i < object.length; i++) {

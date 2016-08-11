@@ -1,6 +1,7 @@
 package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
+import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.*;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
@@ -336,11 +337,18 @@ public class MLPTrainer {
             }
 
             for (int i = 0; i < probs.length; i++) {
-                if (label[i] >= 0)
-                    probs[i] /= sum;
+                if (label[i] >= 0) {
+                    if (sum != 0)
+                        probs[i] /= sum;
+                    else
+                        probs[i] = Utils.SmallDouble;
+                }
             }
 
+
             cost -= Math.log(probs[gold]);
+            if (Double.isInfinite(cost))
+                throw new Exception("Infinite cost!");
             if (argmax == gold)
                 correct += 1.0;
 
