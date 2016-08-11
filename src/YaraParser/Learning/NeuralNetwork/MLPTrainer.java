@@ -37,7 +37,6 @@ public class MLPTrainer {
     double cost = 0.0;
     double correct = 0.0;
     int samples = 0;
-    int epochsWithNoPrint = 0;
     Updater updater;
     Random random;
 
@@ -129,15 +128,13 @@ public class MLPTrainer {
         regularizeWithL2();
         updater.update(gradients);
         net.preCompute();
-        epochsWithNoPrint++;
 
         if (print) {
             System.out.println(getCurrentTimeStamp() + " ---  iteration " + iteration + " --- size " +
-                    samples + " --- Correct " + format.format(100. * correct / samples) + " --- cost: " + format4.format(cost / epochsWithNoPrint));
+                    samples + " --- Correct " + format.format(100. * correct / samples) + " --- cost: " + format4.format(cost / samples));
             cost = 0;
             samples = 0;
             correct = 0;
-            epochsWithNoPrint = 0;
         }
     }
 
@@ -334,7 +331,7 @@ public class MLPTrainer {
                     probs[i] /= sum;
             }
 
-            cost -= Math.log(probs[gold]) / batchSize;
+            cost -= Math.log(probs[gold]);
             if (argmax == gold)
                 correct += 1.0;
 
