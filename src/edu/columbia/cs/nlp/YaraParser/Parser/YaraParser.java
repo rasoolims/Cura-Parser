@@ -176,7 +176,7 @@ public class YaraParser {
 
                     if (step % options.UASEvalPerStep == 0) {
                         if (options.averagingOption != AveragingOption.ONLY) {
-                            KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, 1);
+                            KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads);
                             parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
                                     options.beamWidth, options.lowercase, options.numOfThreads, false, "");
                             Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
@@ -195,7 +195,7 @@ public class YaraParser {
                         }
                         if (options.averagingOption != AveragingOption.NO) {
                             avgMlpNetwork.preCompute();
-                            KBeamArcEagerParser parser = new KBeamArcEagerParser(avgMlpNetwork, 1);
+                            KBeamArcEagerParser parser = new KBeamArcEagerParser(avgMlpNetwork, options.numOfThreads);
                             parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
                                     options.beamWidth, options.lowercase, options.numOfThreads, false, "");
                             Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
