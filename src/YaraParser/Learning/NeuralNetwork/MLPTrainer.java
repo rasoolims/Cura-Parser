@@ -315,13 +315,19 @@ public class MLPTrainer {
                     for (int h : hiddenNodesToUse) {
                         probs[i] += softmaxLayer[i][h] * activationHidden[h];
                     }
-
                     probs[i] += softmaxLayerBias[i];
-                    probs[i] = Math.exp(probs[i]);
-                    sum += probs[i];
-
                     if (argmax < 0 || probs[i] > probs[argmax])
                         argmax = i;
+                }
+            }
+
+            // We do this to decrease the chance of NAN creation.
+            double max = probs[argmax];
+            for (int i = 0; i < probs.length; i++) {
+                if (label[i] >= 0) {
+                    // We do this to decrease the chance of NAN creation.
+                    probs[i] = Math.exp(probs[i] - max);
+                    sum += probs[i];
                 }
             }
 
