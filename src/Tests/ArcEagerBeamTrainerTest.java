@@ -59,42 +59,53 @@ public class ArcEagerBeamTrainerTest {
 
         int index = 0;
         int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
+        assert instances.get(index).gold() == 0;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.shift(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
+        assert instances.get(index).gold() == 0;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.shift(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
+        assert instances.get(index).gold() == 2 + maps.dep2Int("neg");
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.rightArc(configuration.state, maps.dep2Int("neg"));
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
+        assert instances.get(index).gold() == 1;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.reduce(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
+        assert instances.get(index).gold() ==  2 + dependencyLabels.size() + maps.dep2Int("auxpass");
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.leftArc(configuration.state, maps.dep2Int("auxpass"));
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
+        assert instances.get(index).gold() ==  2 + dependencyLabels.size() + maps.dep2Int("nsubjpass");
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
+        assert instances.get(index).gold() == 0;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.shift(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
+        assert instances.get(index).gold() == 2 + maps.dep2Int("p");
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.rightArc(configuration.state, maps.dep2Int("p"));
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
+        assert instances.get(index).gold() == 1;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.reduce(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration);
+        assert instances.get(index).gold() ==  2 + dependencyLabels.size() + maps.dep2Int("ROOT");
+        assert instances.get(index).gold() ==  2 + dependencyLabels.size() + IndexMaps.LabelRootIndex;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         ArcEager.leftArc(configuration.state, maps.dep2Int("ROOT"));
 
