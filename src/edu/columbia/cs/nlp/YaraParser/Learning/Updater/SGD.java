@@ -14,7 +14,6 @@ import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 
 public class SGD extends Updater {
     double momentum;
-
     SGDType type;
 
     public SGD(MLPNetwork mlpNetwork, double learningRate, double momentum, SGDType type) {
@@ -22,7 +21,6 @@ public class SGD extends Updater {
         this.momentum = momentum;
         this.type = type;
     }
-
 
     @Override
     protected void update(double[][] g, double[][] h, double[][] v, EmbeddingTypes embeddingTypes) throws Exception {
