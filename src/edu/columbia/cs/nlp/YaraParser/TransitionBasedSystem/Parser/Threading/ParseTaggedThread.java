@@ -84,7 +84,7 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
 
                 int w = i + 1;
                 int head = bestParse.state.getHead(w);
-                int dep = bestParse.state.getDependency(w);
+                int dep = bestParse.state.getDependency(w, maps.labelNullIndex);
                 String lemma = "_";
                 String fpos = "_";
 

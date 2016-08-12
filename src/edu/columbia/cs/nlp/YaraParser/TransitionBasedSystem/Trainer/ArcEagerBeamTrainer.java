@@ -26,11 +26,13 @@ public class ArcEagerBeamTrainer {
     Options options;
     private String updateMode;
     private ArrayList<Integer> dependencyRelations;
+    private int labelNullIndex;
 
-    public ArcEagerBeamTrainer(String updateMode, Options options, ArrayList<Integer> dependencyRelations) {
+    public ArcEagerBeamTrainer(String updateMode, Options options, ArrayList<Integer> dependencyRelations, int labelNullIndex) {
         this.updateMode = updateMode;
         this.options = options;
         this.dependencyRelations = dependencyRelations;
+        this.labelNullIndex = labelNullIndex;
     }
 
     public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropoutProb)
@@ -67,7 +69,7 @@ public class ArcEagerBeamTrainer {
                 break;
             }
 
-            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig);
+            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, labelNullIndex);
             int[] label = new int[2 * (dependencyRelations.size() + 1)];
             if (!ArcEager.canDo(Actions.LeftArc, currentConfig.state)) {
                 for (int i = 2; i < 2 + dependencyRelations.size(); i++)
@@ -181,7 +183,7 @@ public class ArcEagerBeamTrainer {
         for (Configuration configuration : oracles.keySet()) {
             if (!configuration.state.isTerminalState()) {
                 State currentState = configuration.state;
-                int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+                int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
                 double[] scores = network.output(features, new int[network.getSoftmaxLayerDim()]);
 
                 int accepted = 0;
@@ -277,7 +279,7 @@ public class ArcEagerBeamTrainer {
             if (!canLeftArc)
                 for (int i = 0; i < dependencyRelations.size(); i++)
                     labels[dependencyRelations.size() + 2 + i] = -1;
-            int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+            int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
             double[] scores = network.output(features, labels);
 
             if (canShift) {

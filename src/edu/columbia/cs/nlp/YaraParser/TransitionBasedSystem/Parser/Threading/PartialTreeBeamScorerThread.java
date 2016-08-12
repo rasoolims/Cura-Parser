@@ -25,16 +25,18 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
     Configuration configuration;
     GoldConfiguration goldConfiguration;
     ArrayList<Integer> dependencyRelations;
+    int labelNullIndex;
     int b;
 
     public PartialTreeBeamScorerThread(boolean isDecode, MLPNetwork network, GoldConfiguration
-            goldConfiguration, Configuration configuration, ArrayList<Integer> dependencyRelations, int b) {
+            goldConfiguration, Configuration configuration, ArrayList<Integer> dependencyRelations, int b, int labelNullIndex) {
         this.isDecode = isDecode;
         this.network = network;
         this.configuration = configuration;
         this.goldConfiguration = goldConfiguration;
         this.dependencyRelations = dependencyRelations;
         this.b = b;
+        this.labelNullIndex = labelNullIndex;
     }
 
 
@@ -62,7 +64,7 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         if (!canLeftArc)
             for (int i = 0; i < dependencyRelations.size(); i++)
                 labels[dependencyRelations.size() + 2 + i] = -1;
-        int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+        int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
         double[] scores = network.output(features, labels);
 
         if (canShift) {

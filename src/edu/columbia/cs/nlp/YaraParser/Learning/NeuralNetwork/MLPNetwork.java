@@ -90,7 +90,7 @@ public class MLPNetwork implements Serializable {
         activation = activationType == ActivationType.RELU ? new Relu() : new Cubic();
     }
 
-    public static void averageNetworks(MLPNetwork toAverageFrom, MLPNetwork averaged, double r1, double r2) {
+    public static void averageNetworks(final MLPNetwork toAverageFrom, MLPNetwork averaged, final double r1, final double r2) {
         ArrayList<double[][]> matrices1 = toAverageFrom.matrices.getAllMatrices();
         ArrayList<double[][]> matrices2 = averaged.matrices.getAllMatrices();
         for (int m = 0; m < matrices1.size(); m++) {
@@ -134,14 +134,18 @@ public class MLPNetwork implements Serializable {
         }
 
         for (int i = 0; i < numPos; i++) {
-            for (int j = 0; j < posEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * stdDev);
+            if (i != IndexMaps.UnknownIndex) {
+                for (int j = 0; j < posEmbedDim; j++) {
+                    matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * stdDev);
+                }
             }
         }
 
         for (int i = 0; i < numDepLabels; i++) {
-            for (int j = 0; j < depEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * stdDev);
+            if (i != maps.labelUnkIndex) {
+                for (int j = 0; j < depEmbedDim; j++) {
+                    matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * stdDev);
+                }
             }
         }
 

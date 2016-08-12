@@ -25,15 +25,17 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
     ArrayList<Integer> dependencyRelations;
     int b;
     boolean rootFirst;
+    int labelNullIndex;
 
     public BeamScorerThread(boolean isDecode, MLPNetwork network, Configuration configuration,
-                            ArrayList<Integer> dependencyRelations, int b, boolean rootFirst) {
+                            ArrayList<Integer> dependencyRelations, int b, boolean rootFirst, int labelNullIndex) {
         this.isDecode = isDecode;
         this.network = network;
         this.configuration = configuration;
         this.dependencyRelations = dependencyRelations;
         this.b = b;
         this.rootFirst = rootFirst;
+        this.labelNullIndex = labelNullIndex;
     }
 
 
@@ -56,7 +58,7 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
         if (!canLeftArc)
             for (int i = 0; i < dependencyRelations.size(); i++)
                 labels[dependencyRelations.size() + 2 + i] = -1;
-        int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+        int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
         double[] scores = network.output(features, labels);
 
 

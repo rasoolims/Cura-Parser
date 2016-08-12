@@ -70,8 +70,9 @@ public class CoNLLReader {
             }
         }
 
-        depRelationMap.put(rootString, IndexMaps.LabelRootIndex);
-        int l = IndexMaps.LabelRootIndex + 1;
+        // We shift everything by two when getting the actual value for the dependency feature.
+        depRelationMap.put(rootString, 0);
+        int l = 1;
         for (String lab : labels) {
             if (!lab.equals(rootString)) {
                 depRelationMap.put(lab, l++);

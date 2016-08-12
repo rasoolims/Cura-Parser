@@ -69,7 +69,7 @@ public class KBeamArcEagerParser {
             if (!canLeftArc)
                 for (int i = 0; i < maps.relSize(); i++)
                     labels[maps.relSize() + 2 + i] = -1;
-            int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+            int[] features = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
             double[] scores = network.output(features, labels);
 
             if (!canShift
@@ -128,7 +128,7 @@ public class KBeamArcEagerParser {
     public Configuration parse(Sentence sentence, boolean rootFirst, int beamWidth, int numOfThreads) throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
 
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
         while (!ArcEager.isTerminal(beam)) {
@@ -139,7 +139,7 @@ public class KBeamArcEagerParser {
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(true, network, beam.get(b),
-                            dependencyRelations, b, rootFirst));
+                            dependencyRelations, b, rootFirst, maps.labelNullIndex));
                 }
                 for (int b = 0; b < beam.size(); b++) {
                     for (BeamElement element : pool.take().get()) {
@@ -206,7 +206,7 @@ public class KBeamArcEagerParser {
 
             for (int b = 0; b < beam.size(); b++) {
                 pool.submit(new PartialTreeBeamScorerThread(true, network, goldConfiguration, beam.get(b),
-                        dependencyRelations, b));
+                        dependencyRelations, b, maps.labelNullIndex));
             }
             for (int b = 0; b < beam.size(); b++) {
                 for (BeamElement element : pool.take().get()) {
@@ -351,8 +351,8 @@ public class KBeamArcEagerParser {
 
             if (!partial) {
                 for (GoldConfiguration goldConfiguration : data) {
-                    ParseThread thread = new ParseThread(index, network,
-                            goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration, partial);
+                    ParseThread thread = new ParseThread(index, network, goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration,
+                            partial, maps.labelNullIndex);
                     pool.submit(thread);
                     index++;
                 }
@@ -385,7 +385,7 @@ public class KBeamArcEagerParser {
                 for (int i = 0; i < words.length; i++) {
                     int w = i + 1;
                     int head = bestParse.state.getHead(w);
-                    int dep = bestParse.state.getDependency(w);
+                    int dep = bestParse.state.getDependency(w, maps.labelNullIndex);
 
                     if (w == bestParse.state.rootIndex && !rootFirst)
                         continue;

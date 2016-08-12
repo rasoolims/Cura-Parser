@@ -12,7 +12,7 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Config
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
 
 public class FeatureExtractor {
-    public static int[] extractBaseFeatures(Configuration configuration) throws Exception {
+    public static int[] extractBaseFeatures(Configuration configuration, int labelNullIndex) throws Exception {
 
         State state = configuration.state;
         Sentence sentence = configuration.sentence;
@@ -63,17 +63,17 @@ public class FeatureExtractor {
         int s0bp = IndexMaps.NullIndex;
         int s0ap = IndexMaps.NullIndex;
 
-        int s0l = IndexMaps.LabelNullIndex;
-        int b0l1l = IndexMaps.LabelNullIndex;
-        int b0l2l = IndexMaps.LabelNullIndex;
-        int b0lll = IndexMaps.LabelNullIndex;
-        int sr1l = IndexMaps.LabelNullIndex;
-        int s0rrl = IndexMaps.LabelNullIndex;
-        int sh0l = IndexMaps.LabelNullIndex;
-        int s0l1l = IndexMaps.LabelNullIndex;
-        int s0lll = IndexMaps.LabelNullIndex;
-        int s0r2l = IndexMaps.LabelNullIndex;
-        int s0l2l = IndexMaps.LabelNullIndex;
+        int s0l = labelNullIndex;
+        int b0l1l = labelNullIndex;
+        int b0l2l = labelNullIndex;
+        int b0lll = labelNullIndex;
+        int sr1l = labelNullIndex;
+        int s0rrl = labelNullIndex;
+        int sh0l = labelNullIndex;
+        int s0l1l = labelNullIndex;
+        int s0lll = labelNullIndex;
+        int s0r2l = labelNullIndex;
+        int s0l2l = labelNullIndex;
 
         int[] words = sentence.getWords();
         int[] tags = sentence.getTags();
@@ -92,20 +92,20 @@ public class FeatureExtractor {
             if (leftMost >= 0) {
                 b0l1w = (words[leftMost - 1]);
                 b0l1p = (tags[leftMost - 1]);
-                b0l1l = (state.getDependency(leftMost));
+                b0l1l = (state.getDependency(leftMost, labelNullIndex));
 
                 int l2 = state.secondLeftMostModifier(b0Position);
                 if (l2 >= 0) {
                     b0l2w = (words[l2 - 1]);
                     b0l2p = (tags[l2 - 1]);
-                    b0l2l = (state.getDependency(l2));
+                    b0l2l = (state.getDependency(l2, labelNullIndex));
                 }
 
                 int secondLeftMost = state.leftMostModifier(leftMost);
                 if (secondLeftMost >= 0) {
                     b0llw = (words[secondLeftMost - 1]);
                     b0llp = (tags[secondLeftMost - 1]);
-                    b0lll = (state.getDependency(secondLeftMost));
+                    b0lll = (state.getDependency(secondLeftMost, labelNullIndex));
                 }
             }
 
@@ -130,7 +130,7 @@ public class FeatureExtractor {
             int s0Position = state.peek();
             s0w = (words[s0Position - 1]);
             s0p = (tags[s0Position - 1]);
-            s0l = (state.getDependency(s0Position));
+            s0l = (state.getDependency(s0Position, labelNullIndex));
 
             if (s0Position > 1) {
                 s0bw = words[s0Position - 2];
@@ -170,13 +170,13 @@ public class FeatureExtractor {
             if (leftMost >= 0) {
                 s0l1p = (tags[leftMost - 1]);
                 s0l1w = (words[leftMost - 1]);
-                s0l1l = (state.getDependency(leftMost));
+                s0l1l = (state.getDependency(leftMost, labelNullIndex));
 
                 int secondLeftMost = state.leftMostModifier(leftMost);
                 if (secondLeftMost >= 0) {
                     s0llp = (tags[secondLeftMost - 1]);
                     s0llw = (words[secondLeftMost - 1]);
-                    s0lll = (state.getDependency(secondLeftMost));
+                    s0lll = (state.getDependency(secondLeftMost, labelNullIndex));
                 }
             }
 
@@ -184,13 +184,13 @@ public class FeatureExtractor {
             if (rightMost >= 0) {
                 sr1p = (tags[rightMost - 1]);
                 sr1w = (words[rightMost - 1]);
-                sr1l = (state.getDependency(rightMost));
+                sr1l = (state.getDependency(rightMost, labelNullIndex));
 
                 int secondRightMost = state.rightMostModifier(rightMost);
                 if (secondRightMost >= 0) {
                     s0rrp = (tags[secondRightMost - 1]);
                     s0rrw = (words[secondRightMost - 1]);
-                    s0rrl = (state.getDependency(secondRightMost));
+                    s0rrl = (state.getDependency(secondRightMost, labelNullIndex));
                 }
             }
 
@@ -198,7 +198,7 @@ public class FeatureExtractor {
             if (headIndex >= 0) {
                 sh0w = (words[headIndex - 1]);
                 sh0p = (tags[headIndex - 1]);
-                sh0l = (state.getDependency(headIndex));
+                sh0l = (state.getDependency(headIndex, labelNullIndex));
             }
 
             if (leftMost >= 0) {
@@ -206,7 +206,7 @@ public class FeatureExtractor {
                 if (l2 >= 0) {
                     s0l2w = (words[l2 - 1]);
                     s0l2p = (tags[l2 - 1]);
-                    s0l2l = (state.getDependency(l2));
+                    s0l2l = (state.getDependency(l2, labelNullIndex));
                 }
             }
             if (headIndex >= 0) {
@@ -221,7 +221,7 @@ public class FeatureExtractor {
                 if (r2 >= 0) {
                     s0r2w = (words[r2 - 1]);
                     s0r2p = (tags[r2 - 1]);
-                    s0r2l = (state.getDependency(r2));
+                    s0r2l = (state.getDependency(r2, labelNullIndex));
                 }
             }
         }

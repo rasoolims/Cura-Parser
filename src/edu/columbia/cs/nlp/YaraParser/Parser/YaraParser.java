@@ -10,9 +10,9 @@ import edu.columbia.cs.nlp.YaraParser.Accessories.Evaluator;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
-import edu.columbia.cs.nlp.YaraParser.Learning.AveragingOption;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPTrainer;
+import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
@@ -126,7 +126,8 @@ public class YaraParser {
 
             System.out.println("size of training data (#sens): " + dataSet.size());
             System.out.println("Embedding dimension " + wDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels, maps
+                    .labelNullIndex);
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             maps.constructPreComputeMap(allInstances, MLPNetwork.numWordLayers, 10000);
 

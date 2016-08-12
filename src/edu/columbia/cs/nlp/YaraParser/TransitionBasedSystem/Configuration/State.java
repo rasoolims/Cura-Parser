@@ -6,7 +6,6 @@
 package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration;
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
-import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 
 import java.util.ArrayDeque;
 
@@ -215,10 +214,10 @@ public class State implements Cloneable {
         return -1;
     }
 
-    public int getDependency(int index) {
+    public int getDependency(int index, int labelNullIndex) {
         if (arcs[index] != null)
             return arcs[index].second;
-        return IndexMaps.LabelNullIndex;
+        return labelNullIndex;
     }
 
     public void setMaxSentenceSize(int maxSentenceSize) {

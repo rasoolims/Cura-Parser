@@ -30,11 +30,11 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     int beamWidth;
     GoldConfiguration goldConfiguration;
     boolean partial;
-
+    int labelNullIndex;
     int id;
 
     public ParseThread(int id, MLPNetwork network, Sentence sentence,
-                       boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
+                       boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial, int labelNullIndex) {
         this.id = id;
         this.network = network;
         this.dependencyRelations = network.getDepLabels();
@@ -43,6 +43,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         this.beamWidth = beamWidth;
         this.goldConfiguration = goldConfiguration;
         this.partial = partial;
+        this.labelNullIndex = labelNullIndex;
     }
 
     @Override
@@ -78,7 +79,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     if (!canLeftArc)
                         for (int i = 0; i < dependencyRelations.size(); i++)
                             labels[dependencyRelations.size() + 2 + i] = -1;
-                    int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+                    int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
                     double[] scores = network.output(features, labels);
                     if (!canShift
                             && !canReduce
@@ -178,7 +179,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 if (!canLeftArc)
                     for (int i = 0; i < dependencyRelations.size(); i++)
                         labels[dependencyRelations.size() + 2 + i] = -1;
-                int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+                int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
                 double[] scores = network.output(features, labels);
                 double bestScore = Double.NEGATIVE_INFINITY;
                 int bestAction = -1;
@@ -344,7 +345,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             if (!canLeftArc)
                 for (int i = 0; i < dependencyRelations.size(); i++)
                     labels[dependencyRelations.size() + 2 + i] = -1;
-            int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+            int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
             double[] scores = network.output(features, labels);
             if (!canShift
                     && !canReduce
@@ -423,7 +424,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 if (!canLeftArc)
                     for (int i = 0; i < dependencyRelations.size(); i++)
                         labels[dependencyRelations.size() + 2 + i] = -1;
-                int[] features = FeatureExtractor.extractBaseFeatures(configuration);
+                int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
                 double[] scores = network.output(features, labels);
                 if (!canShift
                         && !canReduce

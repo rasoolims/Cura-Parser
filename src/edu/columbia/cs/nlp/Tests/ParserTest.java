@@ -141,7 +141,7 @@ public class ParserTest {
             int pDim = 4;
             int lDim = 6;
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels);
+                    options, dependencyLabels, maps.labelNullIndex);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);

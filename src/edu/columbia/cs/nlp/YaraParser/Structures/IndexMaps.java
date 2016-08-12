@@ -14,9 +14,9 @@ public class IndexMaps implements Serializable {
     public static final int RootIndex = 2;
     public static final int UnknownIndex = 0;
     public static final int NullIndex = 1;
-    public static final int LabelRootIndex = 0;
-    public static int LabelUnknownIndex;
-    public static int LabelNullIndex;
+    public final int LabelRootIndex = 0;
+    public final int labelNullIndex;
+    public final int labelUnkIndex;
     public final String rootString;
     public final HashSet<Integer> rareWords;
     public HashMap<Integer, Integer>[] preComputeMap;
@@ -56,8 +56,8 @@ public class IndexMaps implements Serializable {
         for (String label : depRelationMap.keySet()) {
             revLabels[depRelationMap.get(label)] = label;
         }
-        LabelUnknownIndex = depRelationMap.size();
-        LabelNullIndex = depRelationMap.size() + 1;
+        labelNullIndex = depRelationMap.size();
+        labelUnkIndex = depRelationMap.size() + 1;
 
         embeddingsDictionary = new HashMap<>();
         this.rareWords = rareWords;
@@ -128,7 +128,7 @@ public class IndexMaps implements Serializable {
     public int dep2Int(String dep) {
         if (depRelationMap.containsKey(dep))
             return depRelationMap.get(dep);
-        return LabelUnknownIndex;
+        return labelUnkIndex;
     }
 
     public void constructPreComputeMap(List<NeuralTrainingInstance> instances, int numWordLayer, int maxNumber) {
