@@ -196,8 +196,7 @@ public class MLPTrainer {
         }
     }
 
-    private void backPropSavedGradients(NetworkMatrices g, double[][][] savedGradients, HashSet<Integer>[] wordsSeen)
-            throws Exception {
+    private void backPropSavedGradients(NetworkMatrices g, double[][][] savedGradients, HashSet<Integer>[] wordsSeen) throws Exception {
         int offset = 0;
         double[][] hiddenLayer = net.matrices.getHiddenLayer();
         double[][] wE = net.matrices.getWordEmbedding();
