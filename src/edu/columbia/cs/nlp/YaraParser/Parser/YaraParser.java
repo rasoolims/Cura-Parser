@@ -135,8 +135,8 @@ public class YaraParser {
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
             maps.emptyEmbeddings();
 
-            MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options.updaterType, 0.9, options.learningRate, 1e-8, options.numOfThreads,
-                    options.dropoutProbForHiddenLayer);
+            MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options.updaterType, 0.9, options.learningRate, options.regularization,
+                    options.numOfThreads, options.dropoutProbForHiddenLayer);
 
 
             int step = 0;

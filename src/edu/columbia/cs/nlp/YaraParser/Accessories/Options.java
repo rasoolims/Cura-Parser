@@ -36,6 +36,7 @@ public class Options implements Serializable {
     public double learningRate;
     public int batchSize;
     public double decayStep;
+    public double regularization;
     public boolean dropout;
     public AveragingOption averagingOption;
     public String modelFile;
@@ -73,6 +74,7 @@ public class Options implements Serializable {
         hiddenLayer2Size = 200;
         // good for ADAM and ADAGRAD
         learningRate = 0.001;
+        regularization = 1e-4;
         batchSize = 1000;
         decayStep = 0.2;
         rootFirst = false;
@@ -167,6 +169,7 @@ public class Options implements Serializable {
         output.append("\t \t -u [updater-type: sgd(default),adam,adagrad] \n");
         output.append("\t \t -batch [batch-size] \n");
         output.append("\t \t -d [dropout-prob] \n");
+        output.append("\t \t -reg [regularization with L2] \n");
         output.append("\t \t -eval [uas eval per step (default 100)] \n");
         output.append("\t \t drop [put if want dropout] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
@@ -273,24 +276,26 @@ public class Options implements Serializable {
                     throw new Exception("updater not supported");
             } else if (args[i].equals("-eval"))
                 options.UASEvalPerStep = Integer.parseInt(args[i + 1]);
-            else if (args[i].startsWith("-h1"))
+            else if (args[i].equals("-h1"))
                 options.hiddenLayer1Size = Integer.parseInt(args[i + 1]);
-            else if (args[i].startsWith("-h2"))
+            else if (args[i].equals("-h2"))
                 options.hiddenLayer2Size = Integer.parseInt(args[i + 1]);
-            else if (args[i].startsWith("-batch"))
+            else if (args[i].equals("-batch"))
                 options.batchSize = Integer.parseInt(args[i + 1]);
-            else if (args[i].startsWith("-lr"))
+            else if (args[i].equals("-lr"))
                 options.learningRate = Double.parseDouble(args[i + 1]);
-            else if (args[i].startsWith("-ds"))
+            else if (args[i].equals("-ds"))
                 options.decayStep = Double.parseDouble(args[i + 1]);
-            else if (args[i].startsWith("-d"))
+            else if (args[i].equals("-d"))
                 options.dropoutProbForHiddenLayer = Double.parseDouble(args[i + 1]);
-            else if (args[i].startsWith("-cluster")) {
+            else if (args[i].equals("-reg"))
+                options.regularization = Double.parseDouble(args[i + 1]);
+            else if (args[i].equals("-cluster")) {
                 options.clusterFile = args[i + 1];
                 options.useExtendedWithBrownClusterFeatures = true;
-            } else if (args[i].startsWith("-out"))
+            } else if (args[i].equals("-out"))
                 options.outputFile = args[i + 1];
-            else if (args[i].startsWith("-delim"))
+            else if (args[i].equals("-delim"))
                 options.separator = args[i + 1];
             else if (args[i].startsWith("beam:"))
                 options.beamWidth = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
