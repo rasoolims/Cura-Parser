@@ -7,12 +7,12 @@ package edu.columbia.cs.nlp.YaraParser.Accessories;
 
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.AveragingOption;
+import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.SGDType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashSet;
 
 
@@ -62,9 +62,14 @@ public class Options implements Serializable {
     public int hiddenLayer1Size;
     public int hiddenLayer2Size;
 
+    public int minFreq;
+    public double momentum;
+    public SGDType sgdType;
+
     public Options() {
         showHelp = false;
         updaterType = UpdaterType.ADAM;
+        sgdType = SGDType.NESTEROV;
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
@@ -77,12 +82,14 @@ public class Options implements Serializable {
         regularization = 1e-4;
         batchSize = 1000;
         decayStep = 0.2;
+        momentum = 0.9;
         rootFirst = false;
         modelFile = "";
         outputFile = "";
         inputFile = "";
         devPath = "";
         scorePath = "";
+        minFreq = 1;
         dropoutProbForHiddenLayer = 0;
         averagingOption = AveragingOption.BOTH;
         activationType = ActivationType.RELU;
@@ -167,9 +174,12 @@ public class Options implements Serializable {
         output.append("\t \t -ds [decay-step] \n");
         output.append("\t \t -a [activation (relu,cubic) -- default:relu] \n");
         output.append("\t \t -u [updater-type: sgd(default),adam,adagrad] \n");
+        output.append("\t \t -sgd [sgd-type (if using sgd): nesterov(default),momentum, vanilla] \n");
         output.append("\t \t -batch [batch-size] \n");
-        output.append("\t \t -d [dropout-prob] \n");
+        output.append("\t \t -d [dropout-prob (default:0)] \n");
+        output.append("\t \t -momentum [momentum (default:0.9)] \n");
         output.append("\t \t -reg [regularization with L2] \n");
+        output.append("\t \t -min [min freq (default 1)] \n");
         output.append("\t \t -eval [uas eval per step (default 100)] \n");
         output.append("\t \t drop [put if want dropout] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
@@ -254,6 +264,15 @@ public class Options implements Serializable {
                     options.activationType = ActivationType.CUBIC;
                 else
                     throw new Exception("updater not supported");
+            } else if (args[i].equals("-sgd")) {
+                if (args[i + 1].equals("nesterov"))
+                    options.sgdType = SGDType.NESTEROV;
+                else if (args[i + 1].equals("momentum"))
+                    options.sgdType = SGDType.MOMENTUM;
+                else if (args[i + 1].equals("vanilla"))
+                    options.sgdType = SGDType.VANILLA;
+                else
+                    throw new Exception("sgd not supported");
             } else if (args[i].startsWith("-u")) {
                 if (args[i + 1].equals("sgd"))
                     options.updaterType = UpdaterType.SGD;
@@ -282,12 +301,16 @@ public class Options implements Serializable {
                 options.hiddenLayer2Size = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-batch"))
                 options.batchSize = Integer.parseInt(args[i + 1]);
+            else if (args[i].equals("-min"))
+                options.minFreq = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-lr"))
                 options.learningRate = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-ds"))
                 options.decayStep = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-d"))
                 options.dropoutProbForHiddenLayer = Double.parseDouble(args[i + 1]);
+            else if (args[i].equals("-momentum"))
+                options.momentum = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-reg"))
                 options.regularization = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-cluster")) {
@@ -330,110 +353,10 @@ public class Options implements Serializable {
         return options;
     }
 
-    public static ArrayList<Options> getAllPossibleOptions(Options option) {
-        ArrayList<Options> options = new ArrayList<Options>();
-        options.add(option);
-
-        ArrayList<Options> tmp = new ArrayList<Options>();
-
-        for (Options opt : options) {
-            Options o1 = opt.clone();
-            o1.labeled = true;
-
-            Options o2 = opt.clone();
-            o2.labeled = false;
-            tmp.add(o1);
-            tmp.add(o2);
-        }
-
-        options = tmp;
-        tmp = new ArrayList<Options>();
-
-
-        for (Options opt : options) {
-            Options o1 = opt.clone();
-            o1.lowercase = true;
-
-            Options o2 = opt.clone();
-            o2.lowercase = false;
-            tmp.add(o1);
-            tmp.add(o2);
-        }
-
-        options = tmp;
-        tmp = new ArrayList<Options>();
-
-        for (Options opt : options) {
-            Options o1 = opt.clone();
-            o1.useExtendedFeatures = true;
-
-            Options o2 = opt.clone();
-            o2.useExtendedFeatures = false;
-            tmp.add(o1);
-            tmp.add(o2);
-        }
-
-        options = tmp;
-        tmp = new ArrayList<Options>();
-
-        for (Options opt : options) {
-            Options o1 = opt.clone();
-            o1.useDynamicOracle = true;
-
-            Options o2 = opt.clone();
-            o2.useDynamicOracle = false;
-            tmp.add(o1);
-            tmp.add(o2);
-        }
-
-        options = tmp;
-        tmp = new ArrayList<Options>();
-
-        for (Options opt : options) {
-            Options o1 = opt.clone();
-            o1.useMaxViol = true;
-
-            Options o2 = opt.clone();
-            o2.useMaxViol = false;
-            tmp.add(o1);
-            tmp.add(o2);
-        }
-
-        options = tmp;
-        tmp = new ArrayList<Options>();
-
-        for (Options opt : options) {
-            Options o1 = opt.clone();
-            o1.useRandomOracleSelection = true;
-
-            Options o2 = opt.clone();
-            o2.useRandomOracleSelection = false;
-            tmp.add(o1);
-            tmp.add(o2);
-        }
-
-        options = tmp;
-        tmp = new ArrayList<Options>();
-
-
-        for (Options opt : options) {
-            Options o1 = opt.clone();
-            o1.rootFirst = true;
-
-            Options o2 = opt.clone();
-            o2.rootFirst = false;
-            tmp.add(o1);
-            tmp.add(o2);
-        }
-
-        options = tmp;
-        return options;
-    }
-
     public void changePunc(String puncPath) throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader(puncPath));
 
-        punctuations = new HashSet<String>();
+        punctuations = new HashSet<>();
         String line;
         while ((line = reader.readLine()) != null) {
             line = line.trim();
@@ -508,33 +431,5 @@ public class Options implements Serializable {
             return builder.toString();
         }
         return "";
-    }
-
-    public Options clone() {
-        Options options = new Options();
-        options.train = train;
-        options.labeled = labeled;
-        options.trainingIter = trainingIter;
-        options.useMaxViol = useMaxViol;
-        options.beamWidth = beamWidth;
-        options.devPath = devPath;
-        options.evaluate = evaluate;
-        options.goldFile = goldFile;
-        options.inputFile = inputFile;
-        options.lowercase = lowercase;
-        options.numOfThreads = numOfThreads;
-        options.outputFile = outputFile;
-        options.useDynamicOracle = useDynamicOracle;
-        options.modelFile = modelFile;
-        options.rootFirst = rootFirst;
-        options.parseConllFile = parseConllFile;
-        options.parseTaggedFile = parseTaggedFile;
-        options.predFile = predFile;
-        options.showHelp = showHelp;
-        options.separator = separator;
-        options.useExtendedFeatures = useExtendedFeatures;
-        options.parsePartialConll = parsePartialConll;
-        options.partialTrainingStartingIteration = partialTrainingStartingIteration;
-        return options;
     }
 }

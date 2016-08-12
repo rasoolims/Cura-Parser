@@ -7,7 +7,6 @@ import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPTrainer;
-import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
@@ -146,7 +145,7 @@ public class ParserTest {
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
 
-            MLPTrainer classifier = new MLPTrainer(network, UpdaterType.ADAM, 0.9, 0.001, 1e-8, 1, 0);
+            MLPTrainer classifier = new MLPTrainer(network, options);
             network.preCompute();
 
             for (int i = 1; i <= 100; i++) {

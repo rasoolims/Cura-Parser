@@ -110,7 +110,7 @@ public class YaraParser {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile, 0);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile, options.minFreq);
             int wDim = 64;
             if (options.wordEmbeddingFile.length() > 0)
                 wDim = maps.readEmbeddings(options.wordEmbeddingFile);
@@ -135,8 +135,7 @@ public class YaraParser {
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32);
             maps.emptyEmbeddings();
 
-            MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options.updaterType, 0.9, options.learningRate, options.regularization,
-                    options.numOfThreads, options.dropoutProbForHiddenLayer);
+            MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options);
 
 
             int step = 0;
@@ -146,7 +145,7 @@ public class YaraParser {
             System.out.println("Decay after every " + decayStep + " batches");
             for (int i = 0; i < options.trainingIter; i++) {
                 System.out.println("reshuffling data for round " + i);
-                allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0.05);
+                allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), options.minFreq < 1 ? 0.05 : 0);
                 Collections.shuffle(allInstances);
                 int s = 0;
                 int e = Math.min(allInstances.size(), options.batchSize);

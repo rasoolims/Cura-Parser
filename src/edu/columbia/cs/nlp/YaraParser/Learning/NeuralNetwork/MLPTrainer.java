@@ -1,5 +1,6 @@
 package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
 
+import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.*;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
@@ -48,24 +49,22 @@ public class MLPTrainer {
     private double regCoef;
     private double dropoutProb;
 
-    public MLPTrainer(MLPNetwork net, UpdaterType updaterType, double momentum, double learningRate, double regCoef, int numThreads, double
-            dropoutProb) throws Exception {
+    public MLPTrainer(MLPNetwork net, Options options) throws Exception {
         this.net = net;
         random = new Random();
-        this.dropoutProb = dropoutProb;
-        if (updaterType == UpdaterType.SGD)
-            // todo
-            updater = new SGD(net, learningRate, momentum, false);
-        else if (updaterType == UpdaterType.ADAGRAD)
-            updater = new Adagrad(net, learningRate, 1e-6);
-        else if (updaterType == UpdaterType.ADAM)
-            updater = new Adam(net, learningRate, 0.9, 0.9999, 1e-8);
-        else if (updaterType == UpdaterType.ADAMAX)
-            updater = new AdaMax(net, learningRate, 0.9, 0.9999, 1e-8);
+        this.dropoutProb = options.dropoutProbForHiddenLayer;
+        if (options.updaterType == UpdaterType.SGD)
+            updater = new SGD(net, options.learningRate, options.momentum, options.sgdType);
+        else if (options.updaterType == UpdaterType.ADAGRAD)
+            updater = new Adagrad(net, options.learningRate, 1e-6);
+        else if (options.updaterType == UpdaterType.ADAM)
+            updater = new Adam(net, options.learningRate, 0.9, 0.9999, 1e-8);
+        else if (options.updaterType == UpdaterType.ADAMAX)
+            updater = new AdaMax(net, options.learningRate, 0.9, 0.9999, 1e-8);
         else
             throw new Exception("Updater not implemented");
-        this.regCoef = regCoef;
-        this.numThreads = numThreads;
+        this.regCoef = options.regularization;
+        this.numThreads = options.numOfThreads;
         executor = Executors.newFixedThreadPool(numThreads);
         pool = new ExecutorCompletionService<>(executor);
     }

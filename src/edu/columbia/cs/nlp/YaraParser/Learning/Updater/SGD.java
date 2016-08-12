@@ -1,6 +1,7 @@
 package edu.columbia.cs.nlp.YaraParser.Learning.Updater;
 
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
+import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.SGDType;
 import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 
 /**
@@ -14,12 +15,12 @@ import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 public class SGD extends Updater {
     double momentum;
 
-    // For Nesterov accelerated gradient.
-    boolean accelerated;
+    SGDType type;
 
-    public SGD(MLPNetwork mlpNetwork, double learningRate, double momentum, boolean accelerated) {
+    public SGD(MLPNetwork mlpNetwork, double learningRate, double momentum, SGDType type) {
         super(mlpNetwork, learningRate);
         this.momentum = momentum;
+        this.type = type;
     }
 
 
@@ -27,13 +28,17 @@ public class SGD extends Updater {
     protected void update(double[][] g, double[][] h, double[][] v, EmbeddingTypes embeddingTypes) throws Exception {
         for (int i = 0; i < g.length; i++) {
             for (int j = 0; j < g[i].length; j++) {
-                if (!accelerated) {
+                if (type == SGDType.VANILLA) {
+                    mlpNetwork.modify(embeddingTypes, i, j, -learningRate * g[i][j]);
+                } else if (type == SGDType.MOMENTUM) {
                     h[i][j] = momentum * h[i][j] - g[i][j];
                     mlpNetwork.modify(embeddingTypes, i, j, learningRate * h[i][j]);
-                } else {
+                } else if (type == SGDType.NESTEROV) {
                     double hPrev = h[i][j];
                     h[i][j] = momentum * h[i][j] - learningRate * g[i][j];
                     mlpNetwork.modify(embeddingTypes, i, j, -momentum * hPrev + (1 + momentum) * h[i][j]);
+                } else {
+                    throw new Exception("SGD type not supported");
                 }
             }
         }
@@ -42,20 +47,18 @@ public class SGD extends Updater {
     @Override
     protected void update(double[] g, double[] h, double[] v, EmbeddingTypes embeddingTypes) throws Exception {
         for (int i = 0; i < g.length; i++) {
-            if (accelerated) {
+            if (type == SGDType.VANILLA) {
+                mlpNetwork.modify(embeddingTypes, i, -1, -learningRate * g[i]);
+            } else if (type == SGDType.MOMENTUM) {
                 h[i] = momentum * h[i] - g[i];
                 mlpNetwork.modify(embeddingTypes, i, -1, learningRate * h[i]);
-            } else {
+            } else if (type == SGDType.NESTEROV) {
                 double hPrev = h[i];
                 h[i] = momentum * h[i] - learningRate * g[i];
                 mlpNetwork.modify(embeddingTypes, i, -1, -momentum * hPrev + (1 + momentum) * h[i]);
+            } else {
+                throw new Exception("SGD type not supported");
             }
         }
     }
-    /**
-
-     v_prev = v # back this up
-     v = mu * v - learning_rate * dx # velocity update stays the same
-     x += -mu * v_prev + (1 + mu) * v # position update changes form
-     */
 }
