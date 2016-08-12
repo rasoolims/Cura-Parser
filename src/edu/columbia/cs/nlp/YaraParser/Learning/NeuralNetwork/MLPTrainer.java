@@ -1,6 +1,7 @@
 package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
+import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.*;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
@@ -250,9 +251,7 @@ public class MLPTrainer {
             throws Exception {
         double cost = 0;
         double correct = 0;
-        HashSet<Integer>[] featuresSeen = new HashSet[net.numWordLayers + net.numPosLayers + net.numDepLayers];
-        for (int i = 0; i < featuresSeen.length; i++)
-            featuresSeen[i] = new HashSet<>();
+        HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(net.numWordLayers + net.numPosLayers + net.numDepLayers);
 
         for (NeuralTrainingInstance instance : instances) {
             int[] features = instance.getFeatures();

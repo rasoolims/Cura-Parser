@@ -1,5 +1,7 @@
 package edu.columbia.cs.nlp.YaraParser.Accessories;
 
+import java.util.HashSet;
+
 /**
  * Created by Mohammad Sadegh Rasooli.
  * ML-NLP Lab, Department of Computer Science, Columbia University
@@ -76,5 +78,12 @@ public class Utils {
                 return false;
         }
         return true;
+    }
+
+    public static <T> HashSet<T>[] createHashSetArray(int size) {
+        HashSet<T>[] a = new HashSet[size];
+        for (int i = 0; i < a.length; i++)
+            a[i] = new HashSet<>();
+        return a;
     }
 }
