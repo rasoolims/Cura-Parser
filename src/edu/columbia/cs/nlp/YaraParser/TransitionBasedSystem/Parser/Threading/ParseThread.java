@@ -6,8 +6,8 @@
 
 package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading;
 
-import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
+import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.Structures.Sentence;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;

@@ -1,7 +1,5 @@
 package edu.columbia.cs.nlp.YaraParser.Structures;
 
-import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Serializable;

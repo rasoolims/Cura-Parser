@@ -1,11 +1,11 @@
 package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
-import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.*;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
+import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;

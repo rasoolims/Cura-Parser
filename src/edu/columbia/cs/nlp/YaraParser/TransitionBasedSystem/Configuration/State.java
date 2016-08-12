@@ -5,7 +5,7 @@
 
 package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration;
 
-import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
+import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 
 import java.util.ArrayDeque;
 

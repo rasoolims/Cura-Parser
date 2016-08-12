@@ -6,7 +6,7 @@
 
 package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration;
 
-import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
+import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.Structures.Sentence;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;

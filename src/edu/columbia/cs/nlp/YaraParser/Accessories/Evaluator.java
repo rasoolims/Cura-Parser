@@ -5,6 +5,7 @@
 
 package edu.columbia.cs.nlp.YaraParser.Accessories;
 
+import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.CompactTree;
 
 import java.text.DecimalFormat;
