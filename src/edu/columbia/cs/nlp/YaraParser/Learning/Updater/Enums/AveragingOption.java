@@ -1,4 +1,4 @@
-package edu.columbia.cs.nlp.YaraParser.Learning;
+package edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
