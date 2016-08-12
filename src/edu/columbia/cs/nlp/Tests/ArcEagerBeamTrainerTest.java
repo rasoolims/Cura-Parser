@@ -54,7 +54,7 @@ public class ArcEagerBeamTrainerTest {
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
         ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
-                maps.labelNullIndex);
+                maps.labelNullIndex, maps.rareWords);
         ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
         Configuration configuration = new Configuration(sentence, options.rootFirst);
 

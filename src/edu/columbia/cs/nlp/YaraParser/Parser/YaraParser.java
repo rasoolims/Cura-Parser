@@ -110,7 +110,7 @@ public class YaraParser {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile, 1);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile, 0);
             int wDim = 64;
             if (options.wordEmbeddingFile.length() > 0)
                 wDim = maps.readEmbeddings(options.wordEmbeddingFile);
@@ -126,8 +126,8 @@ public class YaraParser {
 
             System.out.println("size of training data (#sens): " + dataSet.size());
             System.out.println("Embedding dimension " + wDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels, maps
-                    .labelNullIndex);
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+                    maps.labelNullIndex, maps.rareWords);
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             maps.constructPreComputeMap(allInstances, MLPNetwork.numWordLayers, 10000);
 
@@ -146,6 +146,7 @@ public class YaraParser {
             System.out.println("Decay after every " + decayStep + " batches");
             for (int i = 0; i < options.trainingIter; i++) {
                 System.out.println("reshuffling data for round " + i);
+                allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0.05);
                 Collections.shuffle(allInstances);
                 int s = 0;
                 int e = Math.min(allInstances.size(), options.batchSize);

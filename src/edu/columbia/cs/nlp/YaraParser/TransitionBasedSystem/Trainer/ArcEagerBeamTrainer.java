@@ -8,6 +8,7 @@ package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Pair;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
+import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.BeamElement;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -17,34 +18,36 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtr
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.TreeSet;
+import java.util.*;
 
 public class ArcEagerBeamTrainer {
+    final HashSet<Integer> rareWords;
     Options options;
+    Random random;
     private String updateMode;
     private ArrayList<Integer> dependencyRelations;
     private int labelNullIndex;
 
-    public ArcEagerBeamTrainer(String updateMode, Options options, ArrayList<Integer> dependencyRelations, int labelNullIndex) {
+    public ArcEagerBeamTrainer(String updateMode, Options options, ArrayList<Integer> dependencyRelations, int labelNullIndex, HashSet<Integer>
+            rareWords) {
         this.updateMode = updateMode;
         this.options = options;
         this.dependencyRelations = dependencyRelations;
         this.labelNullIndex = labelNullIndex;
+        random = new Random();
+        this.rareWords = rareWords;
     }
 
-    public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropoutProb)
+    public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropWordProb)
             throws Exception {
         ArrayList<NeuralTrainingInstance> instances = new ArrayList<>();
         for (int i = start; i < end; i++) {
-            addInstance(trainData.get(i), instances, dropoutProb);
+            addInstance(trainData.get(i), instances, dropWordProb);
         }
         return instances;
     }
 
-    private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances, double dropoutProb) throws Exception {
+    private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances, double dropWordProb) throws Exception {
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
         ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
@@ -92,13 +95,11 @@ public class ArcEagerBeamTrainer {
             if (action >= 2)
                 action -= 1;
 
-            /** todo
-             for (int i = 0; i < baseFeatures.length; i++) {
-             if (i < 19 && maps.rareWords.contains(baseFeatures[i]))
-             if (randGen.nextDouble() <= dropoutProb && baseFeatures[i] != 1)
-             baseFeatures[i] = 0;
-             }
-             **/
+            for (int i = 0; i < baseFeatures.length; i++) {
+                if (i < MLPNetwork.numWordLayers && rareWords.contains(baseFeatures[i]))
+                    if (random.nextDouble() <= dropWordProb && baseFeatures[i] != 1)
+                        baseFeatures[i] = IndexMaps.UnknownIndex;
+            }
 
             label[action] = 1;
             instances.add(new NeuralTrainingInstance(baseFeatures, label));

@@ -136,6 +136,8 @@ public class CoNLLReader {
                 rare++;
                 if (str2clusterMap.containsKey(word))
                     word2cluster++;
+            } else if (wordCount.get(word) <= 1) {
+                rareWords.add(wordMap.get(word));
             }
         }
         System.out.println("#rare_types: " + rare + " out of " + (wordCount.size()));
