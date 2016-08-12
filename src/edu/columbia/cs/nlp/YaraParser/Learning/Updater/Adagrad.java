@@ -14,8 +14,8 @@ import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 public class Adagrad extends Updater {
     double eps;
 
-    public Adagrad(MLPNetwork mlpNetwork, double learningRate, double eps) {
-        super(mlpNetwork, learningRate);
+    public Adagrad(MLPNetwork mlpNetwork, double learningRate, boolean outputBiasTerm, double eps) {
+        super(mlpNetwork, learningRate, outputBiasTerm);
         this.eps = eps;
     }
 

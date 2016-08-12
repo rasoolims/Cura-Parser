@@ -16,8 +16,8 @@ public class SGD extends Updater {
     double momentum;
     SGDType type;
 
-    public SGD(MLPNetwork mlpNetwork, double learningRate, double momentum, SGDType type) {
-        super(mlpNetwork, learningRate);
+    public SGD(MLPNetwork mlpNetwork, double learningRate, boolean outputBiasTerm, double momentum, SGDType type) {
+        super(mlpNetwork, learningRate, outputBiasTerm);
         this.momentum = momentum;
         this.type = type;
     }

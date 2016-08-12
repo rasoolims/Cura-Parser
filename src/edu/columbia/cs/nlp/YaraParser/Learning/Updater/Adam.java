@@ -18,8 +18,8 @@ public class Adam extends Updater {
 
     double eps;
 
-    public Adam(MLPNetwork mlpNetwork, double learningRate, double beta1, double beta2, double eps) {
-        super(mlpNetwork, learningRate);
+    public Adam(MLPNetwork mlpNetwork, double learningRate, boolean outputBiasTerm, double beta1, double beta2, double eps) {
+        super(mlpNetwork, learningRate, outputBiasTerm);
         this.beta1 = beta1;
         this.beta2 = beta2;
         this.eps = eps;

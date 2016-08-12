@@ -12,8 +12,8 @@ import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
  */
 
 public class AdaMax extends Adam {
-    public AdaMax(MLPNetwork mlpNetwork, double learningRate, double beta1, double beta2, double eps) {
-        super(mlpNetwork, learningRate, beta1, beta2, eps);
+    public AdaMax(MLPNetwork mlpNetwork, double learningRate, boolean outputBiasTerm, double beta1, double beta2, double eps) {
+        super(mlpNetwork, learningRate, outputBiasTerm, beta1, beta2, eps);
     }
 
     @Override
