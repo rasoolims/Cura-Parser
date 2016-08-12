@@ -144,7 +144,8 @@ public class YaraParser {
             System.out.println("Decay after every " + decayStep + " batches");
             for (int i = 0; i < options.trainingIter; i++) {
                 System.out.println("reshuffling data for round " + i);
-                allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), options.minFreq < 1 ? 0.05 : 0);
+                if (options.minFreq < 1)
+                    allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0.05);
                 Collections.shuffle(allInstances);
                 int s = 0;
                 int e = Math.min(allInstances.size(), options.batchSize);
