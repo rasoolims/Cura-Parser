@@ -72,7 +72,7 @@ public class Options implements Serializable {
         beamWidth = 1;
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
-        // good for ADAM and ADAGRAD
+        // good for ADAM.
         learningRate = 0.001;
         regularization = 1e-4;
         batchSize = 1000;
