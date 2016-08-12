@@ -219,7 +219,7 @@ public class MLPTrainer {
         }
 
         for (int index = net.numWordLayers; index < net.numWordLayers + net.numPosLayers; index++) {
-            for (int tok : wordsSeen[index]) {
+            for (int tok = 0; tok < net.numPos; tok++) {
                 double[] embedding = pE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
                     double delta = savedGradients[index][tok][h];
@@ -233,7 +233,7 @@ public class MLPTrainer {
         }
 
         for (int index = net.numWordLayers + net.numPosLayers; index < net.numWordLayers + net.numPosLayers + net.numDepLayers; index++) {
-            for (int tok : wordsSeen[index]) {
+            for (int tok = 0; tok < net.numDepLabels; tok++) {
                 double[] embedding = lE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
                     double delta = savedGradients[index][tok][h];
@@ -251,7 +251,7 @@ public class MLPTrainer {
             throws Exception {
         double cost = 0;
         double correct = 0;
-        HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(net.numWordLayers + net.numPosLayers + net.numDepLayers);
+        HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(net.numWordLayers);
 
         for (NeuralTrainingInstance instance : instances) {
             int[] features = instance.getFeatures();
@@ -385,7 +385,6 @@ public class MLPTrainer {
             }
 
             for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++) {
-                featuresSeen[index].add(features[index]);
                 for (int h : hiddenNodesToUse) {
                     savedGradients[index][features[index]][h] += hiddenGrad[h];
                 }
