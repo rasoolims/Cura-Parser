@@ -3,7 +3,7 @@
  * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
  */
 
-package edu.columbia.cs.nlp.YaraParser.Parser;
+package edu.columbia.cs.nlp.YaraParser;
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.CoNLLReader;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Evaluator;
