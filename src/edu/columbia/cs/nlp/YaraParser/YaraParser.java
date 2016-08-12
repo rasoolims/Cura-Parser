@@ -137,7 +137,6 @@ public class YaraParser {
 
             MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options);
 
-
             int step = 0;
             double bestModelUAS = 0;
             int decayStep = (int) (options.decayStep * allInstances.size() / options.batchSize);
@@ -178,39 +177,11 @@ public class YaraParser {
 
                     if (step % options.UASEvalPerStep == 0) {
                         if (options.averagingOption != AveragingOption.ONLY) {
-                            KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads);
-                            parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
-                                    options.beamWidth, options.lowercase, options.numOfThreads, false, "");
-                            Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
-                            if (eval.first > bestModelUAS) {
-                                bestModelUAS = eval.first;
-                                System.out.print("Saving the new model...");
-                                FileOutputStream fos = new FileOutputStream(options.modelFile);
-                                GZIPOutputStream gz = new GZIPOutputStream(fos);
-                                ObjectOutput writer = new ObjectOutputStream(gz);
-                                writer.writeObject(mlpNetwork);
-                                writer.writeObject(options);
-                                writer.close();
-                                System.out.print("done!\n\n");
-                            }
+                            bestModelUAS = evaluate(options, mlpNetwork, bestModelUAS);
                         }
                         if (options.averagingOption != AveragingOption.NO) {
                             avgMlpNetwork.preCompute();
-                            KBeamArcEagerParser parser = new KBeamArcEagerParser(avgMlpNetwork, options.numOfThreads);
-                            parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
-                                    options.beamWidth, options.lowercase, options.numOfThreads, false, "");
-                            Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
-                            if (eval.first > bestModelUAS) {
-                                bestModelUAS = eval.first;
-                                System.out.print("Saving the new model...");
-                                FileOutputStream fos = new FileOutputStream(options.modelFile);
-                                GZIPOutputStream gz = new GZIPOutputStream(fos);
-                                ObjectOutput writer = new ObjectOutputStream(gz);
-                                writer.writeObject(avgMlpNetwork);
-                                writer.writeObject(options);
-                                writer.close();
-                                System.out.print("done!\n\n");
-                            }
+                            bestModelUAS = evaluate(options, avgMlpNetwork, bestModelUAS);
                         }
                     }
 
@@ -220,5 +191,24 @@ public class YaraParser {
             }
             neuralTrainer.shutDownLiveThreads();
         }
+    }
+
+    private static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {
+        KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads);
+        parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
+                options.beamWidth, options.lowercase, options.numOfThreads, false, "");
+        Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
+        if (eval.first > bestModelUAS) {
+            bestModelUAS = eval.first;
+            System.out.print("Saving the new model...");
+            FileOutputStream fos = new FileOutputStream(options.modelFile);
+            GZIPOutputStream gz = new GZIPOutputStream(fos);
+            ObjectOutput writer = new ObjectOutputStream(gz);
+            writer.writeObject(mlpNetwork);
+            writer.writeObject(options);
+            writer.close();
+            System.out.print("done!\n\n");
+        }
+        return bestModelUAS;
     }
 }
