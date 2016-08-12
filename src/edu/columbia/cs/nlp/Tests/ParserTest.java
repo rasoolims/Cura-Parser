@@ -173,7 +173,7 @@ public class ParserTest {
                     Options infoptions = (Options) r.readObject();
                     KBeamArcEagerParser loadedParser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads);
                     loadedParser.parseConll(options.devPath, options.modelFile + ".tmp2", infoptions.rootFirst, options.beamWidth,
-                            infoptions.lowercase,  options.numOfThreads, false, options.scorePath);
+                            infoptions.lowercase, options.numOfThreads, false, options.scorePath);
                     Pair<Double, Double> evaluator2 = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp2", options.punctuations);
 
                     assert evaluator.equals(evaluator2);

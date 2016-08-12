@@ -39,7 +39,7 @@ public class State implements Cloneable {
 
     public State(int size) {
         emptyFlag = false;
-        stack = new ArrayDeque<Integer>();
+        stack = new ArrayDeque<>();
         arcs = new Pair[size + 1];
 
         leftMostArcs = new int[size + 1];

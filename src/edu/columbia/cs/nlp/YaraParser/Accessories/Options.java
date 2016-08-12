@@ -6,7 +6,7 @@
 package edu.columbia.cs.nlp.YaraParser.Accessories;
 
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
-import edu.columbia.cs.nlp.YaraParser.Learning.AveragingOption;
+import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 
 import java.io.BufferedReader;

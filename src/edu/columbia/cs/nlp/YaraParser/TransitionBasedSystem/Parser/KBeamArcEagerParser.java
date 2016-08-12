@@ -35,10 +35,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class KBeamArcEagerParser {
+    final MLPNetwork network;
     ArrayList<Integer> dependencyRelations;
-
-    MLPNetwork network;
-
     IndexMaps maps;
     int numThreads;
     ExecutorService executor;
@@ -331,11 +329,10 @@ public class KBeamArcEagerParser {
         boolean addScore = false;
         if (scorePath.trim().length() > 0)
             addScore = true;
-        ArrayList<Double> scoreList = new ArrayList<Double>();
+        ArrayList<Double> scoreList = new ArrayList<>();
 
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-        CompletionService<Pair<Configuration, Integer>> pool = new ExecutorCompletionService<Pair<Configuration,
-                Integer>>(executor);
+        CompletionService<Pair<Configuration, Integer>> pool = new ExecutorCompletionService<>(executor);
 
         long start = System.currentTimeMillis();
         int allArcs = 0;
