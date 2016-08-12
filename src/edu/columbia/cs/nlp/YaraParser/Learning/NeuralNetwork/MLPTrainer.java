@@ -266,12 +266,7 @@ public class MLPTrainer {
             final double[][] posEmbeddings = net.getMatrices().getPosEmbedding();
             final double[][] labelEmbeddings = net.getMatrices().getLabelEmbedding();
 
-            HashSet<Integer> hiddenNodesToUse = new HashSet<>();
-            for (int i = 0; i < hidden.length; i++) {
-                if (dropoutProb <= 0 || random.nextDouble() >= dropoutProb)
-                    hiddenNodesToUse.add(i);
-            }
-
+            HashSet<Integer> hiddenNodesToUse = applyDropout(hidden);
             int offset = 0;
             for (int j = 0; j < features.length; j++) {
                 int tok = features[j];
@@ -400,6 +395,15 @@ public class MLPTrainer {
 
         backPropSavedGradients(g, savedGradients, featuresSeen);
         return new Pair<>(cost, correct);
+    }
+
+    private HashSet<Integer> applyDropout(double[] hidden) {
+        HashSet<Integer> hiddenNodesToUse = new HashSet<>();
+        for (int h = 0; h < hidden.length; h++) {
+            if (dropoutProb <= 0 || random.nextDouble() >= dropoutProb)
+                hiddenNodesToUse.add(h);
+        }
+        return hiddenNodesToUse;
     }
 
     public NetworkMatrices getGradients() {
