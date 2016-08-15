@@ -29,7 +29,7 @@ import java.util.zip.GZIPOutputStream;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
-public class ParserTest {
+public class UpdaterTest {
     final String txtFilePath = "/tmp/tmp.tmp";
     final String embedFilePath = "/tmp/tmp2.tmp";
     final String conllText = "1\tThe\t_\tDT\tDT\t_\t2\tdet\t_\t_\n" +
