@@ -258,11 +258,11 @@ public class Options implements Serializable {
                 options.changePunc(args[i + 1]);
             else if (args[i].equals("-model"))
                 options.modelFile = args[i + 1];
-            else if (args[i].startsWith("-dev"))
+            else if (args[i].equals("-dev"))
                 options.devPath = args[i + 1];
             else if (args[i].equals("-gold"))
                 options.goldFile = args[i + 1];
-            else if (args[i].startsWith("-parse"))
+            else if (args[i].equals("-parse"))
                 options.predFile = args[i + 1];
             else if (args[i].equals("-e"))
                 options.wordEmbeddingFile = args[i + 1];
@@ -412,6 +412,7 @@ public class Options implements Serializable {
             builder.append("regularization: " + regularization + "\n");
             builder.append("batch size: " + batchSize + "\n");
             builder.append("dropout probability: " + dropoutProbForHiddenLayer + "\n");
+            builder.append("parser type: " + parserType + "\n");
             return builder.toString();
         } else if (parseConllFile) {
             StringBuilder builder = new StringBuilder();
