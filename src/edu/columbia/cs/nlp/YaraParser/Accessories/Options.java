@@ -9,7 +9,7 @@ import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.SGDType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.ParserType;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

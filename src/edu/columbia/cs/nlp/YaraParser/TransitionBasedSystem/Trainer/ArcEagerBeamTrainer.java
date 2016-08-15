@@ -15,10 +15,10 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Config
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.Actions;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.ParserType;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager;
+package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums;
 
 /**
  * Created by Mohammad Sadegh Rasooli.

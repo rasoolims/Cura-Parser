@@ -11,7 +11,7 @@ import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.ParserType;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
 import org.junit.Test;
 

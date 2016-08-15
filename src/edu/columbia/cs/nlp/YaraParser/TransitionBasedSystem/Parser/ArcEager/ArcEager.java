@@ -7,6 +7,7 @@ package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager;
 
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.Actions;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
 
 import java.util.ArrayList;

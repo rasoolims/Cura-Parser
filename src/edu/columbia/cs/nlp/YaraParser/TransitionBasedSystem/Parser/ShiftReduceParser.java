@@ -2,7 +2,7 @@ package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser;
 
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.Actions;
 
 import java.util.ArrayList;
 import java.util.HashMap;

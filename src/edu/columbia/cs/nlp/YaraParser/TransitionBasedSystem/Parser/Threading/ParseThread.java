@@ -14,7 +14,7 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Config
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.Actions;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
 
 import java.util.ArrayList;
