@@ -24,7 +24,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class FeatureExtractorTest {
+public class ArcEagerFeatureExtractorTest {
     final String conllText = "1\tThe\t_\tDET\t_\t_\t4\tdet\t_\t_\n" +
             "2\tcomplex\t_\tADJ\t_\t_\t4\tamod\t_\t_\n" +
             "3\tfinancing\t_\tNOUN\t_\t_\t4\tcompmod\t_\t_\n" +
