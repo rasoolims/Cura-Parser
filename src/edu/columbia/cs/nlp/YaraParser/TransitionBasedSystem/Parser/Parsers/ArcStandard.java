@@ -1,6 +1,7 @@
 package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers;
 
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
+import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
@@ -9,6 +10,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -65,13 +67,69 @@ public class ArcStandard extends ShiftReduceParser {
         return false;
     }
 
-    @Override
     public Configuration staticOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double> oracles,
                                       HashMap<Configuration, Double> newOracles, int depSize) throws Exception {
-        return null;
+        Configuration bestScoringOracle = null;
+        HashMap<Integer, Pair<Integer, Integer>> goldDependencies = goldConfiguration.getGoldDependencies();
+        HashMap<Integer, HashSet<Integer>> reversedDependencies = goldConfiguration.getReversedDependencies();
+
+        for (Configuration configuration : oracles.keySet()) {
+            State state = configuration.state;
+
+
+            if (!configuration.state.isTerminalState()) {
+                Configuration newConfig = configuration.clone();
+
+                if (state.stackSize() < 2) {
+                    shift(newConfig.state);
+                    newConfig.addAction(0);
+                    newConfig.addScore(0);
+                } else {
+                    int first = state.pop();
+                    int second = state.peek();
+                    state.push(first);
+
+                    if (goldDependencies.containsKey(second) && goldDependencies.get(second).first == first) { // always prefers left-arc
+                        int dependency = goldDependencies.get(second).second;
+                        leftArc(newConfig.state, dependency);
+                        newConfig.addAction(3 + depSize + dependency);
+                        newConfig.addScore(0);
+                    } else if (goldDependencies.containsKey(first) && goldDependencies.get(first).first == second) {
+                        boolean gotAllDeps = true;
+
+                        if (reversedDependencies.containsKey(first))
+                            for (int dep : reversedDependencies.get(first)) {
+                                if (!state.hasHead(dep)) {
+                                    gotAllDeps = false;
+                                    break;
+                                }
+                            }
+
+                        if (gotAllDeps) {
+                            int dependency = goldDependencies.get(first).second;
+                            rightArc(newConfig.state, dependency);
+                            newConfig.addAction(3 + dependency);
+                            newConfig.addScore(0);
+                        } else {
+                            shift(newConfig.state);
+                            newConfig.addAction(0);
+                            newConfig.addScore(0);
+                        }
+                    } else {
+                        shift(newConfig.state);
+                        newConfig.addAction(0);
+                        newConfig.addScore(0);
+                    }
+                }
+                bestScoringOracle = newConfig;
+                newOracles.put(newConfig, (double) 0);
+            } else {
+                newOracles.put(configuration, oracles.get(configuration));
+            }
+        }
+        return bestScoringOracle;
     }
 
-    @Override
     public Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double> oracles, HashMap<Configuration,
             Double> newOracles, MLPNetwork network, int labelNullIndex, ArrayList<Integer> dependencyRelations) throws Exception {
         throw new NotImplementedException();

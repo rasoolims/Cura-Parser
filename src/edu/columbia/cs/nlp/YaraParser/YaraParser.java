@@ -54,6 +54,7 @@ public class YaraParser {
             options.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
             options.activationType = ActivationType.RELU;
+            options.parserType = ParserType.ArcStandard;
         }
 
         if (options.showHelp) {
