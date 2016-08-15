@@ -4,7 +4,7 @@ import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.Structures.Sentence;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Beam.BeamParser;
 
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
@@ -25,10 +25,10 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
     boolean lowerCased;
     IndexMaps maps;
     int beamWidth;
-    KBeamArcEagerParser parser;
+    BeamParser parser;
 
     public ParseTaggedThread(int lineNum, String line, String delim, boolean rootFirst, boolean lowerCased, IndexMaps
-            maps, int beamWidth, KBeamArcEagerParser parser) {
+            maps, int beamWidth, BeamParser parser) {
         this.lineNum = lineNum;
         this.line = line;
         this.delim = delim;

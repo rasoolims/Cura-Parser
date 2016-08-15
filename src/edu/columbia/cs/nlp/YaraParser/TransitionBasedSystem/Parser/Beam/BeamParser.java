@@ -3,7 +3,7 @@
  * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
  */
 
-package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser;
+package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Beam;
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.CoNLLReader;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
@@ -15,8 +15,9 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Config
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.ArcEager;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.Actions;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.ShiftReduceParser;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.BeamScorerThread;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.ParseTaggedThread;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.ParseThread;
@@ -35,7 +36,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class KBeamArcEagerParser {
+public class BeamParser {
     final MLPNetwork network;
     ArrayList<Integer> dependencyRelations;
     IndexMaps maps;
@@ -44,7 +45,7 @@ public class KBeamArcEagerParser {
     CompletionService<ArrayList<BeamElement>> pool;
     ShiftReduceParser parser;
 
-    public KBeamArcEagerParser(MLPNetwork network, int numOfThreads, ParserType parserType) {
+    public BeamParser(MLPNetwork network, int numOfThreads, ParserType parserType) {
         this.dependencyRelations = network.depLabels;
         this.network = network;
         this.numThreads = numOfThreads;

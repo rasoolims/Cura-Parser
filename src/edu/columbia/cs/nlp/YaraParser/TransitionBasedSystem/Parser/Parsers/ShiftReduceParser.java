@@ -1,4 +1,4 @@
-package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser;
+package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers;
 
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;

@@ -3,12 +3,11 @@
  * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
  */
 
-package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager;
+package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers;
 
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.Actions;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
