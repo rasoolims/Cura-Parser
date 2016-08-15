@@ -1,5 +1,6 @@
 /**
- * Copyright 2014, Yahoo! Inc.
+ * Copyright 2014-2016, Mohammad Sadegh Rasooli
+ * Parts of this code is extracted from the Yara parser.
  * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project 0 for terms.
  */
 

@@ -1,5 +1,6 @@
 /**
- * Copyright 2014, Yahoo! Inc.
+ * Copyright 2014-2016, Mohammad Sadegh Rasooli
+ * Parts of this code is extracted from the Yara parser.
  * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
  */
 
@@ -130,7 +131,7 @@ public class YaraParser {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
                     maps.labelNullIndex, maps.rareWords);
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
-            int numWordLayers = options.parserType == ParserType.ArcEager ? 22:20;
+            int numWordLayers = options.parserType == ParserType.ArcEager ? 22 : 20;
             maps.constructPreComputeMap(allInstances, numWordLayers, 10000);
 
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32, options.parserType);
