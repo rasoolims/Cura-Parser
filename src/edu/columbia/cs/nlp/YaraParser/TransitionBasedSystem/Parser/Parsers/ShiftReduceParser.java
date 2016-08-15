@@ -1,6 +1,8 @@
 package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers;
 
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.Actions;
 
@@ -43,9 +45,32 @@ public abstract class ShiftReduceParser {
 
     public abstract void rightArc(State state, int dependency) throws Exception;
 
-    public abstract boolean canDo(Actions action, State state);
+    public abstract boolean canDo(Actions action, State state) throws Exception;
 
-    public abstract boolean isTerminal(ArrayList<Configuration> beam);
+    /**
+     * Shows true if all of the configurations in the beam are in the terminal state
+     *
+     * @param beam the current beam
+     * @return true if all of the configurations in the beam are in the terminal state
+     */
+    public boolean isTerminal(ArrayList<Configuration> beam) {
+        for (Configuration configuration : beam)
+            if (!configuration.state.isTerminalState())
+                return false;
+        return true;
+    }
 
-    public abstract boolean isTerminal(HashMap<Configuration, Double> oracles);
+    public boolean isTerminal(HashMap<Configuration, Double> oracles) {
+        for (Configuration configuration : oracles.keySet())
+            if (!configuration.state.isTerminalState())
+                return false;
+        return true;
+    }
+
+    public abstract Configuration staticOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double> oracles,
+                                               HashMap<Configuration, Double> newOracles, int depSize) throws Exception;
+
+    public abstract Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double>
+            oracles, HashMap<Configuration, Double> newOracles, MLPNetwork network, int labelNullIndex, ArrayList<Integer> dependencyRelations)
+            throws Exception;
 }

@@ -18,7 +18,7 @@ import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Beam.BeamParser;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.BeamTrainer;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -126,7 +126,7 @@ public class YaraParser {
 
             System.out.println("size of training data (#sens): " + dataSet.size());
             System.out.println("Embedding dimension " + wDim);
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
                     maps.labelNullIndex, maps.rareWords);
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             maps.constructPreComputeMap(allInstances, MLPNetwork.numWordLayers, 10000);

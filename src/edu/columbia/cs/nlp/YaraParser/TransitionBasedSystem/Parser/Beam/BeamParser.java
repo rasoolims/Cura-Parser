@@ -15,14 +15,16 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Config
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.ArcEager;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.Actions;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.ArcEager;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.ArcStandard;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.ShiftReduceParser;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.BeamScorerThread;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.ParseTaggedThread;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.ParseThread;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.PartialTreeBeamScorerThread;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -45,7 +47,7 @@ public class BeamParser {
     CompletionService<ArrayList<BeamElement>> pool;
     ShiftReduceParser parser;
 
-    public BeamParser(MLPNetwork network, int numOfThreads, ParserType parserType) {
+    public BeamParser(MLPNetwork network, int numOfThreads, ParserType parserType) throws Exception {
         this.dependencyRelations = network.depLabels;
         this.network = network;
         this.numThreads = numOfThreads;
@@ -55,6 +57,10 @@ public class BeamParser {
 
         if (parserType == ParserType.ArcEager)
             parser = new ArcEager();
+        else if (parserType == ParserType.ArcStandard)
+            parser = new ArcStandard();
+        else
+            throw new NotImplementedException();
     }
 
     private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, int beamWidth) throws Exception {

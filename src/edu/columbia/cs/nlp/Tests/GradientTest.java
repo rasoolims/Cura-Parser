@@ -19,7 +19,7 @@ import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.BeamTrainer;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
@@ -136,7 +136,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
@@ -209,7 +209,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
@@ -280,7 +280,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
@@ -338,7 +338,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
@@ -394,7 +394,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
@@ -465,7 +465,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
@@ -537,7 +537,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
@@ -608,7 +608,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
@@ -677,7 +677,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
@@ -748,7 +748,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
@@ -817,7 +817,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);

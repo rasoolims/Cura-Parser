@@ -10,5 +10,6 @@ package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums;
 
 public enum ParserType {
     ArcEager,
-    ArcStandard
+    ArcStandard,
+    ArcHybrid
 }

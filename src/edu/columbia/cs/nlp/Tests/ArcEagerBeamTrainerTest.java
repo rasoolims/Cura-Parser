@@ -11,7 +11,7 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldCo
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.ArcEager;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.ShiftReduceParser;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.BeamTrainer;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
@@ -55,7 +55,7 @@ public class ArcEagerBeamTrainerTest {
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
-        ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+        BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
         Configuration configuration = new Configuration(sentence, options.rootFirst);

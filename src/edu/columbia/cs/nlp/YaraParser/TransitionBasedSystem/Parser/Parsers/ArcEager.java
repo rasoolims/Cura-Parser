@@ -5,12 +5,17 @@
 
 package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers;
 
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
+import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.Actions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class ArcEager extends ShiftReduceParser {
     public void leftArc(State state, int dependency) throws Exception {
@@ -52,23 +57,157 @@ public class ArcEager extends ShiftReduceParser {
         return false;
     }
 
-    /**
-     * Shows true if all of the configurations in the beam are in the terminal state
-     *
-     * @param beam the current beam
-     * @return true if all of the configurations in the beam are in the terminal state
-     */
-    public boolean isTerminal(ArrayList<Configuration> beam) {
-        for (Configuration configuration : beam)
-            if (!configuration.state.isTerminalState())
-                return false;
-        return true;
+    public Configuration staticOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double> oracles,
+                                      HashMap<Configuration, Double> newOracles, int depSize) throws Exception {
+        Configuration bestScoringOracle = null;
+        int top = -1;
+        int first = -1;
+        HashMap<Integer, Pair<Integer, Integer>> goldDependencies = goldConfiguration.getGoldDependencies();
+        HashMap<Integer, HashSet<Integer>> reversedDependencies = goldConfiguration.getReversedDependencies();
+
+        for (Configuration configuration : oracles.keySet()) {
+            State state = configuration.state;
+            if (!state.stackEmpty())
+                top = state.peek();
+            if (!state.bufferEmpty())
+                first = state.bufferHead();
+
+            if (!configuration.state.isTerminalState()) {
+                Configuration newConfig = configuration.clone();
+
+                if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
+                    int dependency = goldDependencies.get(first).second;
+                    double score = 0;
+                    rightArc(newConfig.state, dependency);
+                    newConfig.addAction(3 + dependency);
+                    newConfig.addScore(score);
+                } else if (top > 0 && goldDependencies.containsKey(top) && goldDependencies.get(top).first == first) {
+                    int dependency = goldDependencies.get(top).second;
+                    double score = 0;
+                    leftArc(newConfig.state, dependency);
+                    newConfig.addAction(3 + depSize + dependency);
+                    newConfig.addScore(score);
+                } else if (top >= 0 && state.hasHead(top)) {
+                    if (reversedDependencies.containsKey(top)) {
+                        if (reversedDependencies.get(top).size() == state.valence(top)) {
+                            reduce(newConfig.state);
+                            newConfig.addAction(1);
+                            newConfig.addScore(0);
+                        } else {
+                            double score = 0;
+                            shift(newConfig.state);
+                            newConfig.addAction(0);
+                            newConfig.addScore(score);
+                        }
+                    } else {
+                        double score = 0;
+                        reduce(newConfig.state);
+                        newConfig.addAction(1);
+                        newConfig.addScore(score);
+                    }
+                } else if (state.bufferEmpty() && state.stackSize() == 1 && state.peek() == state.rootIndex) {
+                    double score = 0;
+                    reduce(newConfig.state);
+                    newConfig.addAction(1);
+                    newConfig.addScore(score);
+                } else {
+                    double score = 0;
+                    shift(newConfig.state);
+                    newConfig.addAction(0);
+                    newConfig.addScore(score);
+                }
+                bestScoringOracle = newConfig;
+                newOracles.put(newConfig, (double) 0);
+            } else {
+                newOracles.put(configuration, oracles.get(configuration));
+            }
+        }
+        return bestScoringOracle;
     }
 
-    public boolean isTerminal(HashMap<Configuration, Double> oracles) {
-        for (Configuration configuration : oracles.keySet())
-            if (!configuration.state.isTerminalState())
-                return false;
-        return true;
+    public Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double>
+            oracles, HashMap<Configuration, Double> newOracles, MLPNetwork network, int labelNullIndex, ArrayList<Integer> dependencyRelations)
+            throws Exception {
+        double bestScore = Double.NEGATIVE_INFINITY;
+        Configuration bestScoringOracle = null;
+
+        for (Configuration configuration : oracles.keySet()) {
+            if (!configuration.state.isTerminalState()) {
+                State currentState = configuration.state;
+                int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
+                double[] scores = network.output(features, new int[network.getSoftmaxLayerDim()]);
+
+                int accepted = 0;
+                // I only assumed that we need zero cost ones
+                if (goldConfiguration.actionCost(Actions.Shift, -1, currentState, this) == 0) {
+                    Configuration newConfig = configuration.clone();
+                    double score = scores[0];
+                    shift(newConfig.state);
+                    newConfig.addAction(0);
+                    newConfig.addScore(score);
+                    newOracles.put(newConfig, (double) 0);
+
+                    if (newConfig.getScore(true) > bestScore) {
+                        bestScore = newConfig.getScore(true);
+                        bestScoringOracle = newConfig;
+                    }
+                    accepted++;
+                }
+                if (canDo(Actions.RightArc, currentState)) {
+                    for (int dependency : dependencyRelations) {
+                        if (goldConfiguration.actionCost(Actions.RightArc, dependency, currentState, this) == 0) {
+                            Configuration newConfig = configuration.clone();
+                            double score = scores[2 + dependency];
+                            rightArc(newConfig.state, dependency);
+                            newConfig.addAction(3 + dependency);
+                            newConfig.addScore(score);
+                            newOracles.put(newConfig, (double) 0);
+
+                            if (newConfig.getScore(true) > bestScore) {
+                                bestScore = newConfig.getScore(true);
+                                bestScoringOracle = newConfig;
+                            }
+                            accepted++;
+                        }
+                    }
+                }
+                if (canDo(Actions.LeftArc, currentState)) {
+                    for (int dependency : dependencyRelations) {
+                        if (goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState, this) == 0) {
+                            Configuration newConfig = configuration.clone();
+                            double score = scores[2 + dependencyRelations.size() + dependency];
+                            leftArc(newConfig.state, dependency);
+                            newConfig.addAction(3 + dependencyRelations.size() + dependency);
+                            newConfig.addScore(score);
+                            newOracles.put(newConfig, (double) 0);
+
+                            if (newConfig.getScore(true) > bestScore) {
+                                bestScore = newConfig.getScore(true);
+                                bestScoringOracle = newConfig;
+                            }
+                            accepted++;
+                        }
+                    }
+                }
+                if (goldConfiguration.actionCost(Actions.Reduce, -1, currentState, this) == 0) {
+                    Configuration newConfig = configuration.clone();
+                    double score = scores[1];
+                    reduce(newConfig.state);
+                    newConfig.addAction(1);
+                    newConfig.addScore(score);
+                    newOracles.put(newConfig, (double) 0);
+
+                    if (newConfig.getScore(true) > bestScore) {
+                        bestScore = newConfig.getScore(true);
+                        bestScoringOracle = newConfig;
+                    }
+                    accepted++;
+                }
+            } else {
+                newOracles.put(configuration, oracles.get(configuration));
+            }
+        }
+
+        return bestScoringOracle;
     }
 }

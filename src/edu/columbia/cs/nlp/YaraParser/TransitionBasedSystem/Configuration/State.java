@@ -31,8 +31,6 @@ public class State implements Cloneable {
     protected int[] secondRightMostArcs;
     protected int[] leftValency;
     protected int[] rightValency;
-    protected long[] rightDepLabels;
-    protected long[] leftDepLabels;
     protected ArrayDeque<Integer> stack;
     int bufferH;
 
@@ -47,9 +45,6 @@ public class State implements Cloneable {
         secondRightMostArcs = new int[size + 1];
         leftValency = new int[size + 1];
         rightValency = new int[size + 1];
-        rightDepLabels = new long[size + 1];
-        leftDepLabels = new long[size + 1];
-
         rootIndex = 0;
         bufferH = 1;
         maxSentenceSize = 0;
@@ -98,7 +93,6 @@ public class State implements Cloneable {
             } else if (dependent > secondRightMostArcs[head])
                 secondRightMostArcs[head] = dependent;
             rightValency[head] += 1;
-            rightDepLabels[head] = rightDepLabels[head] | value;
         } else { //left dependency
             if (leftMostArcs[head] == 0)
                 leftMostArcs[head] = dependent;
@@ -107,17 +101,8 @@ public class State implements Cloneable {
                 leftMostArcs[head] = dependent;
             } else if (dependent < secondLeftMostArcs[head])
                 secondLeftMostArcs[head] = dependent;
-            leftDepLabels[head] = leftDepLabels[head] | value;
             leftValency[head] += 1;
         }
-    }
-
-    public long rightDependentLabels(int position) {
-        return rightDepLabels[position];
-    }
-
-    public long leftDependentLabels(int position) {
-        return leftDepLabels[position];
     }
 
     public boolean isEmptyFlag() {
@@ -143,7 +128,8 @@ public class State implements Cloneable {
     }
 
     public boolean isTerminalState() {
-        return bufferEmpty() && stackEmpty() || stack.size() == 0 && bufferH == rootIndex;
+        return bufferEmpty() && stackEmpty() || stack.size() == 0 && bufferH == rootIndex ||
+                (stack.size() == 1 && stack.peek() == rootIndex && bufferSize() == 0);
     }
 
     public boolean hasHead(int dependent) {
@@ -249,7 +235,6 @@ public class State implements Cloneable {
                 if (rightMostArcs[h] != 0) {
                     state.rightMostArcs[h] = rightMostArcs[h];
                     state.rightValency[h] = rightValency[h];
-                    state.rightDepLabels[h] = rightDepLabels[h];
                 }
                 if (secondRightMostArcs[h] != 0) {
                     state.secondRightMostArcs[h] = secondRightMostArcs[h];
@@ -258,7 +243,6 @@ public class State implements Cloneable {
                 if (leftMostArcs[h] != 0) {
                     state.leftMostArcs[h] = leftMostArcs[h];
                     state.leftValency[h] = leftValency[h];
-                    state.leftDepLabels[h] = leftDepLabels[h];
                 }
 
                 if (secondLeftMostArcs[h] != 0) {
