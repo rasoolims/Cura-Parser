@@ -139,8 +139,8 @@ public class FeatureExtractor {
 
         if (0 < state.stackSize()) {
             int s0Position = state.peek();
-            s0w = (words[s0Position - 1]);
-            s0p = (tags[s0Position - 1]);
+            s0w = s0Position > 0 ? words[s0Position - 1] : IndexMaps.RootIndex;
+            s0p = s0Position > 0 ? tags[s0Position - 1] : IndexMaps.RootIndex;
             s0l = (state.getDependency(s0Position, labelNullIndex));
 
             if (s0Position > 1) {
@@ -156,20 +156,20 @@ public class FeatureExtractor {
             if (1 < state.stackSize()) {
                 int top1 = state.pop();
                 int s1Position = state.peek();
-                s1w = (words[s1Position - 1]);
-                s1p = (tags[s1Position - 1]);
+                s1w = s1Position > 0 ? words[s1Position - 1] : IndexMaps.RootIndex;
+                s1p = s1Position > 0 ? tags[s1Position - 1] : IndexMaps.RootIndex;
 
                 if (1 < state.stackSize()) {
                     int top2 = state.pop();
                     int s2Position = state.peek();
-                    s2w = (words[s2Position - 1]);
-                    s2p = (tags[s2Position - 1]);
+                    s2w = s2Position > 0 ? words[s2Position - 1] : IndexMaps.RootIndex;
+                    s2p = s2Position > 0 ? tags[s2Position - 1] : IndexMaps.RootIndex;
 
                     if (1 < state.stackSize()) {
                         int top3 = state.pop();
                         int s3Position = state.peek();
-                        s3w = (words[s3Position - 1]);
-                        s3p = (tags[s3Position - 1]);
+                        s3w = s3Position > 0 ? words[s3Position - 1] : IndexMaps.RootIndex;
+                        s3p = s3Position > 0 ? tags[s3Position - 1] : IndexMaps.RootIndex;
                         state.push(top3);
                     }
                     state.push(top2);
@@ -346,52 +346,50 @@ public class FeatureExtractor {
         int s1lc11p = IndexMaps.NullIndex;
         int s1rc11p = IndexMaps.NullIndex;
 
-        int s0lc1l = IndexMaps.NullIndex;
-        int s0rc1l = IndexMaps.NullIndex;
-        int s0lc2l = IndexMaps.NullIndex;
-        int s0rc2l = IndexMaps.NullIndex;
-        int s1lc1l = IndexMaps.NullIndex;
-        int s1rc1l = IndexMaps.NullIndex;
-        int s1lc2l = IndexMaps.NullIndex;
-        int s1rc2l = IndexMaps.NullIndex;
-        int s0lc11l = IndexMaps.NullIndex;
-        int s0rc11l = IndexMaps.NullIndex;
-        int s1lc11l = IndexMaps.NullIndex;
-        int s1rc11l = IndexMaps.NullIndex;
+        int s0lc1l = labelNullIndex;
+        int s0rc1l = labelNullIndex;
+        int s0lc2l = labelNullIndex;
+        int s0rc2l = labelNullIndex;
+        int s1lc1l = labelNullIndex;
+        int s1rc1l = labelNullIndex;
+        int s1lc2l = labelNullIndex;
+        int s1rc2l = labelNullIndex;
+        int s0lc11l = labelNullIndex;
+        int s0rc11l = labelNullIndex;
+        int s1lc11l = labelNullIndex;
+        int s1rc11l = labelNullIndex;
 
         int[] words = sentence.getWords();
         int[] tags = sentence.getTags();
 
         if (0 < state.bufferSize()) {
             int b0Position = state.bufferHead();
-            b0w = (words[b0Position - 1]);
-            b0p = (tags[b0Position - 1]);
+            b0w = words[b0Position - 1];
+            b0p = tags[b0Position - 1];
 
             if (1 < state.bufferSize()) {
                 int b1Position = state.getBufferItem(1);
-                b1w = (words[b1Position - 1]);
-                b1p = (tags[b1Position - 1]);
+                b1w = words[b1Position - 1];
+                b1p = tags[b1Position - 1];
                 if (2 < state.bufferSize()) {
                     int b2Position = state.getBufferItem(2);
-                    b2w = (words[b2Position - 1]);
-                    b2p = (tags[b2Position - 1]);
+                    b2w = words[b2Position - 1];
+                    b2p = tags[b2Position - 1];
                     if (3 < state.bufferSize()) {
                         int b3Position = state.getBufferItem(3);
-                        b3w = (words[b3Position - 1]);
-                        b3p = (tags[b3Position - 1]);
+                        b3w = words[b3Position - 1];
+                        b3p = tags[b3Position - 1];
                     }
                 }
             }
         }
 
         if (0 < state.stackSize()) {
-
-
             if (1 < state.stackSize()) {
                 int top1 = state.pop();
                 int s1Position = state.peek();
-                s1w = (words[s1Position - 1]);
-                s1p = (tags[s1Position - 1]);
+                s1w = s1Position > 0 ? words[s1Position - 1] : IndexMaps.RootIndex;
+                s1p = s1Position > 0 ? tags[s1Position - 1] : IndexMaps.RootIndex;
 
                 int leftMost = state.leftMostModifier(s1Position);
                 if (leftMost >= 0) {
@@ -406,7 +404,7 @@ public class FeatureExtractor {
                         s1lc11l = state.getDependency(l2, labelNullIndex);
                     }
 
-                    int sml = state.secondLeftMostModifier(leftMost);
+                    int sml = state.secondLeftMostModifier(s1Position);
                     if (sml >= 0) {
                         s1lc2p = tags[sml - 1];
                         s1lc2w = words[sml - 1];
@@ -427,7 +425,7 @@ public class FeatureExtractor {
                         s1rc11l = state.getDependency(r2, labelNullIndex);
                     }
 
-                    int smr = state.secondRightMostModifier(rightMost);
+                    int smr = state.secondRightMostModifier(s1Position);
                     if (smr >= 0) {
                         s1rc2p = tags[smr - 1];
                         s1rc2w = words[smr - 1];
@@ -439,14 +437,14 @@ public class FeatureExtractor {
                 if (1 < state.stackSize()) {
                     int top2 = state.pop();
                     int s2Position = state.peek();
-                    s2w = (words[s2Position - 1]);
-                    s2p = (tags[s2Position - 1]);
+                    s2w = s2Position > 0 ? words[s2Position - 1] : IndexMaps.RootIndex;
+                    s2p = s2Position > 0 ? tags[s2Position - 1] : IndexMaps.RootIndex;
 
                     if (1 < state.stackSize()) {
                         int top3 = state.pop();
                         int s3Position = state.peek();
-                        s3w = (words[s3Position - 1]);
-                        s3p = (tags[s3Position - 1]);
+                        s3w = s3Position > 0 ? words[s3Position - 1] : IndexMaps.RootIndex;
+                        s3p = s3Position > 0 ? tags[s3Position - 1] : IndexMaps.RootIndex;
                         state.push(top3);
                     }
                     state.push(top2);
@@ -455,8 +453,8 @@ public class FeatureExtractor {
             }
 
             int s0Position = state.peek();
-            s0w = (words[s0Position - 1]);
-            s0p = (tags[s0Position - 1]);
+            s0w = s0Position > 0 ? words[s0Position - 1] : IndexMaps.RootIndex;
+            s0p = s0Position > 0 ? tags[s0Position - 1] : IndexMaps.RootIndex;
             int leftMost = state.leftMostModifier(s0Position);
             if (leftMost >= 0) {
                 s0lc1p = tags[leftMost - 1];
@@ -470,7 +468,7 @@ public class FeatureExtractor {
                     s0lc11l = state.getDependency(l2, labelNullIndex);
                 }
 
-                int sml = state.secondLeftMostModifier(leftMost);
+                int sml = state.secondLeftMostModifier(s0Position);
                 if (sml >= 0) {
                     s0lc2p = tags[sml - 1];
                     s0lc2w = words[sml - 1];
@@ -491,7 +489,7 @@ public class FeatureExtractor {
                     s0rc11l = state.getDependency(r2, labelNullIndex);
                 }
 
-                int smr = state.secondRightMostModifier(rightMost);
+                int smr = state.secondRightMostModifier(s0Position);
                 if (smr >= 0) {
                     s0rc2p = tags[smr - 1];
                     s0rc2w = words[smr - 1];

@@ -49,7 +49,7 @@ public class ArcStandard extends ShiftReduceParser {
                 return false;
             if (state.peek() == state.rootIndex)
                 return false;
-
+            return true;
         } else if (action == Actions.LeftArc) { //left arc
             if (state.stackSize() < 2)
                 return false;
