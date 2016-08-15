@@ -11,7 +11,7 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Config
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
 
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
@@ -26,9 +26,10 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
     int b;
     boolean rootFirst;
     int labelNullIndex;
+    ShiftReduceParser parser;
 
     public BeamScorerThread(boolean isDecode, MLPNetwork network, Configuration configuration,
-                            ArrayList<Integer> dependencyRelations, int b, boolean rootFirst, int labelNullIndex) {
+                            ArrayList<Integer> dependencyRelations, int b, boolean rootFirst, int labelNullIndex, ShiftReduceParser parser) {
         this.isDecode = isDecode;
         this.network = network;
         this.configuration = configuration;
@@ -36,6 +37,7 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
         this.b = b;
         this.rootFirst = rootFirst;
         this.labelNullIndex = labelNullIndex;
+        this.parser = parser;
     }
 
 
@@ -45,10 +47,10 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
         State currentState = configuration.state;
         double prevScore = configuration.score;
 
-        boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
-        boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
-        boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
-        boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
+        boolean canShift = parser.canDo(Actions.Shift, currentState);
+        boolean canReduce = parser.canDo(Actions.Reduce, currentState);
+        boolean canRightArc = parser.canDo(Actions.RightArc, currentState);
+        boolean canLeftArc = parser.canDo(Actions.LeftArc, currentState);
         int[] labels = new int[network.getSoftmaxLayerDim()];
         if (!canShift) labels[0] = -1;
         if (!canReduce) labels[1] = -1;

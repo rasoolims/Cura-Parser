@@ -21,6 +21,7 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.Bea
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.ParseTaggedThread;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.ParseThread;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Threading.PartialTreeBeamScorerThread;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.ParserType;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -41,14 +42,18 @@ public class KBeamArcEagerParser {
     int numThreads;
     ExecutorService executor;
     CompletionService<ArrayList<BeamElement>> pool;
+    ShiftReduceParser parser;
 
-    public KBeamArcEagerParser(MLPNetwork network, int numOfThreads) {
+    public KBeamArcEagerParser(MLPNetwork network, int numOfThreads, ParserType parserType) {
         this.dependencyRelations = network.depLabels;
         this.network = network;
         this.numThreads = numOfThreads;
         this.maps = network.maps;
         executor = Executors.newFixedThreadPool(numOfThreads);
         pool = new ExecutorCompletionService<>(executor);
+
+        if (parserType == ParserType.ArcEager)
+            parser = new ArcEager();
     }
 
     private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, int beamWidth) throws Exception {
@@ -56,10 +61,10 @@ public class KBeamArcEagerParser {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
             double prevScore = configuration.score;
-            boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
-            boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
-            boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
-            boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
+            boolean canShift = parser.canDo(Actions.Shift, currentState);
+            boolean canReduce = parser.canDo(Actions.Reduce, currentState);
+            boolean canRightArc = parser.canDo(Actions.RightArc, currentState);
+            boolean canLeftArc = parser.canDo(Actions.LeftArc, currentState);
             int[] labels = new int[network.getSoftmaxLayerDim()];
             if (!canShift) labels[0] = -1;
             if (!canReduce) labels[1] = -1;
@@ -131,7 +136,7 @@ public class KBeamArcEagerParser {
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
-        while (!ArcEager.isTerminal(beam)) {
+        while (!parser.isTerminal(beam)) {
             TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
             if (numOfThreads == 1) {
@@ -139,7 +144,7 @@ public class KBeamArcEagerParser {
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(true, network, beam.get(b),
-                            dependencyRelations, b, rootFirst, maps.labelNullIndex));
+                            dependencyRelations, b, rootFirst, maps.labelNullIndex, parser));
                 }
                 for (int b = 0; b < beam.size(); b++) {
                     for (BeamElement element : pool.take().get()) {
@@ -163,19 +168,19 @@ public class KBeamArcEagerParser {
                 Configuration newConfig = beam.get(b).clone();
 
                 if (action == 0) {
-                    ArcEager.shift(newConfig.state);
+                    parser.shift(newConfig.state);
                     newConfig.addAction(0);
                 } else if (action == 1) {
-                    ArcEager.reduce(newConfig.state);
+                    parser.reduce(newConfig.state);
                     newConfig.addAction(1);
                 } else if (action == 2) {
-                    ArcEager.rightArc(newConfig.state, label);
+                    parser.rightArc(newConfig.state, label);
                     newConfig.addAction(3 + label);
                 } else if (action == 3) {
-                    ArcEager.leftArc(newConfig.state, label);
+                    parser.leftArc(newConfig.state, label);
                     newConfig.addAction(3 + dependencyRelations.size() + label);
                 } else if (action == 4) {
-                    ArcEager.unShift(newConfig.state);
+                    parser.unShift(newConfig.state);
                     newConfig.addAction(2);
                 }
                 newConfig.setScore(score);
@@ -201,12 +206,12 @@ public class KBeamArcEagerParser {
         ArrayList<Configuration> beam = new ArrayList<>(beamWidth);
         beam.add(initialConfiguration);
 
-        while (!ArcEager.isTerminal(beam)) {
+        while (!parser.isTerminal(beam)) {
             TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             for (int b = 0; b < beam.size(); b++) {
                 pool.submit(new PartialTreeBeamScorerThread(true, network, goldConfiguration, beam.get(b),
-                        dependencyRelations, b, maps.labelNullIndex));
+                        dependencyRelations, b, maps.labelNullIndex, parser));
             }
             for (int b = 0; b < beam.size(); b++) {
                 for (BeamElement element : pool.take().get()) {
@@ -228,19 +233,19 @@ public class KBeamArcEagerParser {
                 Configuration newConfig = beam.get(b).clone();
 
                 if (action == 0) {
-                    ArcEager.shift(newConfig.state);
+                    parser.shift(newConfig.state);
                     newConfig.addAction(0);
                 } else if (action == 1) {
-                    ArcEager.reduce(newConfig.state);
+                    parser.reduce(newConfig.state);
                     newConfig.addAction(1);
                 } else if (action == 2) {
-                    ArcEager.rightArc(newConfig.state, label);
+                    parser.rightArc(newConfig.state, label);
                     newConfig.addAction(3 + label);
                 } else if (action == 3) {
-                    ArcEager.leftArc(newConfig.state, label);
+                    parser.leftArc(newConfig.state, label);
                     newConfig.addAction(3 + dependencyRelations.size() + label);
                 } else if (action == 4) {
-                    ArcEager.unShift(newConfig.state);
+                    parser.unShift(newConfig.state);
                     newConfig.addAction(2);
                 }
                 newConfig.setScore(score);
@@ -352,7 +357,7 @@ public class KBeamArcEagerParser {
             if (!partial) {
                 for (GoldConfiguration goldConfiguration : data) {
                     ParseThread thread = new ParseThread(index, network, goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration,
-                            partial, maps.labelNullIndex);
+                            partial, maps.labelNullIndex, parser);
                     pool.submit(thread);
                     index++;
                 }

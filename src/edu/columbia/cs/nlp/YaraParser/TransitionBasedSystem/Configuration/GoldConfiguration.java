@@ -9,7 +9,7 @@ package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration;
 import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.Structures.Sentence;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -104,8 +104,8 @@ public class GoldConfiguration {
      * @return oracle cost of the action
      * @throws Exception
      */
-    public int actionCost(Actions action, int dependency, State state) throws Exception {
-        if (!ArcEager.canDo(action, state))
+    public int actionCost(Actions action, int dependency, State state, ShiftReduceParser parser) throws Exception {
+        if (!parser.canDo(action, state))
             return Integer.MAX_VALUE;
         int cost = 0;
 

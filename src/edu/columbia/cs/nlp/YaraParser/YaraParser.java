@@ -90,7 +90,7 @@ public class YaraParser {
             ObjectInput reader = new ObjectInputStream(gz);
             MLPNetwork mlpNetwork = (MLPNetwork) reader.readObject();
             Options infoptions = (Options) reader.readObject();
-            KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads);
+            KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads, options.parserType);
 
             if (options.parseTaggedFile)
                 parser.parseTaggedFile(options.inputFile,
@@ -195,7 +195,7 @@ public class YaraParser {
     }
 
     private static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {
-        KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads);
+        KBeamArcEagerParser parser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads, options.parserType);
         parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
                 options.beamWidth, options.lowercase, options.numOfThreads, false, "");
         Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);

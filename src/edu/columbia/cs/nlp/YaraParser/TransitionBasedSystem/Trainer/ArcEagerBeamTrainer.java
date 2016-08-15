@@ -17,6 +17,8 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.ParserType;
 
 import java.util.*;
 
@@ -24,6 +26,7 @@ public class ArcEagerBeamTrainer {
     final HashSet<Integer> rareWords;
     Options options;
     Random random;
+    ShiftReduceParser parser;
     private String updateMode;
     private ArrayList<Integer> dependencyRelations;
     private int labelNullIndex;
@@ -36,6 +39,9 @@ public class ArcEagerBeamTrainer {
         this.labelNullIndex = labelNullIndex;
         random = new Random();
         this.rareWords = rareWords;
+        if (options.parserType == ParserType.ArcEager)
+            parser = new ArcEager();
+        //todo arc-standard
     }
 
     public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropWordProb)
@@ -59,7 +65,7 @@ public class ArcEagerBeamTrainer {
 
         Configuration bestScoringOracle = null;
 
-        while (!ArcEager.isTerminal(beam) && beam.size() > 0) {
+        while (!parser.isTerminal(beam) && beam.size() > 0) {
             /**
              *  generating new oracles
              *  it keeps the oracles which are in the terminal state
@@ -74,18 +80,18 @@ public class ArcEagerBeamTrainer {
 
             int[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, labelNullIndex);
             int[] label = new int[2 * (dependencyRelations.size() + 1)];
-            if (!ArcEager.canDo(Actions.LeftArc, currentConfig.state)) {
+            if (!parser.canDo(Actions.LeftArc, currentConfig.state)) {
                 for (int i = 2; i < 2 + dependencyRelations.size(); i++)
                     label[i + dependencyRelations.size()] = -1;
             }
-            if (!ArcEager.canDo(Actions.RightArc, currentConfig.state)) {
+            if (!parser.canDo(Actions.RightArc, currentConfig.state)) {
                 for (int i = 2; i < 2 + dependencyRelations.size(); i++)
                     label[i] = -1;
             }
-            if (!ArcEager.canDo(Actions.Shift, currentConfig.state)) {
+            if (!parser.canDo(Actions.Shift, currentConfig.state)) {
                 label[0] = -1;
             }
-            if (!ArcEager.canDo(Actions.Reduce, currentConfig.state)) {
+            if (!parser.canDo(Actions.Reduce, currentConfig.state)) {
                 label[1] = -1;
             }
 
@@ -129,41 +135,41 @@ public class ArcEagerBeamTrainer {
                 if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
                     int dependency = goldDependencies.get(first).second;
                     double score = 0;
-                    ArcEager.rightArc(newConfig.state, dependency);
+                    parser.rightArc(newConfig.state, dependency);
                     newConfig.addAction(3 + dependency);
                     newConfig.addScore(score);
                 } else if (top > 0 && goldDependencies.containsKey(top) && goldDependencies.get(top).first == first) {
                     int dependency = goldDependencies.get(top).second;
                     double score = 0;
-                    ArcEager.leftArc(newConfig.state, dependency);
+                    parser.leftArc(newConfig.state, dependency);
                     newConfig.addAction(3 + dependencyRelations.size() + dependency);
                     newConfig.addScore(score);
                 } else if (top >= 0 && state.hasHead(top)) {
                     if (reversedDependencies.containsKey(top)) {
                         if (reversedDependencies.get(top).size() == state.valence(top)) {
-                            ArcEager.reduce(newConfig.state);
+                            parser.reduce(newConfig.state);
                             newConfig.addAction(1);
                             newConfig.addScore(0);
                         } else {
                             double score = 0;
-                            ArcEager.shift(newConfig.state);
+                            parser.shift(newConfig.state);
                             newConfig.addAction(0);
                             newConfig.addScore(score);
                         }
                     } else {
                         double score = 0;
-                        ArcEager.reduce(newConfig.state);
+                        parser.reduce(newConfig.state);
                         newConfig.addAction(1);
                         newConfig.addScore(score);
                     }
                 } else if (state.bufferEmpty() && state.stackSize() == 1 && state.peek() == state.rootIndex) {
                     double score = 0;
-                    ArcEager.reduce(newConfig.state);
+                    parser.reduce(newConfig.state);
                     newConfig.addAction(1);
                     newConfig.addScore(score);
                 } else {
                     double score = 0;
-                    ArcEager.shift(newConfig.state);
+                    parser.shift(newConfig.state);
                     newConfig.addAction(0);
                     newConfig.addScore(score);
                 }
@@ -189,10 +195,10 @@ public class ArcEagerBeamTrainer {
 
                 int accepted = 0;
                 // I only assumed that we need zero cost ones
-                if (goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
+                if (goldConfiguration.actionCost(Actions.Shift, -1, currentState, parser) == 0) {
                     Configuration newConfig = configuration.clone();
                     double score = scores[0];
-                    ArcEager.shift(newConfig.state);
+                    parser.shift(newConfig.state);
                     newConfig.addAction(0);
                     newConfig.addScore(score);
                     newOracles.put(newConfig, (double) 0);
@@ -203,12 +209,12 @@ public class ArcEagerBeamTrainer {
                     }
                     accepted++;
                 }
-                if (ArcEager.canDo(Actions.RightArc, currentState)) {
+                if (parser.canDo(Actions.RightArc, currentState)) {
                     for (int dependency : dependencyRelations) {
-                        if (goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
+                        if (goldConfiguration.actionCost(Actions.RightArc, dependency, currentState, parser) == 0) {
                             Configuration newConfig = configuration.clone();
                             double score = scores[2 + dependency];
-                            ArcEager.rightArc(newConfig.state, dependency);
+                            parser.rightArc(newConfig.state, dependency);
                             newConfig.addAction(3 + dependency);
                             newConfig.addScore(score);
                             newOracles.put(newConfig, (double) 0);
@@ -221,12 +227,12 @@ public class ArcEagerBeamTrainer {
                         }
                     }
                 }
-                if (ArcEager.canDo(Actions.LeftArc, currentState)) {
+                if (parser.canDo(Actions.LeftArc, currentState)) {
                     for (int dependency : dependencyRelations) {
-                        if (goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
+                        if (goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState, parser) == 0) {
                             Configuration newConfig = configuration.clone();
                             double score = scores[2 + dependencyRelations.size() + dependency];
-                            ArcEager.leftArc(newConfig.state, dependency);
+                            parser.leftArc(newConfig.state, dependency);
                             newConfig.addAction(3 + dependencyRelations.size() + dependency);
                             newConfig.addScore(score);
                             newOracles.put(newConfig, (double) 0);
@@ -239,10 +245,10 @@ public class ArcEagerBeamTrainer {
                         }
                     }
                 }
-                if (goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
+                if (goldConfiguration.actionCost(Actions.Reduce, -1, currentState, parser) == 0) {
                     Configuration newConfig = configuration.clone();
                     double score = scores[1];
-                    ArcEager.reduce(newConfig.state);
+                    parser.reduce(newConfig.state);
                     newConfig.addAction(1);
                     newConfig.addScore(score);
                     newOracles.put(newConfig, (double) 0);
@@ -266,10 +272,10 @@ public class ArcEagerBeamTrainer {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
             double prevScore = configuration.score;
-            boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
-            boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
-            boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
-            boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
+            boolean canShift = parser.canDo(Actions.Shift, currentState);
+            boolean canReduce = parser.canDo(Actions.Reduce, currentState);
+            boolean canRightArc = parser.canDo(Actions.RightArc, currentState);
+            boolean canLeftArc = parser.canDo(Actions.LeftArc, currentState);
 
             int[] labels = new int[network.getSoftmaxLayerDim()];
             if (!canShift) labels[0] = -1;

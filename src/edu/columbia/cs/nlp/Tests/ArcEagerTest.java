@@ -7,6 +7,7 @@ import edu.columbia.cs.nlp.YaraParser.Structures.Sentence;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
@@ -46,17 +47,18 @@ public class ArcEagerTest {
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
         Sentence sentence = dataSet.get(0).getSentence();
         Configuration configuration = new Configuration(sentence, options.rootFirst);
+        ShiftReduceParser parser = new ArcEager();
 
-        ArcEager.shift(configuration.state);
-        ArcEager.shift(configuration.state);
-        ArcEager.rightArc(configuration.state, maps.dep2Int("neg"));
-        ArcEager.reduce(configuration.state);
-        ArcEager.leftArc(configuration.state, maps.dep2Int("auxpass"));
-        ArcEager.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
-        ArcEager.shift(configuration.state);
-        ArcEager.rightArc(configuration.state, maps.dep2Int("p"));
-        ArcEager.reduce(configuration.state);
-        ArcEager.leftArc(configuration.state, maps.dep2Int("ROOT"));
+        parser.shift(configuration.state);
+        parser.shift(configuration.state);
+        parser.rightArc(configuration.state, maps.dep2Int("neg"));
+        parser.reduce(configuration.state);
+        parser.leftArc(configuration.state, maps.dep2Int("auxpass"));
+        parser.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
+        parser.shift(configuration.state);
+        parser.rightArc(configuration.state, maps.dep2Int("p"));
+        parser.reduce(configuration.state);
+        parser.leftArc(configuration.state, maps.dep2Int("ROOT"));
         assert configuration.state.isTerminalState();
     }
 

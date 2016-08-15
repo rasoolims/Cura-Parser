@@ -7,39 +7,17 @@ package edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager;
 
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ArcEager {
-    public static void shift(State state) throws Exception {
-        state.push(state.bufferHead());
-        state.incrementBufferHead();
-
-        // changing the constraint
-        if (state.bufferEmpty())
-            state.setEmptyFlag(true);
-    }
-
-    public static void unShift(State state) throws Exception {
-        if (!state.stackEmpty())
-            state.setBufferH(state.pop());
-        // to make sure
-        state.setEmptyFlag(true);
-        state.setMaxSentenceSize(state.bufferHead());
-    }
-
-    public static void reduce(State state) throws Exception {
-        state.pop();
-        if (state.stackEmpty() && state.bufferEmpty())
-            state.setEmptyFlag(true);
-    }
-
-    public static void leftArc(State state, int dependency) throws Exception {
+public class ArcEager extends ShiftReduceParser {
+    public void leftArc(State state, int dependency) throws Exception {
         state.addArc(state.pop(), state.bufferHead(), dependency);
     }
 
-    public static void rightArc(State state, int dependency) throws Exception {
+    public void rightArc(State state, int dependency) throws Exception {
         state.addArc(state.bufferHead(), state.peek(), dependency);
         state.push(state.bufferHead());
         state.incrementBufferHead();
@@ -47,7 +25,7 @@ public class ArcEager {
             state.setEmptyFlag(true);
     }
 
-    public static boolean canDo(Actions action, State state) {
+    public boolean canDo(Actions action, State state) {
         if (action == Actions.Shift) { //shift
             return !(!state.bufferEmpty() && state.bufferHead() == state.rootIndex && !state.stackEmpty()) && !state
                     .bufferEmpty() && !state.isEmptyFlag();
@@ -80,18 +58,17 @@ public class ArcEager {
      * @param beam the current beam
      * @return true if all of the configurations in the beam are in the terminal state
      */
-    public static boolean isTerminal(ArrayList<Configuration> beam) {
+    public boolean isTerminal(ArrayList<Configuration> beam) {
         for (Configuration configuration : beam)
             if (!configuration.state.isTerminalState())
                 return false;
         return true;
     }
 
-    public static boolean isTerminal(HashMap<Configuration, Double> oracles) {
+    public boolean isTerminal(HashMap<Configuration, Double> oracles) {
         for (Configuration configuration : oracles.keySet())
             if (!configuration.state.isTerminalState())
                 return false;
         return true;
     }
-
 }

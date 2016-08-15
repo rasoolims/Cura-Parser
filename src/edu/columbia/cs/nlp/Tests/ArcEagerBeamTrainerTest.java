@@ -10,6 +10,7 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Config
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
 import org.junit.Test;
 
@@ -42,6 +43,7 @@ public class ArcEagerBeamTrainerTest {
 
     @Test
     public void testInstanceGeneration() throws Exception {
+        ShiftReduceParser parser = new ArcEager();
         writeConllFile(shortConllText);
 
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
@@ -65,7 +67,7 @@ public class ArcEagerBeamTrainerTest {
             assert instances.get(index).getLabel()[i] == -1;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
 
-        ArcEager.shift(configuration.state);
+        parser.shift(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert instances.get(index).gold() == 0;
@@ -73,7 +75,7 @@ public class ArcEagerBeamTrainerTest {
         for (int i = 2; i < instances.get(index).getLabel().length; i++)
             assert instances.get(index).getLabel()[i] == 0;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
-        ArcEager.shift(configuration.state);
+        parser.shift(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert instances.get(index).gold() == 2 + maps.dep2Int("neg");
@@ -82,7 +84,7 @@ public class ArcEagerBeamTrainerTest {
             if (i != instances.get(index).gold() && i != 1)
                 assert instances.get(index).getLabel()[i] == 0;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
-        ArcEager.rightArc(configuration.state, maps.dep2Int("neg"));
+        parser.rightArc(configuration.state, maps.dep2Int("neg"));
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert instances.get(index).gold() == 1;
@@ -94,7 +96,7 @@ public class ArcEagerBeamTrainerTest {
             }
         }
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
-        ArcEager.reduce(configuration.state);
+        parser.reduce(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("auxpass");
@@ -106,27 +108,27 @@ public class ArcEagerBeamTrainerTest {
             }
         }
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
-        ArcEager.leftArc(configuration.state, maps.dep2Int("auxpass"));
+        parser.leftArc(configuration.state, maps.dep2Int("auxpass"));
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("nsubjpass");
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
-        ArcEager.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
+        parser.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert instances.get(index).gold() == 0;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
-        ArcEager.shift(configuration.state);
+        parser.shift(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert instances.get(index).gold() == 2 + maps.dep2Int("p");
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
-        ArcEager.rightArc(configuration.state, maps.dep2Int("p"));
+        parser.rightArc(configuration.state, maps.dep2Int("p"));
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert instances.get(index).gold() == 1;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
-        ArcEager.reduce(configuration.state);
+        parser.reduce(configuration.state);
 
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("ROOT");
@@ -138,7 +140,7 @@ public class ArcEagerBeamTrainerTest {
             }
         }
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
-        ArcEager.leftArc(configuration.state, maps.dep2Int("ROOT"));
+        parser.leftArc(configuration.state, maps.dep2Int("ROOT"));
 
         assert instances.size() == index;
     }

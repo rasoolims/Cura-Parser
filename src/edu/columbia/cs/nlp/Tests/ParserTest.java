@@ -11,6 +11,7 @@ import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.KBeamArcEagerParser;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.ParserType;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
 import org.junit.Test;
 
@@ -152,7 +153,7 @@ public class ParserTest {
                 double acc = classifier.fit(instances, i, true);
 
                 if (i % 10 == 0) {
-                    KBeamArcEagerParser parser = new KBeamArcEagerParser(network, options.numOfThreads);
+                    KBeamArcEagerParser parser = new KBeamArcEagerParser(network, options.numOfThreads, ParserType.ArcEager);
                     parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
                             options.beamWidth, options.lowercase, options.numOfThreads, false, "");
                     Pair<Double, Double> evaluator = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
@@ -170,7 +171,7 @@ public class ParserTest {
                     ObjectInput r = new ObjectInputStream(gz2);
                     MLPNetwork mlpNetwork = (MLPNetwork) r.readObject();
                     Options infoptions = (Options) r.readObject();
-                    KBeamArcEagerParser loadedParser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads);
+                    KBeamArcEagerParser loadedParser = new KBeamArcEagerParser(mlpNetwork, options.numOfThreads, ParserType.ArcEager);
                     loadedParser.parseConll(options.devPath, options.modelFile + ".tmp2", infoptions.rootFirst, options.beamWidth,
                             infoptions.lowercase, options.numOfThreads, false, options.scorePath);
                     Pair<Double, Double> evaluator2 = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp2", options.punctuations);

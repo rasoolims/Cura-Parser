@@ -9,6 +9,7 @@ import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.SGDType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.ParserType;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -67,6 +68,8 @@ public class Options implements Serializable {
     public SGDType sgdType;
     public boolean outputBiasTerm;
 
+    public ParserType parserType;
+
     public Options() {
         showHelp = false;
         updaterType = UpdaterType.ADAM;
@@ -111,6 +114,7 @@ public class Options implements Serializable {
         parsePartialConll = false;
         UASEvalPerStep = 100;
         partialTrainingStartingIteration = 3;
+        parserType = ParserType.ArcEager;
 
         punctuations = new HashSet<>();
         punctuations.add("#");
@@ -174,6 +178,7 @@ public class Options implements Serializable {
         output.append("\t \t -h2 [hidden-layer-size-2] \n");
         output.append("\t \t -lr [learning-rate] \n");
         output.append("\t \t -ds [decay-step] \n");
+        output.append("\t \t -parser [ae(arc-eager:default), as(arc-standard)] \n");
         output.append("\t \t -a [activation (relu,cubic) -- default:relu] \n");
         output.append("\t \t -u [updater-type: sgd(default),adam,adagrad] \n");
         output.append("\t \t -sgd [sgd-type (if using sgd): nesterov(default),momentum, vanilla] \n");
@@ -269,6 +274,13 @@ public class Options implements Serializable {
                     options.activationType = ActivationType.CUBIC;
                 else
                     throw new Exception("updater not supported");
+            } else if (args[i].equals("-parser")) {
+                if (args[i + 1].equals("ae"))
+                    options.parserType = ParserType.ArcEager;
+                else if (args[i + 1].equals("as"))
+                    options.parserType = ParserType.ArcStandard;
+                else
+                    throw new Exception("parser not supported");
             } else if (args[i].equals("-sgd")) {
                 if (args[i + 1].equals("nesterov"))
                     options.sgdType = SGDType.NESTEROV;

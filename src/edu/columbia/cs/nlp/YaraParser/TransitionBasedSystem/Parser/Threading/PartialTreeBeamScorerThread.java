@@ -12,7 +12,7 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldCo
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.Actions;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
 
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
@@ -27,9 +27,11 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
     ArrayList<Integer> dependencyRelations;
     int labelNullIndex;
     int b;
+    ShiftReduceParser parser;
 
-    public PartialTreeBeamScorerThread(boolean isDecode, MLPNetwork network, GoldConfiguration
-            goldConfiguration, Configuration configuration, ArrayList<Integer> dependencyRelations, int b, int labelNullIndex) {
+    public PartialTreeBeamScorerThread(boolean isDecode, MLPNetwork network, GoldConfiguration goldConfiguration,
+                                       Configuration configuration, ArrayList<Integer> dependencyRelations, int b,
+                                       int labelNullIndex, ShiftReduceParser parser) {
         this.isDecode = isDecode;
         this.network = network;
         this.configuration = configuration;
@@ -37,6 +39,7 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         this.dependencyRelations = dependencyRelations;
         this.b = b;
         this.labelNullIndex = labelNullIndex;
+        this.parser = parser;
     }
 
 
@@ -51,10 +54,10 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         State currentState = configuration.state;
         double prevScore = configuration.score;
 
-        boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
-        boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
-        boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
-        boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
+        boolean canShift = parser.canDo(Actions.Shift, currentState);
+        boolean canReduce = parser.canDo(Actions.Reduce, currentState);
+        boolean canRightArc = parser.canDo(Actions.RightArc, currentState);
+        boolean canLeftArc = parser.canDo(Actions.LeftArc, currentState);
         int[] labels = new int[network.getSoftmaxLayerDim()];
         if (!canShift) labels[0] = -1;
         if (!canReduce) labels[1] = -1;
@@ -68,14 +71,14 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         double[] scores = network.output(features, labels);
 
         if (canShift) {
-            if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
+            if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState, parser) == 0) {
                 double score = scores[0];
                 double addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 0, -1));
             }
         }
         if (canReduce) {
-            if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
+            if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState, parser) == 0) {
                 double score = scores[1];
                 double addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 1, -1));
@@ -85,7 +88,7 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
 
         if (canRightArc) {
             for (int dependency : dependencyRelations) {
-                if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
+                if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState, parser) == 0) {
                     double score = scores[2 + dependency];
                     double addedScore = score + prevScore;
                     elements.add(new BeamElement(addedScore, b, 2, dependency));
@@ -94,7 +97,7 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         }
         if (canLeftArc) {
             for (int dependency : dependencyRelations) {
-                if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
+                if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState, parser) == 0) {
                     double score = scores[2 + dependencyRelations.size() + dependency];
                     double addedScore = score + prevScore;
                     elements.add(new BeamElement(addedScore, b, 3, dependency));

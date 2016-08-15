@@ -16,6 +16,6 @@ public class Relu extends Activation {
 
     @Override
     public double gradient(double value, double gradient) {
-        return (value <=0 ? 0 : gradient);
+        return (value <= 0 ? 0 : gradient);
     }
 }

@@ -16,6 +16,7 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Config
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ArcEager.ArcEager;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.ShiftReduceParser;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
@@ -62,6 +63,7 @@ public class FeatureExtractorTest {
 
     @Test
     public void testFeatureExtraction() throws Exception {
+        ShiftReduceParser parser = new ArcEager();
         writeConllFile(conllText);
 
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
@@ -70,6 +72,7 @@ public class FeatureExtractorTest {
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
         Sentence sentence = dataSet.get(0).getSentence();
         Configuration configuration = new Configuration(sentence, options.rootFirst);
+
 
         /**
          * actions = shift, shift, left-arc, left-arc, shift, right-arc, reduce, left-arc
@@ -80,24 +83,24 @@ public class FeatureExtractorTest {
         assert baseFeatures[19] == IndexMaps.NullIndex;
         assert baseFeatures[26] == (sentence.getTags()[0]);
         assert baseFeatures[46] == maps.labelNullIndex;
-        ArcEager.shift(configuration.state);
+        parser.shift(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == (sentence.getWords()[0]);
         assert baseFeatures[4] == (sentence.getWords()[1]);
         assert baseFeatures[19] == (sentence.getTags()[0]);
         assert baseFeatures[26] == (sentence.getTags()[1]);
         assert baseFeatures[46] == maps.labelNullIndex;
-        ArcEager.shift(configuration.state);
-        ArcEager.leftArc(configuration.state, 1);
-        ArcEager.leftArc(configuration.state, 1);
-        ArcEager.shift(configuration.state);
-        ArcEager.shift(configuration.state);
-        ArcEager.rightArc(configuration.state, 2);
+        parser.shift(configuration.state);
+        parser.leftArc(configuration.state, 1);
+        parser.leftArc(configuration.state, 1);
+        parser.shift(configuration.state);
+        parser.shift(configuration.state);
+        parser.rightArc(configuration.state, 2);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[44] == (configuration.state.getDependency(5, maps.labelNullIndex));
-        ArcEager.reduce(configuration.state);
+        parser.reduce(configuration.state);
         int s0 = configuration.state.peek();
-        ArcEager.leftArc(configuration.state, maps.dep2Int("adpobj"));
+        parser.leftArc(configuration.state, maps.dep2Int("adpobj"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert configuration.state.getDependency(s0, maps.labelNullIndex) == baseFeatures[50];
         assert configuration.state.getDependency(configuration.state.bufferHead(), maps.labelNullIndex) == maps.labelNullIndex;
@@ -105,6 +108,7 @@ public class FeatureExtractorTest {
 
     @Test
     public void testFeatureConsistency() throws Exception {
+        ShiftReduceParser parser = new ArcEager();
         writeConllFile(shortConllText);
 
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
@@ -119,7 +123,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[23] == IndexMaps.NullIndex;
         assert baseFeatures[46] == maps.labelNullIndex;
 
-        ArcEager.shift(configuration.state);
+        parser.shift(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[0];
         assert baseFeatures[0] == maps.word2Int("Terms");
@@ -129,7 +133,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[23] == IndexMaps.NullIndex;
         assert baseFeatures[46] == maps.labelNullIndex;
 
-        ArcEager.shift(configuration.state);
+        parser.shift(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[1];
         assert baseFeatures[0] == maps.word2Int("were");
@@ -147,7 +151,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[23] == sentence.getTags()[0];
         assert baseFeatures[46] == maps.labelNullIndex;
 
-        ArcEager.rightArc(configuration.state, maps.dep2Int("neg"));
+        parser.rightArc(configuration.state, maps.dep2Int("neg"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[2];
         assert baseFeatures[0] == maps.word2Int("n't");
@@ -164,7 +168,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[44] == maps.dep2Int("neg");
         assert baseFeatures[47] == maps.labelNullIndex;
 
-        ArcEager.reduce(configuration.state);
+        parser.reduce(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[1];
         assert baseFeatures[0] == maps.word2Int("were");
@@ -179,7 +183,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[6] == IndexMaps.RootIndex;
         assert baseFeatures[6] == maps.word2Int("ROOT");
 
-        ArcEager.leftArc(configuration.state, maps.dep2Int("auxpass"));
+        parser.leftArc(configuration.state, maps.dep2Int("auxpass"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[0];
         assert baseFeatures[0] == maps.word2Int("Terms");
@@ -192,7 +196,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[50] == maps.dep2Int("auxpass");
         assert baseFeatures[51] == maps.labelNullIndex;
 
-        ArcEager.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
+        parser.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == IndexMaps.NullIndex;
         assert baseFeatures[1] == IndexMaps.NullIndex;
@@ -210,7 +214,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[12] == IndexMaps.NullIndex;
 
 
-        ArcEager.shift(configuration.state);
+        parser.shift(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[3];
         assert baseFeatures[0] == maps.word2Int("disclosed");
@@ -230,14 +234,14 @@ public class FeatureExtractorTest {
         assert baseFeatures[27] == maps.pos2Int("ROOT");
         assert baseFeatures[27] == sentence.getTags()[5];
 
-        ArcEager.rightArc(configuration.state, maps.dep2Int("p"));
+        parser.rightArc(configuration.state, maps.dep2Int("p"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[14] == sentence.getWords()[3];
         assert baseFeatures[14] == maps.word2Int("disclosed");
         assert baseFeatures[47] == maps.labelNullIndex;
         assert baseFeatures[44] == maps.dep2Int("p");
 
-        ArcEager.reduce(configuration.state);
+        parser.reduce(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[12] == sentence.getWords()[4];
         assert baseFeatures[12] == maps.word2Int(".");
@@ -245,7 +249,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[34] == sentence.getTags()[4];
         assert baseFeatures[34] == maps.pos2Int(".");
 
-        ArcEager.leftArc(configuration.state, maps.dep2Int("ROOT"));
+        parser.leftArc(configuration.state, maps.dep2Int("ROOT"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[16] == sentence.getWords()[0];
         assert baseFeatures[16] == maps.word2Int("Terms");
@@ -253,6 +257,7 @@ public class FeatureExtractorTest {
 
     @Test
     public void testOOVFeatureConsistency() throws Exception {
+        ShiftReduceParser parser = new ArcEager();
         writeConllFile(shortConllOOVText);
 
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", 1);
@@ -267,7 +272,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[23] == IndexMaps.NullIndex;
         assert baseFeatures[46] == maps.labelNullIndex;
 
-        ArcEager.shift(configuration.state);
+        parser.shift(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[0];
         assert baseFeatures[0] == maps.word2Int("X");
@@ -277,7 +282,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[23] == IndexMaps.NullIndex;
         assert baseFeatures[46] == maps.labelNullIndex;
 
-        ArcEager.shift(configuration.state);
+        parser.shift(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[1];
         assert baseFeatures[0] == maps.word2Int("Z");
@@ -289,7 +294,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[23] == sentence.getTags()[0];
         assert baseFeatures[46] == maps.labelNullIndex;
 
-        ArcEager.rightArc(configuration.state, maps.dep2Int("neg"));
+        parser.rightArc(configuration.state, maps.dep2Int("neg"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[2];
         assert baseFeatures[0] == IndexMaps.UnknownIndex;
@@ -306,7 +311,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[44] == maps.dep2Int("neg");
         assert baseFeatures[47] == maps.labelNullIndex;
 
-        ArcEager.reduce(configuration.state);
+        parser.reduce(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[1];
         assert baseFeatures[0] == maps.word2Int("Z");
@@ -321,7 +326,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[6] == IndexMaps.RootIndex;
         assert baseFeatures[6] == maps.word2Int("ROOT");
 
-        ArcEager.leftArc(configuration.state, maps.dep2Int("auxpass"));
+        parser.leftArc(configuration.state, maps.dep2Int("auxpass"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[0];
         assert baseFeatures[0] == maps.word2Int("X");
@@ -334,7 +339,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[50] == maps.dep2Int("auxpass");
         assert baseFeatures[51] == maps.labelNullIndex;
 
-        ArcEager.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
+        parser.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == IndexMaps.NullIndex;
         assert baseFeatures[1] == IndexMaps.NullIndex;
@@ -352,7 +357,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[12] == IndexMaps.NullIndex;
 
 
-        ArcEager.shift(configuration.state);
+        parser.shift(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[0] == sentence.getWords()[3];
         assert baseFeatures[0] == maps.word2Int("Z");
@@ -372,14 +377,14 @@ public class FeatureExtractorTest {
         assert baseFeatures[27] == maps.pos2Int("ROOT");
         assert baseFeatures[27] == sentence.getTags()[5];
 
-        ArcEager.rightArc(configuration.state, maps.dep2Int("p"));
+        parser.rightArc(configuration.state, maps.dep2Int("p"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[14] == sentence.getWords()[3];
         assert baseFeatures[14] == maps.word2Int("Z");
         assert baseFeatures[47] == maps.labelNullIndex;
         assert baseFeatures[44] == maps.dep2Int("p");
 
-        ArcEager.reduce(configuration.state);
+        parser.reduce(configuration.state);
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[12] == sentence.getWords()[4];
         assert baseFeatures[12] == maps.word2Int("X");
@@ -387,7 +392,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[34] == sentence.getTags()[4];
         assert baseFeatures[34] == maps.pos2Int(".");
 
-        ArcEager.leftArc(configuration.state, maps.dep2Int("ROOT"));
+        parser.leftArc(configuration.state, maps.dep2Int("ROOT"));
         baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
         assert baseFeatures[16] == sentence.getWords()[0];
         assert baseFeatures[16] == maps.word2Int("X");
