@@ -32,11 +32,11 @@ public class ArcStandard extends ShiftReduceParser {
     }
 
     public void reduce(State state) throws Exception {
-        throw new Exception("Reduce is not defined in the arc-standard transitions");
+        throw new NotImplementedException();
     }
 
     public void unShift(State state) throws Exception {
-        throw new Exception("Unshift is not defined in the arc-standard transitions");
+        throw new NotImplementedException();
     }
 
     public boolean canDo(Actions action, State state) throws Exception {
