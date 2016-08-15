@@ -60,7 +60,7 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
         if (!canLeftArc)
             for (int i = 0; i < dependencyRelations.size(); i++)
                 labels[dependencyRelations.size() + 2 + i] = -1;
-        int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
+        int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
         double[] scores = network.output(features, labels);
 
 

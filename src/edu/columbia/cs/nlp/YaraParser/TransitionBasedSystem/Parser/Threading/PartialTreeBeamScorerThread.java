@@ -67,7 +67,7 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         if (!canLeftArc)
             for (int i = 0; i < dependencyRelations.size(); i++)
                 labels[dependencyRelations.size() + 2 + i] = -1;
-        int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
+        int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
         double[] scores = network.output(features, labels);
 
         if (canShift) {

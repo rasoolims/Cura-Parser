@@ -81,7 +81,7 @@ public class BeamParser {
             if (!canLeftArc)
                 for (int i = 0; i < maps.relSize(); i++)
                     labels[maps.relSize() + 2 + i] = -1;
-            int[] features = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+            int[] features = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
             double[] scores = network.output(features, labels);
 
             if (!canShift

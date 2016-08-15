@@ -6,6 +6,7 @@ import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.BeamTrainer;
 import org.junit.Test;
 
@@ -129,9 +130,9 @@ public class MLPNetworkTest {
         BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-        maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
+        maps.constructPreComputeMap(instances, 22, 10000);
 
-        MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+        MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
         network.preCompute();
         MLPNetwork clonedNetwork = network.clone();
 

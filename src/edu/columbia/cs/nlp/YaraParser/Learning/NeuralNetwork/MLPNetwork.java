@@ -15,6 +15,7 @@ import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Relu;
 import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -24,9 +25,6 @@ import java.util.Random;
  * Manual MLP model
  */
 public class MLPNetwork implements Serializable {
-    public static final int numWordLayers = 22;
-    public static final int numPosLayers = 22;
-    public static final int numDepLayers = 11;
     final public IndexMaps maps;
     final public Options options;
     final public ArrayList<Integer> depLabels;
@@ -44,8 +42,21 @@ public class MLPNetwork implements Serializable {
     //todo make them private.
     NetworkMatrices matrices;
     double[][][] saved;
+    private int numWordLayers;
+    private int numPosLayers;
+    private int numDepLayers;
 
-    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int wDim, int pDim, int lDim) throws Exception {
+    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int wDim, int pDim, int lDim, ParserType parserType) throws
+            Exception {
+        if (parserType == ParserType.ArcEager) {
+            numWordLayers = 22;
+            numPosLayers = 22;
+            numDepLayers = 11;
+        } else {
+            numWordLayers = 20;
+            numPosLayers = 20;
+            numDepLayers = 12;
+        }
         this.maps = maps;
         this.options = options;
         this.depLabels = depLabels;
@@ -67,11 +78,12 @@ public class MLPNetwork implements Serializable {
         initializeLayers();
         addPretrainedWordEmbeddings(maps);
         preCompute();
+
     }
 
     public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int numDepLabels, int depEmbedDim, int wordEmbedDim, int
             hiddenLayerDim, int hiddenLayerIntDim, int numWords, int numPos, int posEmbedDim, int softmaxLayerDim, NetworkMatrices matrices,
-                      double[][][] saved, ActivationType activationType) {
+                      double[][][] saved, ActivationType activationType, int numWordLayers, int numPosLayers, int numDepLayers) {
         this.maps = maps;
         this.options = options;
         this.depLabels = depLabels;
@@ -88,6 +100,9 @@ public class MLPNetwork implements Serializable {
         this.saved = saved;
         this.activationType = activationType;
         activation = activationType == ActivationType.RELU ? new Relu() : new Cubic();
+        this.numWordLayers = numWordLayers;
+        this.numPosLayers = numPosLayers;
+        this.numDepLayers = numDepLayers;
     }
 
     public static void averageNetworks(final MLPNetwork toAverageFrom, MLPNetwork averaged, final double r1, final double r2) {
@@ -367,11 +382,14 @@ public class MLPNetwork implements Serializable {
     public MLPNetwork clone() {
         try {
             MLPNetwork network = new MLPNetwork(maps, options, depLabels, numDepLabels, depEmbedDim, wordEmbedDim, hiddenLayerDim,
-                    hiddenLayerIntDim, numWords, numPos, posEmbedDim, softmaxLayerDim, null, null, activationType);
+                    hiddenLayerIntDim, numWords, numPos, posEmbedDim, softmaxLayerDim, null, null, activationType, numWordLayers, numPosLayers,
+                    numDepLayers);
             network.matrices = matrices.clone();
             return network;
         } catch (Exception ex) {
             return null;
         }
     }
+
+
 }

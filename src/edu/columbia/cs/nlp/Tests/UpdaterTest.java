@@ -143,8 +143,8 @@ public class UpdaterTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             MLPTrainer classifier = new MLPTrainer(network, options);
             network.preCompute();

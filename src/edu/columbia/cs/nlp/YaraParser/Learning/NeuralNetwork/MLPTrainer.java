@@ -202,7 +202,7 @@ public class MLPTrainer {
         double[][] wE = net.matrices.getWordEmbedding();
         double[][] pE = net.matrices.getPosEmbedding();
         double[][] lE = net.matrices.getLabelEmbedding();
-        for (int index = 0; index < net.numWordLayers; index++) {
+        for (int index = 0; index < net.getNumWordLayers(); index++) {
             for (int tok : wordsSeen[index]) {
                 int id = net.maps.preComputeMap[index].get(tok);
                 double[] embedding = wE[tok];
@@ -217,7 +217,7 @@ public class MLPTrainer {
             offset += net.wordEmbedDim;
         }
 
-        for (int index = net.numWordLayers; index < net.numWordLayers + net.numPosLayers; index++) {
+        for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers(); index++) {
             for (int tok = 0; tok < net.numPos; tok++) {
                 double[] embedding = pE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
@@ -231,7 +231,8 @@ public class MLPTrainer {
             offset += net.posEmbedDim;
         }
 
-        for (int index = net.numWordLayers + net.numPosLayers; index < net.numWordLayers + net.numPosLayers + net.numDepLayers; index++) {
+        for (int index = net.getNumWordLayers() + net.getNumPosLayers();
+             index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++) {
             for (int tok = 0; tok < net.numDepLabels; tok++) {
                 double[] embedding = lE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
@@ -250,7 +251,7 @@ public class MLPTrainer {
             throws Exception {
         double cost = 0;
         double correct = 0;
-        HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(net.numWordLayers);
+        HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(net.getNumWordLayers());
 
         for (NeuralTrainingInstance instance : instances) {
             int[] features = instance.getFeatures();
@@ -276,9 +277,9 @@ public class MLPTrainer {
                 else
                     embedding = labelEmbeddings[tok];
 
-                if (net.saved != null && (j >= net.numWordLayers || net.maps.preComputeMap[j].containsKey(tok))) {
+                if (net.saved != null && (j >= net.getNumWordLayers() || net.maps.preComputeMap[j].containsKey(tok))) {
                     int id = tok;
-                    if (j < net.numWordLayers)
+                    if (j < net.getNumWordLayers())
                         id = net.maps.preComputeMap[j].get(tok);
                     double[] s = net.saved[j][id];
                     for (int h : hiddenNodesToUse) {
@@ -428,13 +429,13 @@ public class MLPTrainer {
         }
 
         private double[][][] instantiateSavedGradients() {
-            double[][][] savedGradients = new double[net.numWordLayers + net.numPosLayers + net.numDepLayers][][];
-            for (int i = 0; i < net.numWordLayers; i++)
+            double[][][] savedGradients = new double[net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers()][][];
+            for (int i = 0; i < net.getNumWordLayers(); i++)
                 savedGradients[i] = new double[net.maps.preComputeMap[i].size()][net.hiddenLayerDim];
-            for (int i = net.numWordLayers; i < net.numWordLayers + net.numPosLayers; i++)
+            for (int i = net.getNumWordLayers(); i < net.getNumWordLayers() + net.getNumPosLayers(); i++)
                 savedGradients[i] = new double[net.numPos][net.hiddenLayerDim];
-            for (int i = net.numWordLayers + net.numPosLayers;
-                 i < net.numWordLayers + net.numPosLayers + net.numDepLayers; i++)
+            for (int i = net.getNumWordLayers() + net.getNumPosLayers();
+                 i < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); i++)
                 savedGradients[i] = new double[net.numDepLabels][net.hiddenLayerDim];
             return savedGradients;
         }

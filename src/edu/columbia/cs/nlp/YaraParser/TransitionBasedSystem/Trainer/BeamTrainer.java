@@ -82,7 +82,7 @@ public class BeamTrainer {
                 break;
             }
 
-            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, labelNullIndex);
+            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, labelNullIndex, parser);
             int[] label = new int[2 * (dependencyRelations.size() + 1)];
             if (!parser.canDo(Actions.LeftArc, currentConfig.state)) {
                 for (int i = 2; i < 2 + dependencyRelations.size(); i++)
@@ -105,8 +105,9 @@ public class BeamTrainer {
             if (action >= 2)
                 action -= 1;
 
+            int numWordLayers = parser instanceof ArcEager ? 22 : 20;
             for (int i = 0; i < baseFeatures.length; i++) {
-                if (i < MLPNetwork.numWordLayers && rareWords.contains(baseFeatures[i]))
+                if (i < numWordLayers && rareWords.contains(baseFeatures[i]))
                     if (random.nextDouble() <= dropWordProb && baseFeatures[i] != 1)
                         baseFeatures[i] = IndexMaps.UnknownIndex;
             }
@@ -137,7 +138,7 @@ public class BeamTrainer {
             if (!canLeftArc)
                 for (int i = 0; i < dependencyRelations.size(); i++)
                     labels[dependencyRelations.size() + 2 + i] = -1;
-            int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex);
+            int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
             double[] scores = network.output(features, labels);
 
             if (canShift) {

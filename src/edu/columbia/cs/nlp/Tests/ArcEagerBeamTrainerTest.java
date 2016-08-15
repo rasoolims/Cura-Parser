@@ -61,7 +61,7 @@ public class ArcEagerBeamTrainerTest {
         Configuration configuration = new Configuration(sentence, options.rootFirst);
 
         int index = 0;
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 0;
         for (int i = 1; i < instances.get(index).getLabel().length; i++)
             assert instances.get(index).getLabel()[i] == -1;
@@ -69,7 +69,7 @@ public class ArcEagerBeamTrainerTest {
 
         parser.shift(configuration.state);
 
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 0;
         assert instances.get(index).getLabel()[1] == -1;
         for (int i = 2; i < instances.get(index).getLabel().length; i++)
@@ -77,7 +77,7 @@ public class ArcEagerBeamTrainerTest {
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         parser.shift(configuration.state);
 
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 2 + maps.dep2Int("neg");
         assert instances.get(index).getLabel()[1] == -1;
         for (int i = 0; i < instances.get(index).getLabel().length; i++)
@@ -86,7 +86,7 @@ public class ArcEagerBeamTrainerTest {
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         parser.rightArc(configuration.state, maps.dep2Int("neg"));
 
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 1;
         for (int i = 0; i < instances.get(index).getLabel().length; i++) {
             if (i != instances.get(index).gold()) {
@@ -98,7 +98,7 @@ public class ArcEagerBeamTrainerTest {
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         parser.reduce(configuration.state);
 
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("auxpass");
         assert instances.get(index).getLabel()[1] == -1;
         for (int i = 0; i < instances.get(index).getLabel().length; i++) {
@@ -110,27 +110,27 @@ public class ArcEagerBeamTrainerTest {
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         parser.leftArc(configuration.state, maps.dep2Int("auxpass"));
 
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("nsubjpass");
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         parser.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
 
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 0;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         parser.shift(configuration.state);
 
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 2 + maps.dep2Int("p");
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         parser.rightArc(configuration.state, maps.dep2Int("p"));
 
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 1;
         assert Utils.equals(instances.get(index++).getFeatures(), baseFeatures);
         parser.reduce(configuration.state);
 
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.dep2Int("ROOT");
         assert instances.get(index).gold() == 2 + dependencyLabels.size() + maps.LabelRootIndex;
         for (int i = 0; i < instances.get(index).getLabel().length; i++) {

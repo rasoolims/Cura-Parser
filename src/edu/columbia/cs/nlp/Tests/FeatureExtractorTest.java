@@ -77,14 +77,14 @@ public class FeatureExtractorTest {
         /**
          * actions = shift, shift, left-arc, left-arc, shift, right-arc, reduce, left-arc
          */
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == IndexMaps.NullIndex;
         assert baseFeatures[4] == (sentence.getWords()[0]);
         assert baseFeatures[19] == IndexMaps.NullIndex;
         assert baseFeatures[26] == (sentence.getTags()[0]);
         assert baseFeatures[46] == maps.labelNullIndex;
         parser.shift(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == (sentence.getWords()[0]);
         assert baseFeatures[4] == (sentence.getWords()[1]);
         assert baseFeatures[19] == (sentence.getTags()[0]);
@@ -96,12 +96,12 @@ public class FeatureExtractorTest {
         parser.shift(configuration.state);
         parser.shift(configuration.state);
         parser.rightArc(configuration.state, 2);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[44] == (configuration.state.getDependency(5, maps.labelNullIndex));
         parser.reduce(configuration.state);
         int s0 = configuration.state.peek();
         parser.leftArc(configuration.state, maps.dep2Int("adpobj"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert configuration.state.getDependency(s0, maps.labelNullIndex) == baseFeatures[50];
         assert configuration.state.getDependency(configuration.state.bufferHead(), maps.labelNullIndex) == maps.labelNullIndex;
     }
@@ -118,13 +118,13 @@ public class FeatureExtractorTest {
         Sentence sentence = dataSet.get(0).getSentence();
         Configuration configuration = new Configuration(sentence, options.rootFirst);
 
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[1] == IndexMaps.NullIndex;
         assert baseFeatures[23] == IndexMaps.NullIndex;
         assert baseFeatures[46] == maps.labelNullIndex;
 
         parser.shift(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[0];
         assert baseFeatures[0] == maps.word2Int("Terms");
         assert baseFeatures[1] == IndexMaps.NullIndex;
@@ -134,7 +134,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[46] == maps.labelNullIndex;
 
         parser.shift(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[1];
         assert baseFeatures[0] == maps.word2Int("were");
         assert baseFeatures[1] == sentence.getWords()[0];
@@ -152,7 +152,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[46] == maps.labelNullIndex;
 
         parser.rightArc(configuration.state, maps.dep2Int("neg"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[2];
         assert baseFeatures[0] == maps.word2Int("n't");
         assert baseFeatures[2] == sentence.getWords()[0];
@@ -169,7 +169,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[47] == maps.labelNullIndex;
 
         parser.reduce(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[1];
         assert baseFeatures[0] == maps.word2Int("were");
         assert baseFeatures[1] == sentence.getWords()[0];
@@ -184,7 +184,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[6] == maps.word2Int("ROOT");
 
         parser.leftArc(configuration.state, maps.dep2Int("auxpass"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[0];
         assert baseFeatures[0] == maps.word2Int("Terms");
         assert baseFeatures[1] == IndexMaps.NullIndex;
@@ -197,7 +197,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[51] == maps.labelNullIndex;
 
         parser.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == IndexMaps.NullIndex;
         assert baseFeatures[1] == IndexMaps.NullIndex;
         assert baseFeatures[8] == sentence.getWords()[0];
@@ -215,7 +215,7 @@ public class FeatureExtractorTest {
 
 
         parser.shift(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[3];
         assert baseFeatures[0] == maps.word2Int("disclosed");
         assert baseFeatures[1] == IndexMaps.NullIndex;
@@ -235,14 +235,14 @@ public class FeatureExtractorTest {
         assert baseFeatures[27] == sentence.getTags()[5];
 
         parser.rightArc(configuration.state, maps.dep2Int("p"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[14] == sentence.getWords()[3];
         assert baseFeatures[14] == maps.word2Int("disclosed");
         assert baseFeatures[47] == maps.labelNullIndex;
         assert baseFeatures[44] == maps.dep2Int("p");
 
         parser.reduce(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[12] == sentence.getWords()[4];
         assert baseFeatures[12] == maps.word2Int(".");
         assert baseFeatures[14] == IndexMaps.NullIndex;
@@ -250,7 +250,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[34] == maps.pos2Int(".");
 
         parser.leftArc(configuration.state, maps.dep2Int("ROOT"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[16] == sentence.getWords()[0];
         assert baseFeatures[16] == maps.word2Int("Terms");
     }
@@ -267,13 +267,13 @@ public class FeatureExtractorTest {
         Sentence sentence = dataSet.get(0).getSentence();
         Configuration configuration = new Configuration(sentence, options.rootFirst);
 
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[1] == IndexMaps.NullIndex;
         assert baseFeatures[23] == IndexMaps.NullIndex;
         assert baseFeatures[46] == maps.labelNullIndex;
 
         parser.shift(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[0];
         assert baseFeatures[0] == maps.word2Int("X");
         assert baseFeatures[1] == IndexMaps.NullIndex;
@@ -283,7 +283,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[46] == maps.labelNullIndex;
 
         parser.shift(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[1];
         assert baseFeatures[0] == maps.word2Int("Z");
         assert baseFeatures[1] == sentence.getWords()[0];
@@ -295,7 +295,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[46] == maps.labelNullIndex;
 
         parser.rightArc(configuration.state, maps.dep2Int("neg"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[2];
         assert baseFeatures[0] == IndexMaps.UnknownIndex;
         assert baseFeatures[2] == sentence.getWords()[0];
@@ -312,7 +312,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[47] == maps.labelNullIndex;
 
         parser.reduce(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[1];
         assert baseFeatures[0] == maps.word2Int("Z");
         assert baseFeatures[1] == sentence.getWords()[0];
@@ -327,7 +327,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[6] == maps.word2Int("ROOT");
 
         parser.leftArc(configuration.state, maps.dep2Int("auxpass"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[0];
         assert baseFeatures[0] == maps.word2Int("X");
         assert baseFeatures[1] == IndexMaps.NullIndex;
@@ -340,7 +340,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[51] == maps.labelNullIndex;
 
         parser.leftArc(configuration.state, maps.dep2Int("nsubjpass"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == IndexMaps.NullIndex;
         assert baseFeatures[1] == IndexMaps.NullIndex;
         assert baseFeatures[8] == sentence.getWords()[0];
@@ -358,7 +358,7 @@ public class FeatureExtractorTest {
 
 
         parser.shift(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == sentence.getWords()[3];
         assert baseFeatures[0] == maps.word2Int("Z");
         assert baseFeatures[1] == IndexMaps.NullIndex;
@@ -378,14 +378,14 @@ public class FeatureExtractorTest {
         assert baseFeatures[27] == sentence.getTags()[5];
 
         parser.rightArc(configuration.state, maps.dep2Int("p"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[14] == sentence.getWords()[3];
         assert baseFeatures[14] == maps.word2Int("Z");
         assert baseFeatures[47] == maps.labelNullIndex;
         assert baseFeatures[44] == maps.dep2Int("p");
 
         parser.reduce(configuration.state);
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[12] == sentence.getWords()[4];
         assert baseFeatures[12] == maps.word2Int("X");
         assert baseFeatures[14] == IndexMaps.NullIndex;
@@ -393,7 +393,7 @@ public class FeatureExtractorTest {
         assert baseFeatures[34] == maps.pos2Int(".");
 
         parser.leftArc(configuration.state, maps.dep2Int("ROOT"));
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex);
+        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[16] == sentence.getWords()[0];
         assert baseFeatures[16] == maps.word2Int("X");
     }

@@ -19,6 +19,7 @@ import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.BeamTrainer;
 import org.junit.Test;
 
@@ -139,8 +140,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
@@ -212,8 +213,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
@@ -283,8 +284,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
@@ -341,8 +342,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
@@ -397,8 +398,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
@@ -468,8 +469,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
@@ -540,8 +541,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
@@ -611,8 +612,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
@@ -680,8 +681,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
@@ -751,8 +752,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
@@ -820,8 +821,8 @@ public class GradientTest {
             BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, MLPNetwork.numWordLayers, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim);
+            maps.constructPreComputeMap(instances, 22, 10000);
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
             double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
             for (int i = 0; i < network.getNumWordLayers(); i++)
