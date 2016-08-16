@@ -186,8 +186,8 @@ public class YaraParser {
 
     private static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {
         BeamParser parser = new BeamParser(mlpNetwork, options.numOfThreads, options.parserType);
-        parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
-                options.beamWidth, options.lowercase, options.numOfThreads, false, "");
+        parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst, options.beamWidth, options.lowercase, options.numOfThreads,
+                false, "");
         Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
         if (eval.first > bestModelUAS) {
             bestModelUAS = eval.first;
