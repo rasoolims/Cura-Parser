@@ -9,6 +9,7 @@ package edu.columbia.cs.nlp.YaraParser;
 import edu.columbia.cs.nlp.YaraParser.Accessories.CoNLLReader;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Evaluator;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
+import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPTrainer;
@@ -24,8 +25,8 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.BeamTrainer;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -141,57 +142,42 @@ public class YaraParser {
 
             MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options);
 
-            int step = 0;
             double bestModelUAS = 0;
+            Random random = new Random();
             int decayStep = (int) (options.decayStep * allInstances.size() / options.batchSize);
             decayStep = decayStep == 0 ? 1 : decayStep;
+            System.out.println("Data has " + allInstances.size() + " instances");
             System.out.println("Decay after every " + decayStep + " batches");
-            for (int i = 0; i < options.trainingIter; i++) {
-                System.out.println("reshuffling data for round " + i);
-                if (options.minFreq < 1)
-                    allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0.05);
-                Collections.shuffle(allInstances);
-                int s = 0;
-                int e = Math.min(allInstances.size(), options.batchSize);
-
-                while (true) {
-                    step++;
-                    List<NeuralTrainingInstance> instances = allInstances.subList(s, e);
-                    try {
-                        neuralTrainer.fit(instances, step, step % (Math.max(1, options.UASEvalPerStep / 10)) == 0 ? true : false);
-                    } catch (Exception ex) {
-                        System.err.println("Exception occurred: " + ex.getMessage());
-                        ex.printStackTrace();
-                        System.exit(1);
+            for (int step = 0; step < options.trainingIter; step++) {
+                List<NeuralTrainingInstance> instances = Utils.getRandomSubset(allInstances, random, options.batchSize);
+                try {
+                    neuralTrainer.fit(instances, step, step % (Math.max(1, options.UASEvalPerStep / 10)) == 0 ? true : false);
+                } catch (Exception ex) {
+                    System.err.println("Exception occurred: " + ex.getMessage());
+                    ex.printStackTrace();
+                    System.exit(1);
+                }
+                if (options.updaterType == UpdaterType.SGD) {
+                    if (step % decayStep == 0) {
+                        neuralTrainer.setLearningRate(0.96 * neuralTrainer.getLearningRate());
+                        System.out.println("The new learning rate: " + neuralTrainer.getLearningRate());
                     }
-                    s = e;
-                    e = Math.min(allInstances.size(), options.batchSize + e);
+                }
 
-                    if (options.updaterType == UpdaterType.SGD) {
-                        if (step % decayStep == 0) {
-                            neuralTrainer.setLearningRate(0.96 * neuralTrainer.getLearningRate());
-                            System.out.println("The new learning rate: " + neuralTrainer.getLearningRate());
-                        }
+                if (options.averagingOption != AveragingOption.NO) {
+                    // averaging
+                    double ratio = Math.min(0.9999, (double) step / (9 + step));
+                    MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
+                }
+
+                if (step % options.UASEvalPerStep == 0) {
+                    if (options.averagingOption != AveragingOption.ONLY) {
+                        bestModelUAS = evaluate(options, mlpNetwork, bestModelUAS);
                     }
-
                     if (options.averagingOption != AveragingOption.NO) {
-                        // averaging
-                        double ratio = Math.min(0.9999, (double) step / (9 + step));
-                        MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
+                        avgMlpNetwork.preCompute();
+                        bestModelUAS = evaluate(options, avgMlpNetwork, bestModelUAS);
                     }
-
-                    if (step % options.UASEvalPerStep == 0) {
-                        if (options.averagingOption != AveragingOption.ONLY) {
-                            bestModelUAS = evaluate(options, mlpNetwork, bestModelUAS);
-                        }
-                        if (options.averagingOption != AveragingOption.NO) {
-                            avgMlpNetwork.preCompute();
-                            bestModelUAS = evaluate(options, avgMlpNetwork, bestModelUAS);
-                        }
-                    }
-
-                    if (s >= allInstances.size())
-                        break;
                 }
             }
             neuralTrainer.shutDownLiveThreads();

@@ -1,6 +1,9 @@
 package edu.columbia.cs.nlp.YaraParser.Accessories;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -85,5 +88,12 @@ public class Utils {
         for (int i = 0; i < a.length; i++)
             a[i] = new HashSet<>();
         return a;
+    }
+
+    public static List getRandomSubset(List lst, Random random, int size) {
+        ArrayList ar = new ArrayList(size);
+        for (int i = 0; i < size; i++)
+            ar.add(lst.get(random.nextInt(lst.size())));
+        return ar;
     }
 }

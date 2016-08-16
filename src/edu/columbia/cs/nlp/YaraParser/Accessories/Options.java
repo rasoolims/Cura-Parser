@@ -114,7 +114,7 @@ public class Options implements Serializable {
         useMaxViol = true;
         useDynamicOracle = true;
         useRandomOracleSelection = false;
-        trainingIter = 3000;
+        trainingIter = 20000;
         evaluate = false;
         numOfThreads = 8;
         useExtendedWithBrownClusterFeatures = false;
