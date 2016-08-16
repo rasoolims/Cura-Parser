@@ -55,6 +55,9 @@ public class Options implements Serializable {
     public double dropoutProbForHiddenLayer;
     public ActivationType activationType;
     public String goldFile;
+    public int posDim;
+    public int depDim;
+    public int wDim;
 
     public HashSet<String> punctuations;
     public String predFile;
@@ -116,6 +119,9 @@ public class Options implements Serializable {
         UASEvalPerStep = 100;
         partialTrainingStartingIteration = 3;
         parserType = ParserType.ArcEager;
+        posDim = 32;
+        depDim = 32;
+        wDim = 64;
 
         punctuations = new HashSet<>();
         punctuations.add("#");
@@ -189,6 +195,9 @@ public class Options implements Serializable {
         output.append("\t \t -momentum [momentum (default:0.9)] \n");
         output.append("\t \t -reg [regularization with L2] \n");
         output.append("\t \t -min [min freq (default 1)] \n");
+        output.append("\t \t -wdim [word dim (default 64)] \n");
+        output.append("\t \t -posdim [pos dim (default 32)] \n");
+        output.append("\t \t -depdim [dep dim (default 32)]  \n");
         output.append("\t \t -eval [uas eval per step (default 100)] \n");
         output.append("\t \t drop [put if want dropout] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
@@ -319,6 +328,12 @@ public class Options implements Serializable {
                 options.hiddenLayer2Size = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-batch"))
                 options.batchSize = Integer.parseInt(args[i + 1]);
+            else if (args[i].equals("-posdim"))
+                options.posDim = Integer.parseInt(args[i + 1]);
+            else if (args[i].equals("-depdim"))
+                options.depDim = Integer.parseInt(args[i + 1]);
+            else if (args[i].equals("-wdim"))
+                options.wDim = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-min"))
                 options.minFreq = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-lr"))
@@ -412,6 +427,9 @@ public class Options implements Serializable {
             builder.append("regularization: " + regularization + "\n");
             builder.append("batch size: " + batchSize + "\n");
             builder.append("dropout probability: " + dropoutProbForHiddenLayer + "\n");
+            builder.append("word dim: " + wDim + "\n");
+            builder.append("pos dim: " + posDim + "\n");
+            builder.append("dep dim: " + depDim + "\n");
             builder.append("parser type: " + parserType + "\n");
             return builder.toString();
         } else if (parseConllFile) {

@@ -63,4 +63,8 @@ public abstract class Updater {
     protected abstract void update(double[][] g, double[][] h, double[][] v, EmbeddingTypes embeddingTypes) throws Exception;
 
     protected abstract void update(double[] g, double[] h, double[] v, EmbeddingTypes embeddingTypes) throws Exception;
+
+    public final NetworkMatrices getGradientHistory() {
+        return gradientHistory;
+    }
 }

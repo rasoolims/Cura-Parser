@@ -114,7 +114,7 @@ public class YaraParser {
             Options.showHelp();
         } else {
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile, options.minFreq);
-            int wDim = 64;
+            int wDim = options.wDim;
             if (options.wordEmbeddingFile.length() > 0)
                 wDim = maps.readEmbeddings(options.wordEmbeddingFile);
 
@@ -135,8 +135,8 @@ public class YaraParser {
             int numWordLayers = options.parserType == ParserType.ArcEager ? 22 : 20;
             maps.constructPreComputeMap(allInstances, numWordLayers, 10000);
 
-            MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32, options.parserType);
-            MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, 32, 32, options.parserType);
+            MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, options.posDim, options.depDim, options.parserType);
+            MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, options.posDim, options.depDim, options.parserType);
             maps.emptyEmbeddings();
 
             MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options);

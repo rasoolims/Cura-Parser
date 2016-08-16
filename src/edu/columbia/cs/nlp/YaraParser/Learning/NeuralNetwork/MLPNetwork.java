@@ -46,8 +46,8 @@ public class MLPNetwork implements Serializable {
     private int numPosLayers;
     private int numDepLayers;
 
-    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int wDim, int pDim, int lDim, ParserType parserType) throws
-            Exception {
+    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int wDim, int pDim, int lDim, ParserType parserType)
+            throws Exception {
         if (parserType == ParserType.ArcEager) {
             numWordLayers = 22;
             numPosLayers = 22;
@@ -75,7 +75,7 @@ public class MLPNetwork implements Serializable {
         hiddenLayerIntDim = numPosLayers * wDim + numPosLayers * posEmbedDim + numDepLayers * depEmbedDim;
         matrices = new NetworkMatrices(numWords, wDim, numPos, posEmbedDim, numDepLabels, depEmbedDim, hiddenLayerDim,
                 hiddenLayerIntDim, softmaxLayerDim);
-        initializeLayers();
+        initializeLayers(activationType);
         addPretrainedWordEmbeddings(maps);
         preCompute();
 
@@ -137,7 +137,7 @@ public class MLPNetwork implements Serializable {
         System.out.println("num of pre-trained embedding " + numOfPretrained + " out of " + maps.vocabSize());
     }
 
-    private void initializeLayers() throws Exception {
+    private void initializeLayers(ActivationType activationType) throws Exception {
         Random random = new Random();
         double stdDev = 1e-2;
         double reluBiasInit = 0.2;
@@ -165,7 +165,11 @@ public class MLPNetwork implements Serializable {
         }
 
         for (int i = 0; i < hiddenLayerDim; i++) {
-            matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, reluBiasInit);
+            if (activationType == ActivationType.RELU)
+                matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, reluBiasInit);
+            else
+                matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, random.nextGaussian() * stdDev);
+
             for (int j = 0; j < hiddenLayerIntDim; j++) {
                 matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * stdDev);
             }
