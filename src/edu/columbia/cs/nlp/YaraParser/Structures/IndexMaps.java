@@ -86,6 +86,8 @@ public class IndexMaps implements Serializable {
                 wordIndex = wordMap.get(spl[0]);
             else if (wordMap.containsKey(spl[0].toLowerCase()))
                 wordIndex = wordMap.get(spl[0].toLowerCase());
+            else if(spl[0].equals("_unk_"))
+                wordIndex = IndexMaps.UnknownIndex;
 
             if (wordIndex != -1) {
                 double[] e = new double[spl.length - 1];
@@ -95,6 +97,8 @@ public class IndexMaps implements Serializable {
                 }
                 embeddingsDictionary.put(wordIndex, e);
             }
+
+
         }
         return eDim;
     }
