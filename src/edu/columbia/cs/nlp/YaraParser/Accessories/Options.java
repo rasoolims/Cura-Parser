@@ -71,6 +71,7 @@ public class Options implements Serializable {
     public double momentum;
     public SGDType sgdType;
     public boolean outputBiasTerm;
+    public boolean regualarizeAllLayers;
 
     public ParserType parserType;
 
@@ -78,6 +79,7 @@ public class Options implements Serializable {
         showHelp = false;
         updaterType = UpdaterType.ADAM;
         sgdType = SGDType.NESTEROV;
+        regualarizeAllLayers = true;
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
@@ -88,7 +90,8 @@ public class Options implements Serializable {
         outputBiasTerm = false;
         // good for ADAM.
         learningRate = 0.001;
-        regularization = 1e-4;
+        regularization = 1e-8;
+        regualarizeAllLayers = true;
         batchSize = 1000;
         decayStep = 0.2;
         momentum = 0.9;
@@ -199,6 +202,7 @@ public class Options implements Serializable {
         output.append("\t \t -posdim [pos dim (default 32)] \n");
         output.append("\t \t -depdim [dep dim (default 32)]  \n");
         output.append("\t \t -eval [uas eval per step (default 100)] \n");
+        output.append("\t \t -reg_all [true/false regularize all layers (default=true)] \n");
         output.append("\t \t drop [put if want dropout] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:20)\n");
@@ -277,6 +281,8 @@ public class Options implements Serializable {
                 options.wordEmbeddingFile = args[i + 1];
             else if (args[i].equals("-bias") && args[i + 1].equals("true"))
                 options.outputBiasTerm = true;
+            else if (args[i].equals("-reg_all") && args[i + 1].equals("false"))
+                options.regualarizeAllLayers = false;
             else if (args[i].equals("-a")) {
                 if (args[i + 1].equals("relu"))
                     options.activationType = ActivationType.RELU;
@@ -425,6 +431,7 @@ public class Options implements Serializable {
             builder.append("learning rate: " + learningRate + "\n");
             builder.append("decay step: " + decayStep + "\n");
             builder.append("regularization: " + regularization + "\n");
+            builder.append("regularize all layers: " + regualarizeAllLayers + "\n");
             builder.append("batch size: " + batchSize + "\n");
             builder.append("dropout probability: " + dropoutProbForHiddenLayer + "\n");
             builder.append("word dim: " + wDim + "\n");
