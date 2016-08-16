@@ -78,7 +78,7 @@ public class MLPTrainer {
         final double[] hiddenLayerBias = net.matrices.getHiddenLayerBias();
 
         for (int h = 0; h < hiddenLayer.length; h++) {
-            if(regularizeAllLayers) {
+            if (regularizeAllLayers) {
                 regCost += Math.pow(hiddenLayerBias[h], 2);
                 gradients.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, regCoef * 2 * hiddenLayerBias[h]);
             }
@@ -88,7 +88,7 @@ public class MLPTrainer {
             }
         }
 
-        if(regularizeAllLayers) {
+        if (regularizeAllLayers) {
             final double[][] wordEmbeddings = net.matrices.getWordEmbedding();
             final double[][] posEmbeddings = net.matrices.getPosEmbedding();
             final double[][] labelEmbeddings = net.matrices.getLabelEmbedding();
