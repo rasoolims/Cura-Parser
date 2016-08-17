@@ -55,14 +55,15 @@ public class MLPTrainer {
         this.net = net;
         random = new Random();
         this.dropoutProb = options.networkProperties.dropoutProbForHiddenLayer;
-        if (options.updaterType == UpdaterType.SGD)
-            updater = new SGD(net, options.learningRate, options.networkProperties.outputBiasTerm, options.momentum, options.sgdType);
-        else if (options.updaterType == UpdaterType.ADAGRAD)
-            updater = new Adagrad(net, options.learningRate, options.networkProperties.outputBiasTerm, 1e-6);
-        else if (options.updaterType == UpdaterType.ADAM)
-            updater = new Adam(net, options.learningRate, options.networkProperties.outputBiasTerm, 0.9, 0.9999, 1e-8);
-        else if (options.updaterType == UpdaterType.ADAMAX)
-            updater = new AdaMax(net, options.learningRate, options.networkProperties.outputBiasTerm, 0.9, 0.9999, 1e-8);
+        if (options.updaterProperties.updaterType == UpdaterType.SGD)
+            updater = new SGD(net, options.updaterProperties.learningRate, options.networkProperties.outputBiasTerm,
+                    options.updaterProperties.momentum, options.updaterProperties.sgdType);
+        else if (options.updaterProperties.updaterType == UpdaterType.ADAGRAD)
+            updater = new Adagrad(net, options.updaterProperties.learningRate, options.networkProperties.outputBiasTerm, 1e-6);
+        else if (options.updaterProperties.updaterType == UpdaterType.ADAM)
+            updater = new Adam(net, options.updaterProperties.learningRate, options.networkProperties.outputBiasTerm, 0.9, 0.9999, 1e-8);
+        else if (options.updaterProperties.updaterType == UpdaterType.ADAMAX)
+            updater = new AdaMax(net, options.updaterProperties.learningRate, options.networkProperties.outputBiasTerm, 0.9, 0.9999, 1e-8);
         else
             throw new Exception("Updater not implemented");
         this.regCoef = options.networkProperties.regularization;

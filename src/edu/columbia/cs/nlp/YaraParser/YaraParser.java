@@ -44,7 +44,7 @@ public class YaraParser {
             options.outputFile = "/tmp/model.out";
             options.labeled = true;
             options.networkProperties.hiddenLayer1Size = 200;
-            options.learningRate = 0.001;
+            options.updaterProperties.learningRate = 0.001;
             options.networkProperties.batchSize = 1024;
             options.trainingIter = 6;
             options.beamWidth = 1;
@@ -52,7 +52,7 @@ public class YaraParser {
             options.numOfThreads = 2;
             options.decayStep = 10;
             options.UASEvalPerStep = 3;
-            options.updaterType = UpdaterType.ADAM;
+            options.updaterProperties.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
             options.networkProperties.activationType = ActivationType.RELU;
             options.parserType = ParserType.ArcStandard;
@@ -159,7 +159,7 @@ public class YaraParser {
                     ex.printStackTrace();
                     System.exit(1);
                 }
-                if (options.updaterType == UpdaterType.SGD) {
+                if (options.updaterProperties.updaterType == UpdaterType.SGD) {
                     if (step % decayStep == 0) {
                         neuralTrainer.setLearningRate(0.96 * neuralTrainer.getLearningRate());
                         System.out.println("The new learning rate: " + neuralTrainer.getLearningRate());

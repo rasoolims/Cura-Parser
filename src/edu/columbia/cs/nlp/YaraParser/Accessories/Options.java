@@ -8,6 +8,7 @@ package edu.columbia.cs.nlp.YaraParser.Accessories;
 
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Props.NetworkProperties;
+import edu.columbia.cs.nlp.YaraParser.Learning.Props.UpdaterProperties;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.SGDType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
@@ -60,26 +61,17 @@ public class Options implements Serializable {
     public NetworkProperties networkProperties;
 
     // Updater options
-    public double momentum;
-    public SGDType sgdType;
-    public double learningRate;
-    public UpdaterType updaterType;
+    public UpdaterProperties updaterProperties;
 
     public Options() {
         showHelp = false;
         networkProperties = new NetworkProperties();
-        updaterType = UpdaterType.ADAM;
-        sgdType = SGDType.NESTEROV;
+        updaterProperties = new UpdaterProperties();
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
         beamWidth = 1;
-
-        // good for ADAM.
-        learningRate = 0.001;
-
         decayStep = 0.2;
-        momentum = 0.9;
         rootFirst = false;
         modelFile = "";
         outputFile = "";
@@ -273,22 +265,22 @@ public class Options implements Serializable {
                     throw new Exception("parser not supported");
             } else if (args[i].equals("-sgd")) {
                 if (args[i + 1].equals("nesterov"))
-                    options.sgdType = SGDType.NESTEROV;
+                    options.updaterProperties.sgdType = SGDType.NESTEROV;
                 else if (args[i + 1].equals("momentum"))
-                    options.sgdType = SGDType.MOMENTUM;
+                    options.updaterProperties.sgdType = SGDType.MOMENTUM;
                 else if (args[i + 1].equals("vanilla"))
-                    options.sgdType = SGDType.VANILLA;
+                    options.updaterProperties.sgdType = SGDType.VANILLA;
                 else
                     throw new Exception("sgd not supported");
             } else if (args[i].startsWith("-u")) {
                 if (args[i + 1].equals("sgd"))
-                    options.updaterType = UpdaterType.SGD;
+                    options.updaterProperties.updaterType = UpdaterType.SGD;
                 else if (args[i + 1].equals("adam"))
-                    options.updaterType = UpdaterType.ADAM;
+                    options.updaterProperties.updaterType = UpdaterType.ADAM;
                 else if (args[i + 1].equals("adagrad"))
-                    options.updaterType = UpdaterType.ADAGRAD;
+                    options.updaterProperties.updaterType = UpdaterType.ADAGRAD;
                 else if (args[i + 1].equals("adamax"))
-                    options.updaterType = UpdaterType.ADAMAX;
+                    options.updaterProperties.updaterType = UpdaterType.ADAMAX;
                 else
                     throw new Exception("updater not supported");
             } else if (args[i].equals("-avg")) {
@@ -317,13 +309,13 @@ public class Options implements Serializable {
             else if (args[i].equals("-min"))
                 options.minFreq = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-lr"))
-                options.learningRate = Double.parseDouble(args[i + 1]);
+                options.updaterProperties.learningRate = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-ds"))
                 options.decayStep = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-d"))
                 options.networkProperties.dropoutProbForHiddenLayer = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-momentum"))
-                options.momentum = Double.parseDouble(args[i + 1]);
+                options.updaterProperties.momentum = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-reg"))
                 options.networkProperties.regularization = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-cluster"))
@@ -394,8 +386,7 @@ public class Options implements Serializable {
             builder.append("number of threads: " + numOfThreads + "\n");
             builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
             builder.append(networkProperties.toString());
-            builder.append("updater: " + updaterType + "\n");
-            builder.append("learning rate: " + learningRate + "\n");
+            builder.append(updaterProperties.toString());
             builder.append("decay step: " + decayStep + "\n");
             builder.append("parser type: " + parserType + "\n");
             return builder.toString();

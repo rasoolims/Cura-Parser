@@ -128,7 +128,7 @@ public class UpdaterTest {
         options.networkProperties.hiddenLayer1Size = 10;
         options.inputFile = txtFilePath;
         options.modelFile = txtFilePath + ".model";
-        options.learningRate = .1;
+        options.updaterProperties.learningRate = .1;
         IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
@@ -147,14 +147,15 @@ public class UpdaterTest {
         network.getMatrices().getWordEmbedding()[0][0] = 0;
         double origValue = network.getMatrices().getWordEmbedding()[0][0];
         double g1 = -0.01;
-        double g2 = options.momentum * g1 + 0.005;
-        double g3 = options.momentum * g2 - 0.003;
+        double g2 = options.updaterProperties.momentum * g1 + 0.005;
+        double g3 = options.updaterProperties.momentum * g2 - 0.003;
 
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                 .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
         // Test sgd with momentum.
-        Updater updater = new SGD(network, options.learningRate, options.networkProperties.outputBiasTerm, options.momentum, SGDType.MOMENTUM);
+        Updater updater = new SGD(network, options.updaterProperties.learningRate, options.networkProperties.outputBiasTerm,
+                options.updaterProperties.momentum, SGDType.MOMENTUM);
         gradients.modify(EmbeddingTypes.WORD, 0, 0, 0.01);
         updater.update(gradients);
 
@@ -175,7 +176,7 @@ public class UpdaterTest {
         updater.update(gradients);
 
         assert updater.getGradientHistory().getWordEmbedding()[0][0] == g3;
-        assert network.getMatrices().getWordEmbedding()[0][0] - origValue + options.learningRate * (g1 + g2 + g3) < 1e-16;
+        assert network.getMatrices().getWordEmbedding()[0][0] - origValue + options.updaterProperties.learningRate * (g1 + g2 + g3) < 1e-16;
     }
 
     @Test
