@@ -94,7 +94,7 @@ public class YaraParser {
             ObjectInput reader = new ObjectInputStream(gz);
             MLPNetwork mlpNetwork = (MLPNetwork) reader.readObject();
             Options infoptions = (Options) reader.readObject();
-            BeamParser parser = new BeamParser(mlpNetwork, options.numOfThreads, options.parserType);
+            BeamParser parser = new BeamParser(mlpNetwork, options.numOfThreads, infoptions.parserType);
 
             if (options.parseTaggedFile)
                 parser.parseTaggedFile(options.inputFile,
