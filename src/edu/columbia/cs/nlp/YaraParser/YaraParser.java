@@ -39,7 +39,7 @@ public class YaraParser {
             options.inputFile = "/Users/msr/Desktop/data/dev_smal.conll";
             options.devPath = "/Users/msr/Desktop/data/train_smal.conll";
             options.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
-            // options.clusterFile = "/Users/msr/Desktop/data/brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt";
+            options.clusterFile = "/Users/msr/Downloads/trained_freqw+clusters_1k.cbow.en";
             options.modelFile = "/tmp/model";
             options.outputFile = "/tmp/model.out";
             options.labeled = true;

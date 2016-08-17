@@ -37,6 +37,16 @@ public class CoNLLReader {
     public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased, String clusterFile,
                                           int rareMaxWordCount) throws Exception {
         HashMap<String, String> str2clusterMap = new HashMap<>();
+        String line;
+        if (clusterFile.length() > 0) {
+            BufferedReader reader = new BufferedReader(new FileReader(clusterFile));
+            while ((line = reader.readLine()) != null) {
+                String[] spl = line.trim().split(" ");
+                if (spl.length == 2) {
+                    str2clusterMap.put(spl[0], spl[1]);
+                }
+            }
+        }
 
         HashMap<String, Integer> wordMap = new HashMap<>();
         HashMap<String, Integer> depRelationMap = new HashMap<>();
@@ -46,7 +56,6 @@ public class CoNLLReader {
         HashSet<String> labels = new HashSet<>();
         HashSet<String> tags = new HashSet<>();
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
-        String line;
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
@@ -54,10 +63,20 @@ public class CoNLLReader {
                 String pos = spl[3];
                 if (lowercased)
                     word = word.toLowerCase();
-                if (wordCount.containsKey(word))
-                    wordCount.put(word, wordCount.get(word) + 1);
-                else
-                    wordCount.put(word, 1);
+
+                if (str2clusterMap.size() > 0) {
+                    if (str2clusterMap.containsKey(word))
+                        word = str2clusterMap.get(word);
+                    else
+                        word = "_unk_";
+                }
+
+                if (!word.equals("_unk_")) {
+                    if (wordCount.containsKey(word))
+                        wordCount.put(word, wordCount.get(word) + 1);
+                    else
+                        wordCount.put(word, 1);
+                }
                 String label = spl[7];
                 int head = Integer.parseInt(spl[6]);
                 if (head == 0)
@@ -87,24 +106,10 @@ public class CoNLLReader {
             if (!pos.equals(rootString))
                 posMap.put(pos, p++);
 
-        if (clusterFile.length() > 0) {
-            reader = new BufferedReader(new FileReader(clusterFile));
-            while ((line = reader.readLine()) != null) {
-                String[] spl = line.trim().split("\t");
-                if (spl.length > 2) {
-                    String cluster = spl[0];
-                    String word = spl[1];
-                    str2clusterMap.put(word, "cluster___" + cluster.substring(0, Math.min(8, cluster.length())));
-                }
-            }
-        }
-
         HashSet<Integer> rareWords = new HashSet<>();
 
-        // todo indexing may be false
         int wi = IndexMaps.RootIndex;
         wordMap.put(rootString, wi++);
-        HashSet<String> addedClusters = new HashSet<>();
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
@@ -112,39 +117,32 @@ public class CoNLLReader {
                 String word = spl[1];
                 if (lowercased)
                     word = word.toLowerCase();
-                if (wordCount.get(word) > rareMaxWordCount && !wordMap.containsKey(word)) {
-                    wordMap.put(word, wi++);
-                } else if (wordCount.get(word) <= rareMaxWordCount && str2clusterMap.containsKey(word)) {
-                    String c = str2clusterMap.get(word);
-
-                    if (!wordMap.containsKey(c)) {
-                        wordMap.put(c, wi++);
-                        addedClusters.add(c);
-                    }
+                if (str2clusterMap.size() > 0) {
+                    if (str2clusterMap.containsKey(word))
+                        word = str2clusterMap.get(word);
+                    else
+                        word = "_unk_";
                 }
+                if (wordCount.containsKey(word) && wordCount.get(word) > rareMaxWordCount && !wordMap.containsKey(word))
+                    wordMap.put(word, wi++);
             }
         }
 
         Object[] wordsSet = str2clusterMap.keySet().toArray().clone();
         for (Object word : wordsSet) {
-            if (!addedClusters.contains(str2clusterMap.get(word)))
+            if (!wordMap.containsKey(str2clusterMap.get(word)))
                 str2clusterMap.remove(word);
         }
 
-        int word2cluster = 0;
         int rare = 0;
         for (String word : wordCount.keySet()) {
             if (wordCount.get(word) <= rareMaxWordCount) {
                 rare++;
-                if (str2clusterMap.containsKey(word))
-                    word2cluster++;
             } else if (wordCount.get(word) <= 1) {
                 rareWords.add(wordMap.get(word));
             }
         }
         System.out.println("#rare_types: " + rare + " out of " + (wordCount.size()));
-        System.out.println("#word2cluster: " + word2cluster + " out of " + rare);
-        System.out.println("#word2cluster (distinct): " + addedClusters.size());
         return new IndexMaps(rootString, wordMap, posMap, depRelationMap, rareWords, str2clusterMap);
     }
 
