@@ -44,7 +44,8 @@ public class NetworkMatrices implements Serializable {
         hiddenLayer = new double[hDim][hIntDim];
 
         hiddenLayerBias = new double[hDim];
-        softmaxLayer = new double[softDim][hDim];
+        int s2Dim = h2Dim > 0 ? h2Dim : hDim;
+        softmaxLayer = new double[softDim][s2Dim];
         softmaxLayerBias = new double[softDim];
         if (h2Dim > 0) {
             secondHiddenLayer = new double[h2Dim][hDim];

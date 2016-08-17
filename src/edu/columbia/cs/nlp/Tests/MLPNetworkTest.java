@@ -151,6 +151,52 @@ public class MLPNetworkTest {
         }
     }
 
+    @Test
+    public void testSavedWithTwoHiddenLayers() throws Exception {
+        writeText();
+        int[] h2sizes = new int[]{5, 10, 15};
+
+        for (int h2size : h2sizes) {
+            Options options = new Options();
+            options.networkProperties.hiddenLayer1Size = 10;
+            options.networkProperties.hiddenLayer2Size = h2size;
+            options.generalProperties.inputFile = txtFilePath;
+            IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
+                    options.generalProperties.lowercase, "", 0);
+            ArrayList<Integer> dependencyLabels = new ArrayList<>();
+            for (int lab = 0; lab < maps.relSize(); lab++)
+                dependencyLabels.add(lab);
+            CoNLLReader reader = new CoNLLReader(options.generalProperties.inputFile);
+            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
+                    options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+            int wDim = 8;
+            int pDim = 4;
+            int lDim = 6;
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+                    maps.labelNullIndex, maps.rareWords);
+            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+            maps.constructPreComputeMap(instances, 22, 10000);
+
+            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+            network.preCompute();
+            MLPNetwork clonedNetwork = network.clone();
+
+            double eps = 1e-15;
+            for (NeuralTrainingInstance instance : instances) {
+                double[] preComputedOutput = network.output(instance.getFeatures(), instance.getLabel());
+                double[] regularOutput = clonedNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                for (int i = 0; i < regularOutput.length; i++) {
+                    double diff = Math.abs(regularOutput[i] - preComputedOutput[i]);
+                    if (diff > 0)
+                        System.out.println(i + "\t" + regularOutput[i] + "\t" + preComputedOutput[i] + "\t" + diff);
+                    assert diff <= eps;
+                }
+            }
+        }
+    }
+
+
     private void writeText() throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter(txtFilePath));
         writer.write(conllText);

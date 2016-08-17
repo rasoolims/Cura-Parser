@@ -112,7 +112,7 @@ public class MLPNetwork implements Serializable {
         ArrayList<double[][]> matrices1 = toAverageFrom.matrices.getAllMatrices();
         ArrayList<double[][]> matrices2 = averaged.matrices.getAllMatrices();
         for (int m = 0; m < matrices1.size(); m++) {
-            if(matrices1.get(m)==null) continue;
+            if (matrices1.get(m) == null) continue;
             for (int i = 0; i < matrices1.get(m).length; i++) {
                 for (int j = 0; j < matrices1.get(m)[i].length; j++) {
                     matrices2.get(m)[i][j] = r1 * matrices1.get(m)[i][j] + r2 * matrices2.get(m)[i][j];
@@ -123,7 +123,7 @@ public class MLPNetwork implements Serializable {
         ArrayList<double[]> vectors1 = toAverageFrom.matrices.getAllVectors();
         ArrayList<double[]> vectors2 = averaged.matrices.getAllVectors();
         for (int m = 0; m < vectors1.size(); m++) {
-            if(vectors1.get(m)==null) continue;
+            if (vectors1.get(m) == null) continue;
             for (int i = 0; i < vectors1.get(m).length; i++) {
                 vectors2.get(m)[i] = r1 * vectors1.get(m)[i] + r2 * vectors2.get(m)[i];
             }
@@ -180,13 +180,14 @@ public class MLPNetwork implements Serializable {
             }
         }
 
+        int s2Dim = secondHiddenLayerDim > 0 ? secondHiddenLayerDim : hiddenLayerDim;
         for (int i = 0; i < softmaxLayerDim; i++) {
-            for (int j = 0; j < hiddenLayerDim; j++) {
+            for (int j = 0; j < s2Dim; j++) {
                 matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * stdDev);
             }
         }
 
-        if(secondHiddenLayerDim>0){
+        if (secondHiddenLayerDim > 0) {
             for (int i = 0; i < secondHiddenLayerDim; i++) {
                 if (activationType == ActivationType.RELU)
                     matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, reluBiasInit);
@@ -299,14 +300,29 @@ public class MLPNetwork implements Serializable {
             hidden[i] = activation.activate(hidden[i]);
         }
 
+
+        double[] secondHidden = new double[secondHiddenLayerDim];
+        if (secondHiddenLayerDim > 0) {
+            final double[][] secondHiddenLayer = matrices.getSecondHiddenLayer();
+            final double[] secondHiddenLayerBias = matrices.getSecondHiddenLayerBias();
+            for (int i = 0; i < secondHidden.length; i++) {
+                for (int h = 0; h < hidden.length; h++) {
+                    secondHidden[i] += secondHiddenLayer[i][h] * hidden[h];
+                }
+                secondHidden[i] += secondHiddenLayerBias[i];
+            }
+        }
+
+        double[] lastHidden = secondHiddenLayerDim > 0 ? secondHidden : hidden;
+
         double[] probs = new double[softmaxLayerBias.length];
         double sum = 0;
         int argmax = 0;
         int numActiveLabels = 0;
         for (int i = 0; i < probs.length; i++) {
             if (labels[i] >= 0) {
-                for (int j = 0; j < hidden.length; j++) {
-                    probs[i] += softmaxLayer[i][j] * hidden[j];
+                for (int j = 0; j < lastHidden.length; j++) {
+                    probs[i] += softmaxLayer[i][j] * lastHidden[j];
                 }
                 probs[i] += softmaxLayerBias[i];
                 if (probs[i] > probs[argmax])
