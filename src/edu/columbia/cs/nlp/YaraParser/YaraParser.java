@@ -36,24 +36,24 @@ public class YaraParser {
 
         if (args.length < 2) {
             options.train = true;
-            options.inputFile = "/Users/msr/Desktop/data/dev_smal.conll";
-            options.devPath = "/Users/msr/Desktop/data/train_smal.conll";
-            options.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
-            options.clusterFile = "/Users/msr/Downloads/trained_freqw+clusters_1k.cbow.en";
+            options.trainingOptions.trainFile = "/Users/msr/Desktop/data/dev_smal.conll";
+            options.trainingOptions.devPath = "/Users/msr/Desktop/data/train_smal.conll";
+            options.trainingOptions.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
+            options.trainingOptions.clusterFile = "/Users/msr/Downloads/trained_freqw+clusters_1k.cbow.en";
             options.modelFile = "/tmp/model";
             options.outputFile = "/tmp/model.out";
             options.labeled = true;
             options.networkProperties.hiddenLayer1Size = 200;
             options.updaterProperties.learningRate = 0.001;
             options.networkProperties.batchSize = 1024;
-            options.trainingIter = 6;
+            options.trainingOptions.trainingIter = 6;
             options.beamWidth = 1;
-            options.useDynamicOracle = false;
+            options.trainingOptions.useDynamicOracle = false;
             options.numOfThreads = 2;
-            options.decayStep = 10;
-            options.UASEvalPerStep = 3;
+            options.trainingOptions.decayStep = 10;
+            options.trainingOptions.UASEvalPerStep = 3;
             options.updaterProperties.updaterType = UpdaterType.ADAM;
-            options.averagingOption = AveragingOption.BOTH;
+            options.trainingOptions.averagingOption = AveragingOption.BOTH;
             options.networkProperties.activationType = ActivationType.RELU;
             options.parserType = ParserType.ArcStandard;
         }
@@ -111,15 +111,16 @@ public class YaraParser {
     }
 
     public static void trainWithNN(Options options) throws Exception {
-        if (options.inputFile.equals("") || options.modelFile.equals("")) {
+        if (options.trainingOptions.trainFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile, options.minFreq);
+            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.labeled, options.lowercase, options
+                    .trainingOptions.clusterFile, options.trainingOptions.minFreq);
             int wDim = options.networkProperties.wDim;
-            if (options.wordEmbeddingFile.length() > 0)
-                wDim = maps.readEmbeddings(options.wordEmbeddingFile);
+            if (options.trainingOptions.wordEmbeddingFile.length() > 0)
+                wDim = maps.readEmbeddings(options.trainingOptions.wordEmbeddingFile);
 
-            CoNLLReader reader = new CoNLLReader(options.inputFile);
+            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
             ArrayList<GoldConfiguration> dataSet =
                     reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             System.out.println("CoNLL data reading done!");
@@ -130,7 +131,7 @@ public class YaraParser {
 
             System.out.println("size of training data (#sens): " + dataSet.size());
             System.out.println("Embedding dimension " + wDim);
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
                     maps.labelNullIndex, maps.rareWords);
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             int numWordLayers = options.parserType == ParserType.ArcEager ? 22 : 20;
@@ -146,14 +147,14 @@ public class YaraParser {
 
             double bestModelUAS = 0;
             Random random = new Random();
-            int decayStep = (int) (options.decayStep * allInstances.size() / options.networkProperties.batchSize);
+            int decayStep = (int) (options.trainingOptions.decayStep * allInstances.size() / options.networkProperties.batchSize);
             decayStep = decayStep == 0 ? 1 : decayStep;
             System.out.println("Data has " + allInstances.size() + " instances");
             System.out.println("Decay after every " + decayStep + " batches");
-            for (int step = 0; step < options.trainingIter; step++) {
+            for (int step = 0; step < options.trainingOptions.trainingIter; step++) {
                 List<NeuralTrainingInstance> instances = Utils.getRandomSubset(allInstances, random, options.networkProperties.batchSize);
                 try {
-                    neuralTrainer.fit(instances, step, step % (Math.max(1, options.UASEvalPerStep / 10)) == 0 ? true : false);
+                    neuralTrainer.fit(instances, step, step % (Math.max(1, options.trainingOptions.UASEvalPerStep / 10)) == 0 ? true : false);
                 } catch (Exception ex) {
                     System.err.println("Exception occurred: " + ex.getMessage());
                     ex.printStackTrace();
@@ -166,17 +167,17 @@ public class YaraParser {
                     }
                 }
 
-                if (options.averagingOption != AveragingOption.NO) {
+                if (options.trainingOptions.averagingOption != AveragingOption.NO) {
                     // averaging
                     double ratio = Math.min(0.9999, (double) step / (9 + step));
                     MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
                 }
 
-                if (step % options.UASEvalPerStep == 0) {
-                    if (options.averagingOption != AveragingOption.ONLY) {
+                if (step % options.trainingOptions.UASEvalPerStep == 0) {
+                    if (options.trainingOptions.averagingOption != AveragingOption.ONLY) {
                         bestModelUAS = evaluate(options, mlpNetwork, bestModelUAS);
                     }
-                    if (options.averagingOption != AveragingOption.NO) {
+                    if (options.trainingOptions.averagingOption != AveragingOption.NO) {
                         avgMlpNetwork.preCompute();
                         bestModelUAS = evaluate(options, avgMlpNetwork, bestModelUAS);
                     }
@@ -188,9 +189,10 @@ public class YaraParser {
 
     private static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {
         BeamParser parser = new BeamParser(mlpNetwork, options.numOfThreads, options.parserType);
-        parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst, options.beamWidth, options.lowercase, options.numOfThreads,
+        parser.parseConll(options.trainingOptions.devPath, options.modelFile + ".tmp", options.rootFirst, options.beamWidth, options.lowercase,
+                options.numOfThreads,
                 false, "");
-        Pair<Double, Double> eval = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
+        Pair<Double, Double> eval = Evaluator.evaluate(options.trainingOptions.devPath, options.modelFile + ".tmp", options.punctuations);
         if (eval.first > bestModelUAS) {
             bestModelUAS = eval.first;
             System.out.print("Saving the new model...");

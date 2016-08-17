@@ -137,7 +137,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -196,7 +196,7 @@ public class GradientTest {
             writeText();
             writeWordEmbedText();
             Options options = new Options();
-            options.wordEmbeddingFile = embedFilePath;
+            options.trainingOptions.wordEmbeddingFile = embedFilePath;
             options.networkProperties.activationType = type;
             options.networkProperties.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
@@ -210,7 +210,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -281,7 +281,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -325,7 +325,7 @@ public class GradientTest {
             writeText();
             writeWordEmbedText();
             Options options = new Options();
-            options.wordEmbeddingFile = embedFilePath;
+            options.trainingOptions.wordEmbeddingFile = embedFilePath;
             options.networkProperties.activationType = type;
             options.networkProperties.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
@@ -339,7 +339,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -395,7 +395,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -466,7 +466,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -538,7 +538,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -609,7 +609,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -678,7 +678,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -749,7 +749,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -818,7 +818,7 @@ public class GradientTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);

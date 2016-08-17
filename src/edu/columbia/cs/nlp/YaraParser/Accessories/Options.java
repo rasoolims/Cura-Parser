@@ -13,12 +13,12 @@ import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.SGDType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Props.TrainingOptions;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Serializable;
 import java.util.HashSet;
-
 
 public class Options implements Serializable {
     // General options
@@ -35,22 +35,11 @@ public class Options implements Serializable {
     public boolean lowercase;
     public String inputFile;
     public String outputFile;
-    public String devPath;
     public int numOfThreads;
     public HashSet<String> punctuations;
 
     // Training options
-    public int trainingIter;
-    public String clusterFile;
-    public String wordEmbeddingFile;
-    public boolean useMaxViol;
-    public boolean useDynamicOracle;
-    public boolean useRandomOracleSelection;
-    public int UASEvalPerStep;
-    public double decayStep;
-    public AveragingOption averagingOption;
-    public int partialTrainingStartingIteration;
-    public int minFreq;
+    public TrainingOptions trainingOptions;
 
     // Parsing options
     public String scorePath;
@@ -67,33 +56,22 @@ public class Options implements Serializable {
         showHelp = false;
         networkProperties = new NetworkProperties();
         updaterProperties = new UpdaterProperties();
+        trainingOptions = new TrainingOptions();
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
         beamWidth = 1;
-        decayStep = 0.2;
         rootFirst = false;
         modelFile = "";
         outputFile = "";
         inputFile = "";
-        devPath = "";
         scorePath = "";
-        minFreq = 1;
-        averagingOption = AveragingOption.BOTH;
         separator = "_";
-        clusterFile = "";
-        wordEmbeddingFile = "";
         labeled = true;
         lowercase = false;
-        useMaxViol = true;
-        useDynamicOracle = true;
-        useRandomOracleSelection = false;
-        trainingIter = 20000;
         evaluate = false;
         numOfThreads = 8;
         parsePartialConll = false;
-        UASEvalPerStep = 100;
-        partialTrainingStartingIteration = 3;
         parserType = ParserType.ArcEager;
 
         punctuations = new HashSet<>();
@@ -236,15 +214,15 @@ public class Options implements Serializable {
             else if (args[i].equals("parse_tagged"))
                 options.parseTaggedFile = true;
             else if (args[i].equals("-train-file") || args[i].equals("-input"))
-                options.inputFile = args[i + 1];
+                options.trainingOptions.trainFile = args[i + 1];
             else if (args[i].equals("-punc"))
                 options.changePunc(args[i + 1]);
             else if (args[i].equals("-model"))
                 options.modelFile = args[i + 1];
             else if (args[i].equals("-dev"))
-                options.devPath = args[i + 1];
+                options.trainingOptions.devPath = args[i + 1];
             else if (args[i].equals("-e"))
-                options.wordEmbeddingFile = args[i + 1];
+                options.trainingOptions.wordEmbeddingFile = args[i + 1];
             else if (args[i].equals("-bias") && args[i + 1].equals("true"))
                 options.networkProperties.outputBiasTerm = true;
             else if (args[i].equals("-reg_all") && args[i + 1].equals("false"))
@@ -285,15 +263,15 @@ public class Options implements Serializable {
                     throw new Exception("updater not supported");
             } else if (args[i].equals("-avg")) {
                 if (args[i + 1].equals("both"))
-                    options.averagingOption = AveragingOption.BOTH;
+                    options.trainingOptions.averagingOption = AveragingOption.BOTH;
                 else if (args[i + 1].equals("no"))
-                    options.averagingOption = AveragingOption.NO;
+                    options.trainingOptions.averagingOption = AveragingOption.NO;
                 else if (args[i + 1].equals("only"))
-                    options.averagingOption = AveragingOption.ONLY;
+                    options.trainingOptions.averagingOption = AveragingOption.ONLY;
                 else
                     throw new Exception("updater not supported");
             } else if (args[i].equals("-eval"))
-                options.UASEvalPerStep = Integer.parseInt(args[i + 1]);
+                options.trainingOptions.UASEvalPerStep = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-h1"))
                 options.networkProperties.hiddenLayer1Size = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-h2"))
@@ -307,11 +285,11 @@ public class Options implements Serializable {
             else if (args[i].equals("-wdim"))
                 options.networkProperties.wDim = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-min"))
-                options.minFreq = Integer.parseInt(args[i + 1]);
+                options.trainingOptions.minFreq = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-lr"))
                 options.updaterProperties.learningRate = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-ds"))
-                options.decayStep = Double.parseDouble(args[i + 1]);
+                options.trainingOptions.decayStep = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-d"))
                 options.networkProperties.dropoutProbForHiddenLayer = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-momentum"))
@@ -319,7 +297,7 @@ public class Options implements Serializable {
             else if (args[i].equals("-reg"))
                 options.networkProperties.regularization = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-cluster"))
-                options.clusterFile = args[i + 1];
+                options.trainingOptions.clusterFile = args[i + 1];
             else if (args[i].equals("-out"))
                 options.outputFile = args[i + 1];
             else if (args[i].equals("-delim"))
@@ -329,8 +307,7 @@ public class Options implements Serializable {
             else if (args[i].startsWith("nt:"))
                 options.numOfThreads = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].startsWith("pt:"))
-                options.partialTrainingStartingIteration = Integer.parseInt(args[i].substring(args[i].lastIndexOf
-                        (":") + 1));
+                options.trainingOptions.partialTrainingStartingIteration = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].equals("unlabeled"))
                 options.labeled = Boolean.parseBoolean(args[i]);
             else if (args[i].equals("lowercase"))
@@ -338,15 +315,15 @@ public class Options implements Serializable {
             else if (args[i].startsWith("-score"))
                 options.scorePath = args[i + 1];
             else if (args[i].equals("early"))
-                options.useMaxViol = false;
+                options.trainingOptions.useMaxViol = false;
             else if (args[i].equals("static"))
-                options.useDynamicOracle = false;
+                options.trainingOptions.useDynamicOracle = false;
             else if (args[i].equals("random"))
-                options.useRandomOracleSelection = true;
+                options.trainingOptions.useRandomOracleSelection = true;
             else if (args[i].equals("root_first"))
                 options.rootFirst = true;
             else if (args[i].startsWith("iter:"))
-                options.trainingIter = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
+                options.trainingOptions.trainingIter = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
         }
 
         if (options.train || options.parseTaggedFile || options.parseConllFile)
@@ -370,24 +347,14 @@ public class Options implements Serializable {
     public String toString() {
         if (train) {
             StringBuilder builder = new StringBuilder();
-            builder.append("train file: " + inputFile + "\n");
-            builder.append("dev file: " + devPath + "\n");
-            builder.append("cluster file: " + clusterFile + "\n");
+            builder.append(trainingOptions.toString());
             builder.append("beam width: " + beamWidth + "\n");
             builder.append("rootFirst: " + rootFirst + "\n");
             builder.append("labeled: " + labeled + "\n");
             builder.append("lower-case: " + lowercase + "\n");
-            builder.append("updateModel: " + (useMaxViol ? "max violation" : "early") + "\n");
-            builder.append("oracle: " + (useDynamicOracle ? "dynamic" : "static") + "\n");
-            if (useDynamicOracle)
-                builder.append("oracle selection: " + (!useRandomOracleSelection ? "latent max" : "random") + "\n");
-
-            builder.append("training-iterations: " + trainingIter + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
-            builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
             builder.append(networkProperties.toString());
             builder.append(updaterProperties.toString());
-            builder.append("decay step: " + decayStep + "\n");
             builder.append("parser type: " + parserType + "\n");
             return builder.toString();
         } else if (parseConllFile) {

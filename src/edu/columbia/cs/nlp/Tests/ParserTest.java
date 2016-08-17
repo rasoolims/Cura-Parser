@@ -211,8 +211,8 @@ public class ParserTest {
             writeText();
             writeWordEmbedText();
             Options options = new Options();
-            options.wordEmbeddingFile = embedFilePath;
-            options.devPath = txtFilePath;
+            options.trainingOptions.wordEmbeddingFile = embedFilePath;
+            options.trainingOptions.devPath = txtFilePath;
             options.networkProperties.activationType = type;
             options.networkProperties.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
@@ -227,7 +227,7 @@ public class ParserTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -241,9 +241,10 @@ public class ParserTest {
 
                 if (i % 10 == 0) {
                     BeamParser parser = new BeamParser(network, options.numOfThreads, ParserType.ArcEager);
-                    parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
+                    parser.parseConll(options.trainingOptions.devPath, options.modelFile + ".tmp", options.rootFirst,
                             options.beamWidth, options.lowercase, options.numOfThreads, false, "");
-                    Pair<Double, Double> evaluator = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
+                    Pair<Double, Double> evaluator = Evaluator.evaluate(options.trainingOptions.devPath, options.modelFile + ".tmp", options
+                            .punctuations);
 
                     FileOutputStream fos = new FileOutputStream(options.modelFile);
                     GZIPOutputStream gz = new GZIPOutputStream(fos);
@@ -259,9 +260,10 @@ public class ParserTest {
                     MLPNetwork mlpNetwork = (MLPNetwork) r.readObject();
                     Options infoptions = (Options) r.readObject();
                     BeamParser loadedParser = new BeamParser(mlpNetwork, options.numOfThreads, ParserType.ArcEager);
-                    loadedParser.parseConll(options.devPath, options.modelFile + ".tmp2", infoptions.rootFirst, options.beamWidth,
+                    loadedParser.parseConll(options.trainingOptions.devPath, options.modelFile + ".tmp2", infoptions.rootFirst, options.beamWidth,
                             infoptions.lowercase, options.numOfThreads, false, options.scorePath);
-                    Pair<Double, Double> evaluator2 = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp2", options.punctuations);
+                    Pair<Double, Double> evaluator2 = Evaluator.evaluate(options.trainingOptions.devPath, options.modelFile + ".tmp2", options
+                            .punctuations);
 
                     assert evaluator.equals(evaluator2);
                     if (acc == 1) assert evaluator.first == 100 && evaluator.second == 100;
