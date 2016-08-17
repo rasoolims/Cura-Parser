@@ -25,7 +25,8 @@ public class Adam extends Updater {
         this.eps = eps;
         this.gradientHistoryVariance = new NetworkMatrices(mlpNetwork.getNumWords(), mlpNetwork.getWordEmbedDim(), mlpNetwork.getNumPos(),
                 mlpNetwork.getPosEmbedDim(), mlpNetwork.getNumDepLabels(), mlpNetwork.getDepEmbedDim(),
-                mlpNetwork.getHiddenLayerDim(), mlpNetwork.getHiddenLayerIntDim(), mlpNetwork.getSoftmaxLayerDim());
+                mlpNetwork.getHiddenLayerDim(), mlpNetwork.getHiddenLayerIntDim(), mlpNetwork.getSecondHiddenLayerDim(),
+                mlpNetwork.getSoftmaxLayerDim());
     }
 
     @Override

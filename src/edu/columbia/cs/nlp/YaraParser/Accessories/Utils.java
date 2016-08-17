@@ -17,6 +17,7 @@ public class Utils {
     public static final double SmallDouble = Double.MAX_VALUE * 10;
 
     public static double[][] clone(double[][] object) {
+        if (object == null) return null;
         double[][] cloned = new double[object.length][];
         for (int i = 0; i < object.length; i++) {
             cloned[i] = clone(object[i]);
@@ -25,6 +26,7 @@ public class Utils {
     }
 
     public static double[] clone(double[] object) {
+        if (object == null) return null;
         double[] cloned = new double[object.length];
         for (int i = 0; i < object.length; i++) {
             cloned[i] = object[i];
@@ -33,12 +35,13 @@ public class Utils {
     }
 
     public static void addInPlace(double[][] m1, double[][] m2) {
+        if (m1 == null) return;
         for (int i = 0; i < m1.length; i++)
-            for (int j = 0; j < m1[0].length; j++)
-                m1[i][j] += m2[i][j];
+            addInPlace(m1[i], m2[i]);
     }
 
     public static void addInPlace(double[] m1, double[] m2) {
+        if (m1 == null) return;
         for (int i = 0; i < m1.length; i++)
             m1[i] += m2[i];
     }

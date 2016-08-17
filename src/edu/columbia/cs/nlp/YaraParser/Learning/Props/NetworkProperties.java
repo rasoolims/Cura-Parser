@@ -28,7 +28,7 @@ public class NetworkProperties implements Serializable {
     public NetworkProperties() {
         regualarizeAllLayers = true;
         hiddenLayer1Size = 200;
-        hiddenLayer2Size = 200;
+        hiddenLayer2Size = 0;
         outputBiasTerm = false;
         regularization = 1e-8;
         regualarizeAllLayers = true;

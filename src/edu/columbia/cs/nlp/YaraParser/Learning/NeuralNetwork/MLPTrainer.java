@@ -426,7 +426,7 @@ public class MLPTrainer {
             this.instances = instances;
             this.batchSize = batchSize;
             g = new NetworkMatrices(net.numWords, net.wordEmbedDim, net.numPos, net.posEmbedDim, net.numDepLabels, net.depEmbedDim,
-                    net.hiddenLayerDim, net.hiddenLayerIntDim, net.softmaxLayerDim);
+                    net.hiddenLayerDim, net.hiddenLayerIntDim, net.secondHiddenLayerDim, net.softmaxLayerDim);
             savedGradients = instantiateSavedGradients();
         }
 

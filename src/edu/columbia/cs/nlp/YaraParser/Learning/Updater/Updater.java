@@ -25,9 +25,9 @@ public abstract class Updater {
     public Updater(MLPNetwork mlpNetwork, double learningRate, boolean outputBiasTerm) {
         this.mlpNetwork = mlpNetwork;
         this.learningRate = learningRate;
-        gradientHistory = new NetworkMatrices(mlpNetwork.getNumWords(), mlpNetwork.getWordEmbedDim(), mlpNetwork.getNumPos(), mlpNetwork
-                .getPosEmbedDim(), mlpNetwork.getNumDepLabels(), mlpNetwork.getDepEmbedDim(), mlpNetwork.getHiddenLayerDim(),
-                mlpNetwork.getHiddenLayerIntDim(), mlpNetwork.getSoftmaxLayerDim());
+        gradientHistory = new NetworkMatrices(mlpNetwork.getNumWords(), mlpNetwork.getWordEmbedDim(), mlpNetwork.getNumPos(),
+                mlpNetwork.getPosEmbedDim(), mlpNetwork.getNumDepLabels(), mlpNetwork.getDepEmbedDim(), mlpNetwork.getHiddenLayerDim(),
+                mlpNetwork.getHiddenLayerIntDim(), mlpNetwork.getSecondHiddenLayerDim(), mlpNetwork.getSoftmaxLayerDim());
         gradientHistoryVariance = null;
         t = 1;
         this.outputBiasTerm = outputBiasTerm;

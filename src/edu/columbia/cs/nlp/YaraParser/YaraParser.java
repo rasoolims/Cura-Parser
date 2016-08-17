@@ -46,12 +46,12 @@ public class YaraParser {
             options.networkProperties.hiddenLayer1Size = 200;
             options.updaterProperties.learningRate = 0.001;
             options.networkProperties.batchSize = 1024;
-            options.trainingOptions.trainingIter = 6;
+            options.trainingOptions.trainingIter = 100;
             options.generalProperties.beamWidth = 1;
             options.trainingOptions.useDynamicOracle = false;
             options.generalProperties.numOfThreads = 2;
             options.trainingOptions.decayStep = 10;
-            options.trainingOptions.UASEvalPerStep = 3;
+            options.trainingOptions.UASEvalPerStep = 10;
             options.updaterProperties.updaterType = UpdaterType.ADAM;
             options.trainingOptions.averagingOption = AveragingOption.BOTH;
             options.networkProperties.activationType = ActivationType.RELU;

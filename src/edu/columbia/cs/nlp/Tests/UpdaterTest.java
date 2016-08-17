@@ -153,7 +153,7 @@ public class UpdaterTest {
 
         NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
+                .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
         // Test sgd with momentum.
         Updater updater = new SGD(network, options.updaterProperties.learningRate, options.networkProperties.outputBiasTerm,
                 options.updaterProperties.momentum, SGDType.MOMENTUM);
@@ -163,7 +163,7 @@ public class UpdaterTest {
         // reset
         gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
+                .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
 
         gradients.modify(EmbeddingTypes.WORD, 0, 0, -0.005);
         updater.update(gradients);
@@ -171,7 +171,7 @@ public class UpdaterTest {
         // reset
         gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
                 .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
+                .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
 
         gradients.modify(EmbeddingTypes.WORD, 0, 0, 0.003);
         updater.update(gradients);

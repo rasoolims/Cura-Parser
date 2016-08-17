@@ -21,9 +21,11 @@ public class NetworkMatrices implements Serializable {
     private double[] hiddenLayerBias;
     private double[][] softmaxLayer;
     private double[] softmaxLayerBias;
+    private double[][] secondHiddenLayer;
+    private double[] secondHiddenLayerBias;
 
-    private NetworkMatrices(double[][] wordEmbedding, double[][] posEmbedding, double[][] labelEmbedding, double[][] hiddenLayer, double[]
-            hiddenLayerBias, double[][] softmaxLayer, double[] softmaxLayerBias) {
+    public NetworkMatrices(double[][] wordEmbedding, double[][] posEmbedding, double[][] labelEmbedding, double[][] hiddenLayer, double[]
+            hiddenLayerBias, double[][] secondHiddenLayer, double[] secondHiddenLayerBias, double[][] softmaxLayer, double[] softmaxLayerBias) {
         this.wordEmbedding = wordEmbedding;
         this.posEmbedding = posEmbedding;
         this.labelEmbedding = labelEmbedding;
@@ -31,9 +33,11 @@ public class NetworkMatrices implements Serializable {
         this.hiddenLayerBias = hiddenLayerBias;
         this.softmaxLayer = softmaxLayer;
         this.softmaxLayerBias = softmaxLayerBias;
+        this.secondHiddenLayer = secondHiddenLayer;
+        this.secondHiddenLayerBias = secondHiddenLayerBias;
     }
 
-    public NetworkMatrices(int wSize, int wDim, int pSize, int pDim, int lSize, int lDim, int hDim, int hIntDim, int softDim) {
+    public NetworkMatrices(int wSize, int wDim, int pSize, int pDim, int lSize, int lDim, int hDim, int hIntDim, int h2Dim, int softDim) {
         wordEmbedding = new double[wSize][wDim];
         posEmbedding = new double[pSize][pDim];
         labelEmbedding = new double[lSize][lDim];
@@ -42,6 +46,10 @@ public class NetworkMatrices implements Serializable {
         hiddenLayerBias = new double[hDim];
         softmaxLayer = new double[softDim][hDim];
         softmaxLayerBias = new double[softDim];
+        if (h2Dim > 0) {
+            secondHiddenLayer = new double[h2Dim][hDim];
+            secondHiddenLayerBias = new double[h2Dim];
+        }
     }
 
     public void resetToPretrainedWordEmbeddings(int i, double[] embeddings) {
@@ -66,6 +74,13 @@ public class NetworkMatrices implements Serializable {
             assert j == -1;
             newValue = hiddenLayerBias[i] + change;
             hiddenLayerBias[i] = newValue;
+        } else if (t.equals(EmbeddingTypes.SECONDHIDDENLAYER)) {
+            newValue = secondHiddenLayer[i][j] + change;
+            secondHiddenLayer[i][j] = newValue;
+        } else if (t.equals(EmbeddingTypes.SECONDHIDDENLAYERBIAS)) {
+            assert j == -1;
+            newValue = secondHiddenLayerBias[i] + change;
+            secondHiddenLayerBias[i] = newValue;
         } else if (t.equals(EmbeddingTypes.SOFTMAX)) {
             newValue = softmaxLayer[i][j] + change;
             softmaxLayer[i][j] = newValue;
@@ -100,6 +115,14 @@ public class NetworkMatrices implements Serializable {
         return hiddenLayerBias;
     }
 
+    public double[][] getSecondHiddenLayer() {
+        return secondHiddenLayer;
+    }
+
+    public double[] getSecondHiddenLayerBias() {
+        return secondHiddenLayerBias;
+    }
+
     public double[][] getSoftmaxLayer() {
         return softmaxLayer;
     }
@@ -114,6 +137,7 @@ public class NetworkMatrices implements Serializable {
         matrices.add(posEmbedding);
         matrices.add(labelEmbedding);
         matrices.add(hiddenLayer);
+        matrices.add(secondHiddenLayer);
         matrices.add(softmaxLayer);
         return matrices;
     }
@@ -121,6 +145,7 @@ public class NetworkMatrices implements Serializable {
     public ArrayList<double[]> getAllVectors() {
         ArrayList<double[]> vectors = new ArrayList<>();
         vectors.add(hiddenLayerBias);
+        vectors.add(secondHiddenLayerBias);
         vectors.add(softmaxLayerBias);
         return vectors;
     }
@@ -136,12 +161,15 @@ public class NetworkMatrices implements Serializable {
         Utils.addInPlace(labelEmbedding, matrices.getLabelEmbedding());
         Utils.addInPlace(hiddenLayer, matrices.getHiddenLayer());
         Utils.addInPlace(hiddenLayerBias, matrices.getHiddenLayerBias());
+        Utils.addInPlace(secondHiddenLayer, matrices.getSecondHiddenLayer());
+        Utils.addInPlace(secondHiddenLayerBias, matrices.getSecondHiddenLayerBias());
         Utils.addInPlace(softmaxLayer, matrices.getSoftmaxLayer());
         Utils.addInPlace(softmaxLayerBias, matrices.getSoftmaxLayerBias());
     }
 
     public NetworkMatrices clone() {
         return new NetworkMatrices(Utils.clone(wordEmbedding), Utils.clone(posEmbedding), Utils.clone(labelEmbedding), Utils.clone(hiddenLayer),
-                Utils.clone(hiddenLayerBias), Utils.clone(softmaxLayer), Utils.clone(softmaxLayerBias));
+                Utils.clone(hiddenLayerBias), Utils.clone(secondHiddenLayer), Utils.clone(secondHiddenLayerBias), Utils.clone(softmaxLayer),
+                Utils.clone(softmaxLayerBias));
     }
 }
