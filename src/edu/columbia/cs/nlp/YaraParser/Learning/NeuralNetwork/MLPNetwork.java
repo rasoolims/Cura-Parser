@@ -185,6 +185,19 @@ public class MLPNetwork implements Serializable {
                 matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * stdDev);
             }
         }
+
+        if(secondHiddenLayerDim>0){
+            for (int i = 0; i < secondHiddenLayerDim; i++) {
+                if (activationType == ActivationType.RELU)
+                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, reluBiasInit);
+                else
+                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, random.nextGaussian() * stdDev);
+
+                for (int j = 0; j < hiddenLayerDim; j++) {
+                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYER, i, j, random.nextGaussian() * stdDev);
+                }
+            }
+        }
     }
 
     public void modify(EmbeddingTypes t, int i, int j, double change) throws Exception {
