@@ -67,7 +67,7 @@ public class MLPTrainer {
         else
             throw new Exception("Updater not implemented");
         this.regCoef = options.networkProperties.regularization;
-        this.numThreads = options.numOfThreads;
+        this.numThreads = options.generalProperties.numOfThreads;
         this.regularizeAllLayers = options.networkProperties.regualarizeAllLayers;
         executor = Executors.newFixedThreadPool(numThreads);
         pool = new ExecutorCompletionService<>(executor);

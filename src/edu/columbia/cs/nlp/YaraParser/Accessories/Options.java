@@ -13,30 +13,14 @@ import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.SGDType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
+import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Props.GeneralProperties;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Props.TrainingOptions;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.Serializable;
-import java.util.HashSet;
 
 public class Options implements Serializable {
     // General options
-    public boolean showHelp;
-    public boolean evaluate;
-    public boolean train;
-    public boolean parseTaggedFile;
-    public boolean parseConllFile;
-    public boolean parsePartialConll;
-    public String modelFile;
-    public int beamWidth;
-    public boolean rootFirst;
-    public boolean labeled;
-    public boolean lowercase;
-    public String inputFile;
-    public String outputFile;
-    public int numOfThreads;
-    public HashSet<String> punctuations;
+    public GeneralProperties generalProperties;
 
     // Training options
     public TrainingOptions trainingOptions;
@@ -44,7 +28,6 @@ public class Options implements Serializable {
     // Parsing options
     public String scorePath;
     public String separator;
-    public ParserType parserType;
 
     // Network options
     public NetworkProperties networkProperties;
@@ -53,59 +36,12 @@ public class Options implements Serializable {
     public UpdaterProperties updaterProperties;
 
     public Options() {
-        showHelp = false;
+        generalProperties = new GeneralProperties();
         networkProperties = new NetworkProperties();
         updaterProperties = new UpdaterProperties();
         trainingOptions = new TrainingOptions();
-        train = false;
-        parseConllFile = false;
-        parseTaggedFile = false;
-        beamWidth = 1;
-        rootFirst = false;
-        modelFile = "";
-        outputFile = "";
-        inputFile = "";
         scorePath = "";
         separator = "_";
-        labeled = true;
-        lowercase = false;
-        evaluate = false;
-        numOfThreads = 8;
-        parsePartialConll = false;
-        parserType = ParserType.ArcEager;
-
-        punctuations = new HashSet<>();
-        punctuations.add("#");
-        punctuations.add("''");
-        punctuations.add("(");
-        punctuations.add(")");
-        punctuations.add("[");
-        punctuations.add("]");
-        punctuations.add("{");
-        punctuations.add("}");
-        punctuations.add("\"");
-        punctuations.add(",");
-        punctuations.add(".");
-        punctuations.add(":");
-        punctuations.add("``");
-        punctuations.add("-LRB-");
-        punctuations.add("-RRB-");
-        punctuations.add("-LSB-");
-        punctuations.add("-RSB-");
-        punctuations.add("-LCB-");
-        punctuations.add("-RCB-");
-        punctuations.add("!");
-        punctuations.add(".");
-        punctuations.add("#");
-        punctuations.add("$");
-        punctuations.add("''");
-        punctuations.add("(");
-        punctuations.add(")");
-        punctuations.add(",");
-        punctuations.add("-LRB-");
-        punctuations.add("-RRB-");
-        punctuations.add(":");
-        punctuations.add("?");
     }
 
     public static void showHelp() {
@@ -202,23 +138,23 @@ public class Options implements Serializable {
 
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--help") || args[i].equals("-h") || args[i].equals("-help"))
-                options.showHelp = true;
+                options.generalProperties.showHelp = true;
             else if (args[i].equals("train"))
-                options.train = true;
+                options.generalProperties.train = true;
             else if (args[i].equals("parse_conll"))
-                options.parseConllFile = true;
+                options.generalProperties.parseConllFile = true;
             else if (args[i].equals("parse_partial"))
-                options.parsePartialConll = true;
+                options.generalProperties.parsePartialConll = true;
             else if (args[i].equals("eval"))
-                options.evaluate = true;
+                options.generalProperties.evaluate = true;
             else if (args[i].equals("parse_tagged"))
-                options.parseTaggedFile = true;
+                options.generalProperties.parseTaggedFile = true;
             else if (args[i].equals("-train-file") || args[i].equals("-input"))
                 options.trainingOptions.trainFile = args[i + 1];
             else if (args[i].equals("-punc"))
                 options.changePunc(args[i + 1]);
             else if (args[i].equals("-model"))
-                options.modelFile = args[i + 1];
+                options.generalProperties.modelFile = args[i + 1];
             else if (args[i].equals("-dev"))
                 options.trainingOptions.devPath = args[i + 1];
             else if (args[i].equals("-e"))
@@ -236,9 +172,9 @@ public class Options implements Serializable {
                     throw new Exception("updater not supported");
             } else if (args[i].equals("-parser")) {
                 if (args[i + 1].equals("ae"))
-                    options.parserType = ParserType.ArcEager;
+                    options.generalProperties.parserType = ParserType.ArcEager;
                 else if (args[i + 1].equals("as"))
-                    options.parserType = ParserType.ArcStandard;
+                    options.generalProperties.parserType = ParserType.ArcStandard;
                 else
                     throw new Exception("parser not supported");
             } else if (args[i].equals("-sgd")) {
@@ -299,19 +235,19 @@ public class Options implements Serializable {
             else if (args[i].equals("-cluster"))
                 options.trainingOptions.clusterFile = args[i + 1];
             else if (args[i].equals("-out"))
-                options.outputFile = args[i + 1];
+                options.generalProperties.outputFile = args[i + 1];
             else if (args[i].equals("-delim"))
                 options.separator = args[i + 1];
             else if (args[i].startsWith("beam:"))
-                options.beamWidth = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
+                options.generalProperties.beamWidth = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].startsWith("nt:"))
-                options.numOfThreads = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
+                options.generalProperties.numOfThreads = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].startsWith("pt:"))
                 options.trainingOptions.partialTrainingStartingIteration = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].equals("unlabeled"))
-                options.labeled = Boolean.parseBoolean(args[i]);
+                options.generalProperties.labeled = Boolean.parseBoolean(args[i]);
             else if (args[i].equals("lowercase"))
-                options.lowercase = Boolean.parseBoolean(args[i]);
+                options.generalProperties.lowercase = Boolean.parseBoolean(args[i]);
             else if (args[i].startsWith("-score"))
                 options.scorePath = args[i + 1];
             else if (args[i].equals("early"))
@@ -321,75 +257,48 @@ public class Options implements Serializable {
             else if (args[i].equals("random"))
                 options.trainingOptions.useRandomOracleSelection = true;
             else if (args[i].equals("root_first"))
-                options.rootFirst = true;
+                options.generalProperties.rootFirst = true;
             else if (args[i].startsWith("iter:"))
                 options.trainingOptions.trainingIter = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
         }
 
-        if (options.train || options.parseTaggedFile || options.parseConllFile)
-            options.showHelp = false;
+        if (options.generalProperties.train || options.generalProperties.parseTaggedFile || options.generalProperties.parseConllFile)
+            options.generalProperties.showHelp = false;
 
         return options;
     }
 
     public void changePunc(String puncPath) throws Exception {
-        BufferedReader reader = new BufferedReader(new FileReader(puncPath));
-
-        punctuations = new HashSet<>();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            line = line.trim();
-            if (line.length() > 0)
-                punctuations.add(line.split(" ")[0].trim());
-        }
+        generalProperties.changePunc(puncPath);
     }
 
     public String toString() {
-        if (train) {
+        if (generalProperties.train) {
             StringBuilder builder = new StringBuilder();
+            builder.append(generalProperties.toString());
             builder.append(trainingOptions.toString());
-            builder.append("beam width: " + beamWidth + "\n");
-            builder.append("rootFirst: " + rootFirst + "\n");
-            builder.append("labeled: " + labeled + "\n");
-            builder.append("lower-case: " + lowercase + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
             builder.append(networkProperties.toString());
             builder.append(updaterProperties.toString());
-            builder.append("parser type: " + parserType + "\n");
             return builder.toString();
-        } else if (parseConllFile) {
+        } else if (generalProperties.parseConllFile) {
             StringBuilder builder = new StringBuilder();
-            builder.append("parse conll" + "\n");
-            builder.append("input file: " + inputFile + "\n");
-            builder.append("output file: " + outputFile + "\n");
-            builder.append("model file: " + modelFile + "\n");
+            builder.append(generalProperties.toString());
             builder.append("score file: " + scorePath + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
-        } else if (parseTaggedFile) {
+        } else if (generalProperties.parseTaggedFile) {
             StringBuilder builder = new StringBuilder();
-            builder.append("parse  tag file" + "\n");
-            builder.append("input file: " + inputFile + "\n");
-            builder.append("output file: " + outputFile + "\n");
-            builder.append("model file: " + modelFile + "\n");
+            builder.append(generalProperties.toString());
             builder.append("score file: " + scorePath + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
-        } else if (parsePartialConll) {
+        } else if (generalProperties.parsePartialConll) {
             StringBuilder builder = new StringBuilder();
-            builder.append("parse partial conll" + "\n");
-            builder.append("input file: " + inputFile + "\n");
-            builder.append("output file: " + outputFile + "\n");
+            builder.append(generalProperties.toString());
             builder.append("score file: " + scorePath + "\n");
-            builder.append("model file: " + modelFile + "\n");
-            builder.append("labeled: " + labeled + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
-        } else if (evaluate) {
+        } else if (generalProperties.evaluate) {
             StringBuilder builder = new StringBuilder();
             builder.append("Evaluate" + "\n");
-            builder.append("input file: " + inputFile + "\n");
-            builder.append("parsed file: " + outputFile + "\n");
+            builder.append(generalProperties.toString());
             return builder.toString();
         }
         return "";

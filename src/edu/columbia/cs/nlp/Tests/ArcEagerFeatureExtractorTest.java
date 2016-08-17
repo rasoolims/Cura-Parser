@@ -71,7 +71,7 @@ public class ArcEagerFeatureExtractorTest {
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
         Sentence sentence = dataSet.get(0).getSentence();
-        Configuration configuration = new Configuration(sentence, options.rootFirst);
+        Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
 
 
         /**
@@ -116,7 +116,7 @@ public class ArcEagerFeatureExtractorTest {
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
         Sentence sentence = dataSet.get(0).getSentence();
-        Configuration configuration = new Configuration(sentence, options.rootFirst);
+        Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
 
         int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[1] == IndexMaps.NullIndex;
@@ -265,7 +265,7 @@ public class ArcEagerFeatureExtractorTest {
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
         Sentence sentence = dataSet.get(0).getSentence();
-        Configuration configuration = new Configuration(sentence, options.rootFirst);
+        Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
 
         int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[1] == IndexMaps.NullIndex;

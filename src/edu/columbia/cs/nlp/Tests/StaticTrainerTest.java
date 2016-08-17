@@ -82,7 +82,7 @@ public class StaticTrainerTest {
         BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
-        Configuration configuration = new Configuration(sentence, options.rootFirst);
+        Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
 
         int index = 0;
         int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
@@ -176,8 +176,8 @@ public class StaticTrainerTest {
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
-        options.parserType = ParserType.ArcStandard;
-        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, options.rootFirst, false, maps);
+        options.generalProperties.parserType = ParserType.ArcStandard;
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, options.generalProperties.rootFirst, false, maps);
 
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
@@ -235,10 +235,10 @@ public class StaticTrainerTest {
         assert instances.get(lIndex++).gold() == 2 + dependencyLabels.size() + maps.dep2Int("ROOT"); // 10<-ROOT
         assert instances.size() == lIndex;
 
-        options.rootFirst = true;
+        options.generalProperties.rootFirst = true;
         lIndex = 0;
         reader = new CoNLLReader(tmpPath);
-        dataSet = reader.readData(Integer.MAX_VALUE, false, true, options.rootFirst, false, maps);
+        dataSet = reader.readData(Integer.MAX_VALUE, false, true, options.generalProperties.rootFirst, false, maps);
 
         dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)

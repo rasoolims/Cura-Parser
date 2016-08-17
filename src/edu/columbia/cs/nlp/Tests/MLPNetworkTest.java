@@ -116,14 +116,15 @@ public class MLPNetworkTest {
         writeText();
         Options options = new Options();
         options.networkProperties.hiddenLayer1Size = 10;
-        options.inputFile = txtFilePath;
-        IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
+        options.generalProperties.inputFile = txtFilePath;
+        IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
+                options.generalProperties.lowercase, "", 0);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
-        CoNLLReader reader = new CoNLLReader(options.inputFile);
-        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
-                .rootFirst, options.lowercase, maps);
+        CoNLLReader reader = new CoNLLReader(options.generalProperties.inputFile);
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
+                options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
         int wDim = 8;
         int pDim = 4;
         int lDim = 6;

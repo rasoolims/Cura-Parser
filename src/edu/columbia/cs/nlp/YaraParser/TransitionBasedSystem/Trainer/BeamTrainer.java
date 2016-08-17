@@ -41,9 +41,9 @@ public class BeamTrainer {
         this.labelNullIndex = labelNullIndex;
         random = new Random();
         this.rareWords = rareWords;
-        if (options.parserType == ParserType.ArcEager)
+        if (options.generalProperties.parserType == ParserType.ArcEager)
             parser = new ArcEager();
-        else if (options.parserType == ParserType.ArcStandard)
+        else if (options.generalProperties.parserType == ParserType.ArcStandard)
             parser = new ArcStandard();
         else
             throw new NotImplementedException();
@@ -59,9 +59,9 @@ public class BeamTrainer {
     }
 
     private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances, double dropWordProb) throws Exception {
-        Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.rootFirst);
+        Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.generalProperties.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(options.beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<Configuration>(options.generalProperties.beamWidth);
         beam.add(initialConfiguration);
 
         HashMap<Configuration, Double> oracles = new HashMap<>();
@@ -115,7 +115,7 @@ public class BeamTrainer {
 
             label[action] = 1;
             instances.add(new NeuralTrainingInstance(baseFeatures, label));
-            beam = new ArrayList<>(options.beamWidth);
+            beam = new ArrayList<>(options.generalProperties.beamWidth);
             beam.add(bestScoringOracle);
         }
     }
@@ -147,7 +147,7 @@ public class BeamTrainer {
                 double addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
-                if (beamPreserver.size() > options.beamWidth)
+                if (beamPreserver.size() > options.generalProperties.beamWidth)
                     beamPreserver.pollFirst();
             }
             if (canReduce) {
@@ -155,7 +155,7 @@ public class BeamTrainer {
                 double addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
-                if (beamPreserver.size() > options.beamWidth)
+                if (beamPreserver.size() > options.generalProperties.beamWidth)
                     beamPreserver.pollFirst();
             }
 
@@ -165,7 +165,7 @@ public class BeamTrainer {
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
-                    if (beamPreserver.size() > options.beamWidth)
+                    if (beamPreserver.size() > options.generalProperties.beamWidth)
                         beamPreserver.pollFirst();
                 }
             }
@@ -175,7 +175,7 @@ public class BeamTrainer {
                     double addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
-                    if (beamPreserver.size() > options.beamWidth)
+                    if (beamPreserver.size() > options.generalProperties.beamWidth)
                         beamPreserver.pollFirst();
                 }
             }

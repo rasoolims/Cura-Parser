@@ -58,10 +58,10 @@ public class ArcStandardFeatureExtractorTest {
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
-        options.rootFirst = false;
-        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, options.rootFirst, false, maps);
+        options.generalProperties.rootFirst = false;
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, options.generalProperties.rootFirst, false, maps);
         Sentence sentence = dataSet.get(0).getSentence();
-        Configuration configuration = new Configuration(sentence, options.rootFirst);
+        Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
 
 
         /**
@@ -244,10 +244,10 @@ public class ArcStandardFeatureExtractorTest {
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
-        options.rootFirst = true;
-        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, options.rootFirst, false, maps);
+        options.generalProperties.rootFirst = true;
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, options.generalProperties.rootFirst, false, maps);
         Sentence sentence = dataSet.get(0).getSentence();
-        Configuration configuration = new Configuration(sentence, options.rootFirst);
+        Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
 
 
         /**

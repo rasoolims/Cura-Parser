@@ -126,16 +126,17 @@ public class UpdaterTest {
         options.trainingOptions.wordEmbeddingFile = embedFilePath;
         options.trainingOptions.devPath = txtFilePath;
         options.networkProperties.hiddenLayer1Size = 10;
-        options.inputFile = txtFilePath;
-        options.modelFile = txtFilePath + ".model";
+        options.trainingOptions.trainFile = txtFilePath;
+        options.generalProperties.modelFile = txtFilePath + ".model";
         options.updaterProperties.learningRate = .1;
-        IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);
+        IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options.generalProperties
+                .lowercase, "", 1);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
-        CoNLLReader reader = new CoNLLReader(options.inputFile);
-        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
-                .rootFirst, options.lowercase, maps);
+        CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
         int wDim = 8;
         int pDim = 4;
         int lDim = 6;

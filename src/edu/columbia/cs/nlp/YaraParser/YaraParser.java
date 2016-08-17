@@ -35,38 +35,39 @@ public class YaraParser {
         Options options = Options.processArgs(args);
 
         if (args.length < 2) {
-            options.train = true;
+            options.generalProperties.train = true;
             options.trainingOptions.trainFile = "/Users/msr/Desktop/data/dev_smal.conll";
             options.trainingOptions.devPath = "/Users/msr/Desktop/data/train_smal.conll";
             options.trainingOptions.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
             options.trainingOptions.clusterFile = "/Users/msr/Downloads/trained_freqw+clusters_1k.cbow.en";
-            options.modelFile = "/tmp/model";
-            options.outputFile = "/tmp/model.out";
-            options.labeled = true;
+            options.generalProperties.modelFile = "/tmp/model";
+            options.generalProperties.outputFile = "/tmp/model.out";
+            options.generalProperties.labeled = true;
             options.networkProperties.hiddenLayer1Size = 200;
             options.updaterProperties.learningRate = 0.001;
             options.networkProperties.batchSize = 1024;
             options.trainingOptions.trainingIter = 6;
-            options.beamWidth = 1;
+            options.generalProperties.beamWidth = 1;
             options.trainingOptions.useDynamicOracle = false;
-            options.numOfThreads = 2;
+            options.generalProperties.numOfThreads = 2;
             options.trainingOptions.decayStep = 10;
             options.trainingOptions.UASEvalPerStep = 3;
             options.updaterProperties.updaterType = UpdaterType.ADAM;
             options.trainingOptions.averagingOption = AveragingOption.BOTH;
             options.networkProperties.activationType = ActivationType.RELU;
-            options.parserType = ParserType.ArcStandard;
+            options.generalProperties.parserType = ParserType.ArcStandard;
         }
 
-        if (options.showHelp) {
+        if (options.generalProperties.showHelp) {
             Options.showHelp();
         } else {
             System.out.println(options);
-            if (options.train) {
+            if (options.generalProperties.train) {
                 trainWithNN(options);
-            } else if (options.parseTaggedFile || options.parseConllFile || options.parsePartialConll) {
+            } else if (options.generalProperties.parseTaggedFile || options.generalProperties.parseConllFile
+                    || options.generalProperties.parsePartialConll) {
                 parse(options);
-            } else if (options.evaluate) {
+            } else if (options.generalProperties.evaluate) {
                 evaluate(options);
             } else {
                 Options.showHelp();
@@ -76,53 +77,57 @@ public class YaraParser {
     }
 
     private static void evaluate(Options options) throws Exception {
-        if (options.inputFile.equals("") || options.outputFile.equals(""))
+        if (options.generalProperties.inputFile.equals("") || options.generalProperties.outputFile.equals(""))
             Options.showHelp();
         else {
-            Evaluator.evaluate(options.inputFile, options.outputFile, options.punctuations);
+            Evaluator.evaluate(options.generalProperties.inputFile, options.generalProperties.outputFile, options.generalProperties.punctuations);
         }
     }
 
     private static void parse(Options options) throws Exception {
-        if (options.outputFile.equals("") || options.inputFile.equals("")
-                || options.modelFile.equals("")) {
+        if (options.generalProperties.outputFile.equals("") || options.generalProperties.inputFile.equals("")
+                || options.generalProperties.modelFile.equals("")) {
             Options.showHelp();
 
         } else {
-            FileInputStream fos = new FileInputStream(options.modelFile);
+            FileInputStream fos = new FileInputStream(options.generalProperties.modelFile);
             GZIPInputStream gz = new GZIPInputStream(fos);
             ObjectInput reader = new ObjectInputStream(gz);
             MLPNetwork mlpNetwork = (MLPNetwork) reader.readObject();
             Options infoptions = (Options) reader.readObject();
-            BeamParser parser = new BeamParser(mlpNetwork, options.numOfThreads, infoptions.parserType);
+            BeamParser parser = new BeamParser(mlpNetwork, options.generalProperties.numOfThreads, infoptions.generalProperties.parserType);
 
-            if (options.parseTaggedFile)
-                parser.parseTaggedFile(options.inputFile,
-                        options.outputFile, infoptions.rootFirst, options.beamWidth, infoptions.lowercase,
-                        options.separator, options.numOfThreads);
-            else if (options.parseConllFile)
-                parser.parseConll(options.inputFile, options.outputFile, infoptions.rootFirst, options.beamWidth, infoptions.lowercase,
-                        options.numOfThreads, false, options.scorePath);
-            else if (options.parsePartialConll)
-                parser.parseConll(options.inputFile, options.outputFile, infoptions.rootFirst, options.beamWidth, infoptions.lowercase,
-                        options.numOfThreads, true, options.scorePath);
+            if (options.generalProperties.parseTaggedFile)
+                parser.parseTaggedFile(options.generalProperties.inputFile,
+                        options.generalProperties.outputFile, infoptions.generalProperties.rootFirst, options.generalProperties.beamWidth,
+                        infoptions.generalProperties.lowercase,
+                        options.separator, options.generalProperties.numOfThreads);
+            else if (options.generalProperties.parseConllFile)
+                parser.parseConll(options.generalProperties.inputFile, options.generalProperties.outputFile, infoptions.generalProperties
+                                .rootFirst, options.generalProperties.beamWidth, infoptions.generalProperties.lowercase,
+                        options.generalProperties.numOfThreads, false, options.scorePath);
+            else if (options.generalProperties.parsePartialConll)
+                parser.parseConll(options.generalProperties.inputFile, options.generalProperties.outputFile, infoptions.generalProperties
+                                .rootFirst, options.generalProperties.beamWidth, infoptions.generalProperties.lowercase,
+                        options.generalProperties.numOfThreads, true, options.scorePath);
             parser.shutDownLiveThreads();
         }
     }
 
     public static void trainWithNN(Options options) throws Exception {
-        if (options.trainingOptions.trainFile.equals("") || options.modelFile.equals("")) {
+        if (options.trainingOptions.trainFile.equals("") || options.generalProperties.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.labeled, options.lowercase, options
-                    .trainingOptions.clusterFile, options.trainingOptions.minFreq);
+            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled,
+                    options.generalProperties.lowercase, options.trainingOptions.clusterFile, options.trainingOptions.minFreq);
             int wDim = options.networkProperties.wDim;
             if (options.trainingOptions.wordEmbeddingFile.length() > 0)
                 wDim = maps.readEmbeddings(options.trainingOptions.wordEmbeddingFile);
 
             CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
             ArrayList<GoldConfiguration> dataSet =
-                    reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
+                    reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options.generalProperties.rootFirst,
+                            options.generalProperties.lowercase, maps);
             System.out.println("CoNLL data reading done!");
 
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -134,13 +139,13 @@ public class YaraParser {
             BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
                     maps.labelNullIndex, maps.rareWords);
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
-            int numWordLayers = options.parserType == ParserType.ArcEager ? 22 : 20;
+            int numWordLayers = options.generalProperties.parserType == ParserType.ArcEager ? 22 : 20;
             maps.constructPreComputeMap(allInstances, numWordLayers, 10000);
 
             MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, options.networkProperties.posDim,
-                    options.networkProperties.depDim, options.parserType);
+                    options.networkProperties.depDim, options.generalProperties.parserType);
             MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, options.networkProperties.posDim,
-                    options.networkProperties.depDim, options.parserType);
+                    options.networkProperties.depDim, options.generalProperties.parserType);
             maps.emptyEmbeddings();
 
             MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options);
@@ -188,15 +193,17 @@ public class YaraParser {
     }
 
     private static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {
-        BeamParser parser = new BeamParser(mlpNetwork, options.numOfThreads, options.parserType);
-        parser.parseConll(options.trainingOptions.devPath, options.modelFile + ".tmp", options.rootFirst, options.beamWidth, options.lowercase,
-                options.numOfThreads,
+        BeamParser parser = new BeamParser(mlpNetwork, options.generalProperties.numOfThreads, options.generalProperties.parserType);
+        parser.parseConll(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp", options.generalProperties.rootFirst,
+                options.generalProperties.beamWidth, options.generalProperties.lowercase,
+                options.generalProperties.numOfThreads,
                 false, "");
-        Pair<Double, Double> eval = Evaluator.evaluate(options.trainingOptions.devPath, options.modelFile + ".tmp", options.punctuations);
+        Pair<Double, Double> eval = Evaluator.evaluate(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp",
+                options.generalProperties.punctuations);
         if (eval.first > bestModelUAS) {
             bestModelUAS = eval.first;
             System.out.print("Saving the new model...");
-            FileOutputStream fos = new FileOutputStream(options.modelFile);
+            FileOutputStream fos = new FileOutputStream(options.generalProperties.modelFile);
             GZIPOutputStream gz = new GZIPOutputStream(fos);
             ObjectOutput writer = new ObjectOutputStream(gz);
             writer.writeObject(mlpNetwork);
