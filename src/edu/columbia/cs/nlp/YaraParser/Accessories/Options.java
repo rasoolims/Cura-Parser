@@ -19,61 +19,60 @@ import java.util.HashSet;
 
 
 public class Options implements Serializable {
+    // General options
+    public boolean showHelp;
+    public boolean evaluate;
     public boolean train;
     public boolean parseTaggedFile;
     public boolean parseConllFile;
+    public boolean parsePartialConll;
+    public String modelFile;
     public int beamWidth;
     public boolean rootFirst;
-    public boolean showHelp;
     public boolean labeled;
+    public boolean lowercase;
     public String inputFile;
     public String outputFile;
     public String devPath;
+    public int numOfThreads;
+    public HashSet<String> punctuations;
+
+    // Training options
     public int trainingIter;
-    public boolean evaluate;
-    public boolean parsePartialConll;
-    public String scorePath;
     public String clusterFile;
     public String wordEmbeddingFile;
-    public double learningRate;
-    public int batchSize;
-    public double decayStep;
-    public double regularization;
-    public boolean dropout;
-    public AveragingOption averagingOption;
-    public String modelFile;
-    public boolean lowercase;
-    public boolean useExtendedFeatures;
-    public boolean useExtendedWithBrownClusterFeatures;
     public boolean useMaxViol;
     public boolean useDynamicOracle;
     public boolean useRandomOracleSelection;
-    public String separator;
-    public int numOfThreads;
-    public UpdaterType updaterType;
     public int UASEvalPerStep;
-    public double dropoutProbForHiddenLayer;
-    public ActivationType activationType;
-    public String goldFile;
+    public double decayStep;
+    public AveragingOption averagingOption;
+    public int partialTrainingStartingIteration;
+    public int minFreq;
+
+    // Parsing options
+    public String scorePath;
+    public String separator;
+    public ParserType parserType;
+
+    // Network options
+    public int hiddenLayer1Size;
+    public int hiddenLayer2Size;
     public int posDim;
     public int depDim;
     public int wDim;
-
-    public HashSet<String> punctuations;
-    public String predFile;
-
-    public int partialTrainingStartingIteration;
-
-    public int hiddenLayer1Size;
-    public int hiddenLayer2Size;
-
-    public int minFreq;
-    public double momentum;
-    public SGDType sgdType;
+    public int batchSize;
+    public double dropoutProbForHiddenLayer;
+    public ActivationType activationType;
+    public double regularization;
     public boolean outputBiasTerm;
     public boolean regualarizeAllLayers;
 
-    public ParserType parserType;
+    // Updater options
+    public double momentum;
+    public SGDType sgdType;
+    public double learningRate;
+    public UpdaterType updaterType;
 
     public Options() {
         showHelp = false;
@@ -83,7 +82,6 @@ public class Options implements Serializable {
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
-        dropout = false;
         beamWidth = 1;
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 200;
@@ -110,14 +108,12 @@ public class Options implements Serializable {
         wordEmbeddingFile = "";
         labeled = true;
         lowercase = false;
-        useExtendedFeatures = true;
         useMaxViol = true;
         useDynamicOracle = true;
         useRandomOracleSelection = false;
         trainingIter = 20000;
         evaluate = false;
         numOfThreads = 8;
-        useExtendedWithBrownClusterFeatures = false;
         parsePartialConll = false;
         UASEvalPerStep = 100;
         partialTrainingStartingIteration = 3;
@@ -242,7 +238,7 @@ public class Options implements Serializable {
         output.append("\t** Optional: -score [score file] averaged score of each output parse tree in a file\n\n");
 
         output.append("* Evaluate a Conll file:\n");
-        output.append("\tjava -jar YaraParser.jar eval -gold [gold-file] -parse [parsed-file]  -punc [punc-file]\n");
+        output.append("\tjava -jar YaraParser.jar eval -input [gold-file] -out [parsed-file]  -punc [punc-file]\n");
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one" +
                 " line\n");
         output.append("\t** Both files should have conll 2006 format\n");
@@ -273,10 +269,6 @@ public class Options implements Serializable {
                 options.modelFile = args[i + 1];
             else if (args[i].equals("-dev"))
                 options.devPath = args[i + 1];
-            else if (args[i].equals("-gold"))
-                options.goldFile = args[i + 1];
-            else if (args[i].equals("-parse"))
-                options.predFile = args[i + 1];
             else if (args[i].equals("-e"))
                 options.wordEmbeddingFile = args[i + 1];
             else if (args[i].equals("-bias") && args[i + 1].equals("true"))
@@ -352,10 +344,9 @@ public class Options implements Serializable {
                 options.momentum = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-reg"))
                 options.regularization = Double.parseDouble(args[i + 1]);
-            else if (args[i].equals("-cluster")) {
+            else if (args[i].equals("-cluster"))
                 options.clusterFile = args[i + 1];
-                options.useExtendedWithBrownClusterFeatures = true;
-            } else if (args[i].equals("-out"))
+            else if (args[i].equals("-out"))
                 options.outputFile = args[i + 1];
             else if (args[i].equals("-delim"))
                 options.separator = args[i + 1];
@@ -372,8 +363,6 @@ public class Options implements Serializable {
                 options.lowercase = Boolean.parseBoolean(args[i]);
             else if (args[i].startsWith("-score"))
                 options.scorePath = args[i + 1];
-            else if (args[i].equals("basic"))
-                options.useExtendedFeatures = false;
             else if (args[i].equals("early"))
                 options.useMaxViol = false;
             else if (args[i].equals("static"))
@@ -414,8 +403,6 @@ public class Options implements Serializable {
             builder.append("rootFirst: " + rootFirst + "\n");
             builder.append("labeled: " + labeled + "\n");
             builder.append("lower-case: " + lowercase + "\n");
-            builder.append("extended features: " + useExtendedFeatures + "\n");
-            builder.append("extended with brown cluster features: " + useExtendedWithBrownClusterFeatures + "\n");
             builder.append("updateModel: " + (useMaxViol ? "max violation" : "early") + "\n");
             builder.append("oracle: " + (useDynamicOracle ? "dynamic" : "static") + "\n");
             if (useDynamicOracle)
@@ -470,8 +457,8 @@ public class Options implements Serializable {
         } else if (evaluate) {
             StringBuilder builder = new StringBuilder();
             builder.append("Evaluate" + "\n");
-            builder.append("gold file: " + goldFile + "\n");
-            builder.append("parsed file: " + predFile + "\n");
+            builder.append("input file: " + inputFile + "\n");
+            builder.append("parsed file: " + outputFile + "\n");
             return builder.toString();
         }
         return "";

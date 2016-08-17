@@ -76,10 +76,10 @@ public class YaraParser {
     }
 
     private static void evaluate(Options options) throws Exception {
-        if (options.goldFile.equals("") || options.predFile.equals(""))
+        if (options.inputFile.equals("") || options.outputFile.equals(""))
             Options.showHelp();
         else {
-            Evaluator.evaluate(options.goldFile, options.predFile, options.punctuations);
+            Evaluator.evaluate(options.inputFile, options.outputFile, options.punctuations);
         }
     }
 
