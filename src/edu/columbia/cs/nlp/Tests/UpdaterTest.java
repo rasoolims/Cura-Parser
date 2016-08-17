@@ -1,25 +1,24 @@
 package edu.columbia.cs.nlp.Tests;
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.CoNLLReader;
-import edu.columbia.cs.nlp.YaraParser.Accessories.Evaluator;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
-import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPTrainer;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.NetworkMatrices;
+import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.SGDType;
+import edu.columbia.cs.nlp.YaraParser.Learning.Updater.SGD;
+import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Updater;
+import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
-import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Beam.BeamParser;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.BeamTrainer;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -118,70 +117,75 @@ public class UpdaterTest {
             "21\tlater\t_\tRB\tRB\t_\t16\tadvmod\t_\t_\n" +
             "22\t.\t_\t.\t.\t_\t3\tpunct\t_\t_\n";
 
+
     @Test
-    public void TestPretrainedtWordEmbeddingUpdates() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            writeWordEmbedText();
-            Options options = new Options();
-            options.wordEmbeddingFile = embedFilePath;
-            options.devPath = txtFilePath;
-            options.activationType = type;
-            options.hiddenLayer1Size = 10;
-            options.inputFile = txtFilePath;
-            options.modelFile = txtFilePath + ".model";
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.inputFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
-                    .rootFirst, options.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+    public void testSGDUpdate() throws Exception {
+        writeText();
+        writeWordEmbedText();
+        Options options = new Options();
+        options.wordEmbeddingFile = embedFilePath;
+        options.devPath = txtFilePath;
+        options.hiddenLayer1Size = 10;
+        options.inputFile = txtFilePath;
+        options.modelFile = txtFilePath + ".model";
+        options.learningRate = .1;
+        IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);
+        ArrayList<Integer> dependencyLabels = new ArrayList<>();
+        for (int lab = 0; lab < maps.relSize(); lab++)
+            dependencyLabels.add(lab);
+        CoNLLReader reader = new CoNLLReader(options.inputFile);
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options
+                .rootFirst, options.lowercase, maps);
+        int wDim = 8;
+        int pDim = 4;
+        int lDim = 6;
+        BeamTrainer trainer = new BeamTrainer(options.useMaxViol ? "max_violation" : "early",
+                options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+        List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
+        maps.constructPreComputeMap(instances, 22, 10000);
+        MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+        network.getMatrices().getWordEmbedding()[0][0] = 0;
+        double origValue = network.getMatrices().getWordEmbedding()[0][0];
+        double g1 = -0.01;
+        double g2 = options.momentum * g1 + 0.005;
+        double g3 = options.momentum * g2 - 0.003;
 
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
+        NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
+        // Test sgd with momentum.
+        Updater updater = new SGD(network, options.learningRate, options.outputBiasTerm, options.momentum, SGDType.MOMENTUM);
+        gradients.modify(EmbeddingTypes.WORD, 0, 0, 0.01);
+        updater.update(gradients);
 
-            for (int i = 1; i <= 100; i++) {
-                double acc = classifier.fit(instances, i, true);
+        // reset
+        gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
 
-                if (i % 10 == 0) {
-                    BeamParser parser = new BeamParser(network, options.numOfThreads, ParserType.ArcEager);
-                    parser.parseConll(options.devPath, options.modelFile + ".tmp", options.rootFirst,
-                            options.beamWidth, options.lowercase, options.numOfThreads, false, "");
-                    Pair<Double, Double> evaluator = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp", options.punctuations);
+        gradients.modify(EmbeddingTypes.WORD, 0, 0, -0.005);
+        updater.update(gradients);
 
-                    FileOutputStream fos = new FileOutputStream(options.modelFile);
-                    GZIPOutputStream gz = new GZIPOutputStream(fos);
-                    ObjectOutput writer = new ObjectOutputStream(gz);
-                    writer.writeObject(network);
-                    writer.writeObject(options);
-                    writer.close();
-                    System.out.print("done!\n\n");
+        // reset
+        gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
 
-                    FileInputStream fis = new FileInputStream(options.modelFile);
-                    GZIPInputStream gz2 = new GZIPInputStream(fis);
-                    ObjectInput r = new ObjectInputStream(gz2);
-                    MLPNetwork mlpNetwork = (MLPNetwork) r.readObject();
-                    Options infoptions = (Options) r.readObject();
-                    BeamParser loadedParser = new BeamParser(mlpNetwork, options.numOfThreads, ParserType.ArcEager);
-                    loadedParser.parseConll(options.devPath, options.modelFile + ".tmp2", infoptions.rootFirst, options.beamWidth,
-                            infoptions.lowercase, options.numOfThreads, false, options.scorePath);
-                    Pair<Double, Double> evaluator2 = Evaluator.evaluate(options.devPath, options.modelFile + ".tmp2", options.punctuations);
+        gradients.modify(EmbeddingTypes.WORD, 0, 0, 0.003);
+        updater.update(gradients);
 
-                    assert evaluator.equals(evaluator2);
-                    if (acc == 1) assert evaluator.first == 100 && evaluator.second == 100;
-                }
-            }
+        assert updater.getGradientHistory().getWordEmbedding()[0][0] == g3;
+        assert network.getMatrices().getWordEmbedding()[0][0] - origValue + options.learningRate * (g1 + g2 + g3) < 1e-16;
+    }
 
-        }
+    @Test
+    public void testAdamUpdate() throws Exception {
+        //todo
+    }
+
+    @Test
+    public void testAdagradUpdate() throws Exception {
+        //todo
     }
 
     private void writeText() throws Exception {
