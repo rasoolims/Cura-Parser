@@ -213,8 +213,8 @@ public class ParserTest {
             Options options = new Options();
             options.wordEmbeddingFile = embedFilePath;
             options.devPath = txtFilePath;
-            options.activationType = type;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.activationType = type;
+            options.networkProperties.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             options.modelFile = txtFilePath + ".model";
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);

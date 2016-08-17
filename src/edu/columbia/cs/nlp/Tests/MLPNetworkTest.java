@@ -115,7 +115,7 @@ public class MLPNetworkTest {
     public void testSaved() throws Exception {
         writeText();
         Options options = new Options();
-        options.hiddenLayer1Size = 10;
+        options.networkProperties.hiddenLayer1Size = 10;
         options.inputFile = txtFilePath;
         IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();

@@ -125,7 +125,7 @@ public class UpdaterTest {
         Options options = new Options();
         options.wordEmbeddingFile = embedFilePath;
         options.devPath = txtFilePath;
-        options.hiddenLayer1Size = 10;
+        options.networkProperties.hiddenLayer1Size = 10;
         options.inputFile = txtFilePath;
         options.modelFile = txtFilePath + ".model";
         options.learningRate = .1;
@@ -154,7 +154,7 @@ public class UpdaterTest {
                 .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
                 .getHiddenLayerIntDim(), network.getSoftmaxLayerDim());
         // Test sgd with momentum.
-        Updater updater = new SGD(network, options.learningRate, options.outputBiasTerm, options.momentum, SGDType.MOMENTUM);
+        Updater updater = new SGD(network, options.learningRate, options.networkProperties.outputBiasTerm, options.momentum, SGDType.MOMENTUM);
         gradients.modify(EmbeddingTypes.WORD, 0, 0, 0.01);
         updater.update(gradients);
 

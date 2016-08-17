@@ -124,8 +124,8 @@ public class GradientTest {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             Options options = new Options();
-            options.activationType = type;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.activationType = type;
+            options.networkProperties.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -197,8 +197,8 @@ public class GradientTest {
             writeWordEmbedText();
             Options options = new Options();
             options.wordEmbeddingFile = embedFilePath;
-            options.activationType = type;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.activationType = type;
+            options.networkProperties.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -268,8 +268,8 @@ public class GradientTest {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             Options options = new Options();
-            options.activationType = type;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.activationType = type;
+            options.networkProperties.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -326,8 +326,8 @@ public class GradientTest {
             writeWordEmbedText();
             Options options = new Options();
             options.wordEmbeddingFile = embedFilePath;
-            options.activationType = type;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.activationType = type;
+            options.networkProperties.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 1);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -382,8 +382,8 @@ public class GradientTest {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             Options options = new Options();
-            options.activationType = type;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.activationType = type;
+            options.networkProperties.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -453,8 +453,8 @@ public class GradientTest {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             Options options = new Options();
-            options.activationType = type;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.activationType = type;
+            options.networkProperties.hiddenLayer1Size = 10;
             options.inputFile = txtFilePath;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -525,9 +525,9 @@ public class GradientTest {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             Options options = new Options();
-            options.activationType = type;
+            options.networkProperties.activationType = type;
             options.inputFile = txtFilePath;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
@@ -596,9 +596,9 @@ public class GradientTest {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             Options options = new Options();
-            options.activationType = type;
+            options.networkProperties.activationType = type;
             options.inputFile = txtFilePath;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
@@ -665,9 +665,9 @@ public class GradientTest {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             Options options = new Options();
-            options.activationType = type;
+            options.networkProperties.activationType = type;
             options.inputFile = txtFilePath;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
@@ -736,9 +736,9 @@ public class GradientTest {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             Options options = new Options();
-            options.activationType = type;
+            options.networkProperties.activationType = type;
             options.inputFile = txtFilePath;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
@@ -805,9 +805,9 @@ public class GradientTest {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             Options options = new Options();
-            options.activationType = type;
+            options.networkProperties.activationType = type;
             options.inputFile = txtFilePath;
-            options.hiddenLayer1Size = 10;
+            options.networkProperties.hiddenLayer1Size = 10;
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)

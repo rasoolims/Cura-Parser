@@ -7,6 +7,7 @@
 package edu.columbia.cs.nlp.YaraParser.Accessories;
 
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Props.NetworkProperties;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.SGDType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
@@ -56,17 +57,7 @@ public class Options implements Serializable {
     public ParserType parserType;
 
     // Network options
-    public int hiddenLayer1Size;
-    public int hiddenLayer2Size;
-    public int posDim;
-    public int depDim;
-    public int wDim;
-    public int batchSize;
-    public double dropoutProbForHiddenLayer;
-    public ActivationType activationType;
-    public double regularization;
-    public boolean outputBiasTerm;
-    public boolean regualarizeAllLayers;
+    public NetworkProperties networkProperties;
 
     // Updater options
     public double momentum;
@@ -76,21 +67,17 @@ public class Options implements Serializable {
 
     public Options() {
         showHelp = false;
+       networkProperties = new NetworkProperties();
         updaterType = UpdaterType.ADAM;
         sgdType = SGDType.NESTEROV;
-        regualarizeAllLayers = true;
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
         beamWidth = 1;
-        hiddenLayer1Size = 200;
-        hiddenLayer2Size = 200;
-        outputBiasTerm = false;
+
         // good for ADAM.
         learningRate = 0.001;
-        regularization = 1e-8;
-        regualarizeAllLayers = true;
-        batchSize = 1000;
+
         decayStep = 0.2;
         momentum = 0.9;
         rootFirst = false;
@@ -100,9 +87,7 @@ public class Options implements Serializable {
         devPath = "";
         scorePath = "";
         minFreq = 1;
-        dropoutProbForHiddenLayer = 0;
         averagingOption = AveragingOption.BOTH;
-        activationType = ActivationType.RELU;
         separator = "_";
         clusterFile = "";
         wordEmbeddingFile = "";
@@ -118,9 +103,6 @@ public class Options implements Serializable {
         UASEvalPerStep = 100;
         partialTrainingStartingIteration = 3;
         parserType = ParserType.ArcEager;
-        posDim = 32;
-        depDim = 32;
-        wDim = 64;
 
         punctuations = new HashSet<>();
         punctuations.add("#");
@@ -272,14 +254,14 @@ public class Options implements Serializable {
             else if (args[i].equals("-e"))
                 options.wordEmbeddingFile = args[i + 1];
             else if (args[i].equals("-bias") && args[i + 1].equals("true"))
-                options.outputBiasTerm = true;
+                options.networkProperties.outputBiasTerm = true;
             else if (args[i].equals("-reg_all") && args[i + 1].equals("false"))
-                options.regualarizeAllLayers = false;
+                options.networkProperties.regualarizeAllLayers = false;
             else if (args[i].equals("-a")) {
                 if (args[i + 1].equals("relu"))
-                    options.activationType = ActivationType.RELU;
+                    options.networkProperties.activationType = ActivationType.RELU;
                 else if (args[i + 1].equals("cubic"))
-                    options.activationType = ActivationType.CUBIC;
+                    options.networkProperties.activationType = ActivationType.CUBIC;
                 else
                     throw new Exception("updater not supported");
             } else if (args[i].equals("-parser")) {
@@ -321,17 +303,17 @@ public class Options implements Serializable {
             } else if (args[i].equals("-eval"))
                 options.UASEvalPerStep = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-h1"))
-                options.hiddenLayer1Size = Integer.parseInt(args[i + 1]);
+                options.networkProperties.hiddenLayer1Size = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-h2"))
-                options.hiddenLayer2Size = Integer.parseInt(args[i + 1]);
+                options.networkProperties.hiddenLayer2Size = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-batch"))
-                options.batchSize = Integer.parseInt(args[i + 1]);
+                options.networkProperties.batchSize = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-posdim"))
-                options.posDim = Integer.parseInt(args[i + 1]);
+                options.networkProperties.posDim = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-depdim"))
-                options.depDim = Integer.parseInt(args[i + 1]);
+                options.networkProperties.depDim = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-wdim"))
-                options.wDim = Integer.parseInt(args[i + 1]);
+                options.networkProperties.wDim = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-min"))
                 options.minFreq = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-lr"))
@@ -339,11 +321,11 @@ public class Options implements Serializable {
             else if (args[i].equals("-ds"))
                 options.decayStep = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-d"))
-                options.dropoutProbForHiddenLayer = Double.parseDouble(args[i + 1]);
+                options.networkProperties.dropoutProbForHiddenLayer = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-momentum"))
                 options.momentum = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-reg"))
-                options.regularization = Double.parseDouble(args[i + 1]);
+                options.networkProperties.regularization = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-cluster"))
                 options.clusterFile = args[i + 1];
             else if (args[i].equals("-out"))
@@ -411,19 +393,10 @@ public class Options implements Serializable {
             builder.append("training-iterations: " + trainingIter + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
-            builder.append("h1-size: " + hiddenLayer1Size + "\n");
-            builder.append("h2-size: " + hiddenLayer2Size + "\n");
+            builder.append(networkProperties.toString());
             builder.append("updater: " + updaterType + "\n");
-            builder.append("activation: " + activationType + "\n");
             builder.append("learning rate: " + learningRate + "\n");
             builder.append("decay step: " + decayStep + "\n");
-            builder.append("regularization: " + regularization + "\n");
-            builder.append("regularize all layers: " + regualarizeAllLayers + "\n");
-            builder.append("batch size: " + batchSize + "\n");
-            builder.append("dropout probability: " + dropoutProbForHiddenLayer + "\n");
-            builder.append("word dim: " + wDim + "\n");
-            builder.append("pos dim: " + posDim + "\n");
-            builder.append("dep dim: " + depDim + "\n");
             builder.append("parser type: " + parserType + "\n");
             return builder.toString();
         } else if (parseConllFile) {

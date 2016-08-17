@@ -54,20 +54,20 @@ public class MLPTrainer {
     public MLPTrainer(MLPNetwork net, Options options) throws Exception {
         this.net = net;
         random = new Random();
-        this.dropoutProb = options.dropoutProbForHiddenLayer;
+        this.dropoutProb = options.networkProperties.dropoutProbForHiddenLayer;
         if (options.updaterType == UpdaterType.SGD)
-            updater = new SGD(net, options.learningRate, options.outputBiasTerm, options.momentum, options.sgdType);
+            updater = new SGD(net, options.learningRate, options.networkProperties.outputBiasTerm, options.momentum, options.sgdType);
         else if (options.updaterType == UpdaterType.ADAGRAD)
-            updater = new Adagrad(net, options.learningRate, options.outputBiasTerm, 1e-6);
+            updater = new Adagrad(net, options.learningRate, options.networkProperties.outputBiasTerm, 1e-6);
         else if (options.updaterType == UpdaterType.ADAM)
-            updater = new Adam(net, options.learningRate, options.outputBiasTerm, 0.9, 0.9999, 1e-8);
+            updater = new Adam(net, options.learningRate, options.networkProperties.outputBiasTerm, 0.9, 0.9999, 1e-8);
         else if (options.updaterType == UpdaterType.ADAMAX)
-            updater = new AdaMax(net, options.learningRate, options.outputBiasTerm, 0.9, 0.9999, 1e-8);
+            updater = new AdaMax(net, options.learningRate, options.networkProperties.outputBiasTerm, 0.9, 0.9999, 1e-8);
         else
             throw new Exception("Updater not implemented");
-        this.regCoef = options.regularization;
+        this.regCoef = options.networkProperties.regularization;
         this.numThreads = options.numOfThreads;
-        this.regularizeAllLayers = options.regualarizeAllLayers;
+        this.regularizeAllLayers = options.networkProperties.regualarizeAllLayers;
         executor = Executors.newFixedThreadPool(numThreads);
         pool = new ExecutorCompletionService<>(executor);
     }

@@ -43,9 +43,9 @@ public class YaraParser {
             options.modelFile = "/tmp/model";
             options.outputFile = "/tmp/model.out";
             options.labeled = true;
-            options.hiddenLayer1Size = 200;
+            options.networkProperties.hiddenLayer1Size = 200;
             options.learningRate = 0.001;
-            options.batchSize = 1024;
+            options.networkProperties.batchSize = 1024;
             options.trainingIter = 6;
             options.beamWidth = 1;
             options.useDynamicOracle = false;
@@ -54,7 +54,7 @@ public class YaraParser {
             options.UASEvalPerStep = 3;
             options.updaterType = UpdaterType.ADAM;
             options.averagingOption = AveragingOption.BOTH;
-            options.activationType = ActivationType.RELU;
+            options.networkProperties.activationType = ActivationType.RELU;
             options.parserType = ParserType.ArcStandard;
         }
 
@@ -115,7 +115,7 @@ public class YaraParser {
             Options.showHelp();
         } else {
             IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile, options.minFreq);
-            int wDim = options.wDim;
+            int wDim = options.networkProperties.wDim;
             if (options.wordEmbeddingFile.length() > 0)
                 wDim = maps.readEmbeddings(options.wordEmbeddingFile);
 
@@ -136,20 +136,22 @@ public class YaraParser {
             int numWordLayers = options.parserType == ParserType.ArcEager ? 22 : 20;
             maps.constructPreComputeMap(allInstances, numWordLayers, 10000);
 
-            MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, options.posDim, options.depDim, options.parserType);
-            MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, options.posDim, options.depDim, options.parserType);
+            MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, options.networkProperties.posDim,
+                    options.networkProperties.depDim, options.parserType);
+            MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, options.networkProperties.posDim,
+                    options.networkProperties.depDim, options.parserType);
             maps.emptyEmbeddings();
 
             MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options);
 
             double bestModelUAS = 0;
             Random random = new Random();
-            int decayStep = (int) (options.decayStep * allInstances.size() / options.batchSize);
+            int decayStep = (int) (options.decayStep * allInstances.size() / options.networkProperties.batchSize);
             decayStep = decayStep == 0 ? 1 : decayStep;
             System.out.println("Data has " + allInstances.size() + " instances");
             System.out.println("Decay after every " + decayStep + " batches");
             for (int step = 0; step < options.trainingIter; step++) {
-                List<NeuralTrainingInstance> instances = Utils.getRandomSubset(allInstances, random, options.batchSize);
+                List<NeuralTrainingInstance> instances = Utils.getRandomSubset(allInstances, random, options.networkProperties.batchSize);
                 try {
                     neuralTrainer.fit(instances, step, step % (Math.max(1, options.UASEvalPerStep / 10)) == 0 ? true : false);
                 } catch (Exception ex) {

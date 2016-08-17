@@ -65,11 +65,11 @@ public class MLPNetwork implements Serializable {
         numDepLabels = maps.relSize() + 2;
         depEmbedDim = lDim;
         wordEmbedDim = wDim;
-        hiddenLayerDim = options.hiddenLayer1Size;
+        hiddenLayerDim = options.networkProperties.hiddenLayer1Size;
         numPos = maps.posSize() + 2;
         posEmbedDim = pDim;
 
-        this.activationType = options.activationType;
+        this.activationType = options.networkProperties.activationType;
         activation = activationType == ActivationType.RELU ? new Relu() : new Cubic();
 
         hiddenLayerIntDim = numPosLayers * wDim + numPosLayers * posEmbedDim + numDepLayers * depEmbedDim;
