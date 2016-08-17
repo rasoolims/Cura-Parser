@@ -7,7 +7,7 @@
 package edu.columbia.cs.nlp.YaraParser.Accessories;
 
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Props.NetworkProperties;
+import edu.columbia.cs.nlp.YaraParser.Learning.Props.NetworkProperties;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.SGDType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
@@ -67,7 +67,7 @@ public class Options implements Serializable {
 
     public Options() {
         showHelp = false;
-       networkProperties = new NetworkProperties();
+        networkProperties = new NetworkProperties();
         updaterType = UpdaterType.ADAM;
         sgdType = SGDType.NESTEROV;
         train = false;

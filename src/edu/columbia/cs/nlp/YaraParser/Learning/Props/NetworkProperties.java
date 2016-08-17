@@ -1,4 +1,4 @@
-package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Props;
+package edu.columbia.cs.nlp.YaraParser.Learning.Props;
 
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 
@@ -12,7 +12,7 @@ import java.io.Serializable;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
-public class NetworkProperties implements Serializable{
+public class NetworkProperties implements Serializable {
     public int hiddenLayer1Size;
     public int hiddenLayer2Size;
     public int posDim;
@@ -41,7 +41,7 @@ public class NetworkProperties implements Serializable{
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("h1-size: " + hiddenLayer1Size + "\n");
         builder.append("h2-size: " + hiddenLayer2Size + "\n");
