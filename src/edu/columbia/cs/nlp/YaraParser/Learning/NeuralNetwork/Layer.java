@@ -1,5 +1,6 @@
 package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
 
+import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Activation;
 import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.FixInit;
 import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.Initializer;
@@ -40,15 +41,21 @@ public class Layer {
 
     public double[] forward(double[] i) {
         assert i.length == w[0].length;
+        return activation.activate(Utils.sum(Utils.dot(w, i), b));
+    }
 
-        double[] o = new double[b.length];
+    public double[] backward(double[] delta, double[][] nextW, double[] hInput, double[][] wG, double[] bG, double[] prevH) {
+        assert delta.length == nextW.length;
+        assert nextW[0].length == w.length;
+        assert hInput.length == w.length;
+        assert prevH.length == w[0].length;
 
-        for (int j = 0; j < w.length; j++) {
-            for (int k = 0; k < w[j].length; k++)
-                o[j] += w[j][k] * i[k];
-            o[j] = activation.activate(o[j] + b[j]);
-        }
-        return o;
+        double[] dL_dH = Utils.dot(nextW, delta);
+        double[] newDelta = activation.gradient(hInput, dL_dH);
+        Utils.sumi(bG, newDelta);
+        Utils.sumi(wG, Utils.dotTranspose(newDelta, prevH));
+
+        return newDelta;
     }
 
     public void modifyW(int i, int j, double change) {
