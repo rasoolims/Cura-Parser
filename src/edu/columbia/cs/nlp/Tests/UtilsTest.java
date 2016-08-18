@@ -61,4 +61,14 @@ public class UtilsTest {
         assert prod[1] == 0;
         assert prod[2] == 0;
     }
+
+    @Test
+    public void TestSumi() {
+        double[] x = new double[]{1, 2, 3};
+        double[] y = new double[]{-1, -2, -3};
+        Utils.sumi(x, y);
+        assert x[0] == 0;
+        assert x[1] == 0;
+        assert x[2] == 0;
+    }
 }

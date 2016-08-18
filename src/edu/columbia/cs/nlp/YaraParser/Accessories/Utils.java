@@ -34,16 +34,26 @@ public class Utils {
         return cloned;
     }
 
-    public static void addInPlace(double[][] m1, double[][] m2) {
+    /**
+     * Sum in place
+     *
+     * @param m1 this value will be affected.
+     * @param m2
+     */
+    public static void sumi(double[][] m1, double[][] m2) {
         if (m1 == null) return;
-        for (int i = 0; i < m1.length; i++)
-            addInPlace(m1[i], m2[i]);
+        for (int i = 0; i < m1.length; i++) sumi(m1[i], m2[i]);
     }
 
-    public static void addInPlace(double[] m1, double[] m2) {
-        if (m1 == null) return;
-        for (int i = 0; i < m1.length; i++)
-            m1[i] += m2[i];
+    /**
+     * Sum in place
+     *
+     * @param v1 this value will be affected.
+     * @param v2
+     */
+    public static void sumi(double[] v1, double[] v2) {
+        if (v1 == null) return;
+        for (int i = 0; i < v1.length; i++) v1[i] += v2[i];
     }
 
     public static boolean equals(double[][] o1, double[][] o2) {
@@ -131,7 +141,6 @@ public class Utils {
         }
         return o;
     }
-
 
     public static double[] dotTranspose(double[][] x, double[] y) {
         assert x.length == y.length;

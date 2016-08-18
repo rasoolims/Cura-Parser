@@ -157,15 +157,15 @@ public class NetworkMatrices implements Serializable {
      * @param matrices
      */
     public void mergeMatricesInPlaceForNonSaved(NetworkMatrices matrices) {
-        Utils.addInPlace(wordEmbedding, matrices.getWordEmbedding());
-        Utils.addInPlace(posEmbedding, matrices.getPosEmbedding());
-        Utils.addInPlace(labelEmbedding, matrices.getLabelEmbedding());
-        Utils.addInPlace(hiddenLayer, matrices.getHiddenLayer());
-        Utils.addInPlace(hiddenLayerBias, matrices.getHiddenLayerBias());
-        Utils.addInPlace(secondHiddenLayer, matrices.getSecondHiddenLayer());
-        Utils.addInPlace(secondHiddenLayerBias, matrices.getSecondHiddenLayerBias());
-        Utils.addInPlace(softmaxLayer, matrices.getSoftmaxLayer());
-        Utils.addInPlace(softmaxLayerBias, matrices.getSoftmaxLayerBias());
+        Utils.sumi(wordEmbedding, matrices.getWordEmbedding());
+        Utils.sumi(posEmbedding, matrices.getPosEmbedding());
+        Utils.sumi(labelEmbedding, matrices.getLabelEmbedding());
+        Utils.sumi(hiddenLayer, matrices.getHiddenLayer());
+        Utils.sumi(hiddenLayerBias, matrices.getHiddenLayerBias());
+        Utils.sumi(secondHiddenLayer, matrices.getSecondHiddenLayer());
+        Utils.sumi(secondHiddenLayerBias, matrices.getSecondHiddenLayerBias());
+        Utils.sumi(softmaxLayer, matrices.getSoftmaxLayer());
+        Utils.sumi(softmaxLayerBias, matrices.getSoftmaxLayerBias());
     }
 
     public NetworkMatrices clone() {
