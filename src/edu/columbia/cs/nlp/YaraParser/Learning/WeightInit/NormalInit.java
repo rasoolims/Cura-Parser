@@ -11,8 +11,8 @@ import java.util.Random;
  */
 
 public class NormalInit extends Initializer {
-    public NormalInit(Random random, int nIn, int nOut) {
-        super(random, nIn, nOut);
+    public NormalInit(Random random, int nIn) {
+        super(random, nIn, 0);
         this.stdDev = Math.sqrt(1.0 / nIn);
     }
 

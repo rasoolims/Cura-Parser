@@ -13,8 +13,8 @@ import java.util.Random;
 public class FixInit extends Initializer {
     double initVal;
 
-    public FixInit(Random random, int nIn, int nOut, double initVal) {
-        super(random, nIn, nOut);
+    public FixInit(double initVal) {
+        super(null, 0, 0);
         this.initVal = initVal;
     }
 

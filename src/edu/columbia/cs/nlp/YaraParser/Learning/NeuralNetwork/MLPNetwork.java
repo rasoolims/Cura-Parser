@@ -145,17 +145,17 @@ public class MLPNetwork implements Serializable {
 
     private void initializeLayers(ActivationType activationType) throws Exception {
         Random random = new Random();
-        Initializer hiddenBiasInit = activationType == ActivationType.RELU ? new FixInit(random, 0, 0, 0.2) :
-                new NormalInit(random, 10000, 0);
+        Initializer hiddenBiasInit = activationType == ActivationType.RELU ? new FixInit(0.2) :
+                new NormalInit(random, 10000);
 
-        Initializer wordEmbeddingInitializer = new UniformInit(random, wordEmbedDim, wordEmbedDim);
+        Initializer wordEmbeddingInitializer = new UniformInit(random, wordEmbedDim);
         wordEmbeddingInitializer.init(matrices.getWordEmbedding());
 
-        Initializer posEmbeddingInitializer = new UniformInit(random, posEmbedDim, posEmbedDim);
+        Initializer posEmbeddingInitializer = new UniformInit(random, posEmbedDim);
         posEmbeddingInitializer.init(matrices.getPosEmbedding());
 
 
-        Initializer labelEmbeddingInitializer = new UniformInit(random, depEmbedDim, depEmbedDim);
+        Initializer labelEmbeddingInitializer = new UniformInit(random, depEmbedDim);
         labelEmbeddingInitializer.init(matrices.getLabelEmbedding());
 
         Initializer hiddenLayerInitializer = new ReluInit(random, hiddenLayerDim, hiddenLayerIntDim);
