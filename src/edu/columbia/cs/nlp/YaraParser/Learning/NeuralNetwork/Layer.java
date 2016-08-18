@@ -12,7 +12,6 @@ import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.Initializer;
  * Time: 3:43 PM
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
-
 public class Layer {
     Activation activation;
 
@@ -31,17 +30,21 @@ public class Layer {
     public Layer(Activation activation, int nIn, int nOut, Initializer initializer, Initializer biasInitializer, boolean useBias) {
         this.activation = activation;
         this.useBias = useBias;
-        b = new double[nOut];
         w = new double[nOut][nIn];
 
         initializer.init(w);
-        if (useBias)
+        if (useBias) {
+            b = new double[nOut];
             biasInitializer.init(b);
+        }
     }
 
     public double[] forward(double[] i) {
         assert i.length == w[0].length;
-        return activation.activate(Utils.sum(Utils.dot(w, i), b));
+        if (useBias)
+            return activation.activate(Utils.sum(Utils.dot(w, i), b));
+        else
+            return activation.activate(Utils.dot(w, i));
     }
 
     public double[] backward(double[] delta, double[][] nextW, double[] hInput, double[][] wG, double[] bG, double[] prevH) {
@@ -52,7 +55,7 @@ public class Layer {
 
         double[] dL_dH = Utils.dot(nextW, delta);
         double[] newDelta = activation.gradient(hInput, dL_dH);
-        Utils.sumi(bG, newDelta);
+        if (useBias) Utils.sumi(bG, newDelta);
         Utils.sumi(wG, Utils.dotTranspose(newDelta, prevH));
 
         return newDelta;
