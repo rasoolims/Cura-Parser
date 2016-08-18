@@ -8,7 +8,7 @@ package edu.columbia.cs.nlp.YaraParser.Learning.Activation;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
-public class Identity extends Activation{
+public class Identity extends Activation {
     @Override
     public double activate(double value) {
         return value;
