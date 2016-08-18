@@ -99,4 +99,28 @@ public class Utils {
             ar.add(lst.get(random.nextInt(lst.size())));
         return ar;
     }
+
+    public static double[] dot(double[][] x, double[] y) {
+        assert x[0].length == y.length;
+
+        double[] o = new double[x.length];
+        for (int i = 0; i < o.length; i++) {
+            for (int j = 0; j < y.length; j++) {
+                o[i] += x[i][j] * y[j];
+            }
+        }
+        return o;
+    }
+
+    public static double[] dot(double[][] x, double[] y, boolean transposeFirst) {
+        assert x.length == y.length;
+
+        double[] o = new double[x[0].length];
+        for (int j = 0; j < y.length; j++) {
+            for (int i = 0; i < o.length; i++) {
+                o[i] += x[j][i] * y[j];
+            }
+        }
+        return o;
+    }
 }
