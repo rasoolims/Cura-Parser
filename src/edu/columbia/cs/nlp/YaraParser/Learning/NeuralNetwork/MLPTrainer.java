@@ -458,42 +458,42 @@ public class MLPTrainer {
         }
     }
 
-    private void gradientWithTwoHiddenLayers(NetworkMatrices g, double[][][] savedGradients, HashSet<Integer>[] featuresSeen, int[]
-            features, int[] label, double[] hidden, double[] hidden2, double[][] softmaxLayer, double[][] hiddenLayer, double[][]
-                                                     secondHidden, double[][] wordEmbeddings, HashSet<Integer> hiddenNodesToUse, HashSet<Integer>
-            secondHiddenNodesToUse,
-                                             double[] activationHidden, double[] secondActivationHidden, double[] delta) throws Exception {
+    private void gradientWithTwoHiddenLayers(NetworkMatrices gradient, double[][][] savedGradients, HashSet<Integer>[] featuresSeen,
+                                             int[] features, int[] label, double[] hiddenInput, double[] hiddenInput2, double[][] softmaxLayer,
+                                             double[][] hiddenLayer, double[][] secondHidden, double[][] wordEmbeddings,
+                                             HashSet<Integer> hiddenNodesToUse, HashSet<Integer> secondHiddenNodesToUse,
+                                             double[] H1, double[] H2, double[] delta) throws Exception {
         int offset;
-        double[] activationGradW2 = new double[secondActivationHidden.length];
+        double[] dL_dH2 = new double[H2.length];
         for (int i = 0; i < delta.length; i++) {
             if (label[i] >= 0) {
-                g.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, delta[i]);
-                for (int h : secondHiddenNodesToUse) {
-                    g.modify(EmbeddingTypes.SOFTMAX, i, h, delta[i] * secondActivationHidden[h]);
-                    activationGradW2[h] += delta[i] * softmaxLayer[i][h];
+                gradient.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, delta[i]);
+                for (int k : secondHiddenNodesToUse) {
+                    gradient.modify(EmbeddingTypes.SOFTMAX, i, k, delta[i] * H2[k]);
+                    dL_dH2[k] += delta[i] * softmaxLayer[i][k];
                 }
             }
         }
 
-        double[] hiddenGrad2 = new double[hidden2.length];
-        for (int h : secondHiddenNodesToUse) {
-            hiddenGrad2[h] = net.activation.gradient(hidden2[h], activationGradW2[h]);
-            g.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, h, -1, hiddenGrad2[h]);
+        double[] df_dH2_input = new double[hiddenInput2.length];
+        for (int k : secondHiddenNodesToUse) {
+            df_dH2_input[k] = net.activation.gradient(hiddenInput2[k], dL_dH2[k]);
+            gradient.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, k, -1, df_dH2_input[k]);
         }
 
-        double[] activationGradW = new double[activationHidden.length];
-        for (int h : secondHiddenNodesToUse) {
-            for (int h1 : hiddenNodesToUse) {
-                g.modify(EmbeddingTypes.SECONDHIDDENLAYER, h, h1, hiddenGrad2[h] * activationHidden[h1]);
-                activationGradW[h1] += secondActivationHidden[h] * secondHidden[h][h1];
+        double[] dL_dH1 = new double[H1.length];
+        for (int k : secondHiddenNodesToUse) {
+            for (int g : hiddenNodesToUse) {
+                gradient.modify(EmbeddingTypes.SECONDHIDDENLAYER, k, g, df_dH2_input[k] * H1[g]);
+                dL_dH1[g] += df_dH2_input[k] * secondHidden[k][g];
             }
         }
 
 
-        double[] hiddenGrad = new double[hidden.length];
+        double[] df_dH1_input = new double[hiddenInput.length];
         for (int h : hiddenNodesToUse) {
-            hiddenGrad[h] = net.activation.gradient(hidden[h], activationGradW[h]);
-            g.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, hiddenGrad[h]);
+            df_dH1_input[h] = net.activation.gradient(hiddenInput[h], dL_dH1[h]);
+            gradient.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, df_dH1_input[h]);
         }
 
         offset = 0;
@@ -502,14 +502,14 @@ public class MLPTrainer {
                 featuresSeen[index].add(features[index]);
                 int id = net.maps.preComputeMap[index].get(features[index]);
                 for (int h : hiddenNodesToUse) {
-                    savedGradients[index][id][h] += hiddenGrad[h];
+                    savedGradients[index][id][h] += df_dH1_input[h];
                 }
             } else {
                 double[] embeddings = wordEmbeddings[features[index]];
                 for (int h : hiddenNodesToUse) {
                     for (int k = 0; k < embeddings.length; k++) {
-                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
-                        g.modify(EmbeddingTypes.WORD, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
+                        gradient.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, df_dH1_input[h] * embeddings[k]);
+                        gradient.modify(EmbeddingTypes.WORD, features[index], k, df_dH1_input[h] * hiddenLayer[h][offset + k]);
                     }
                 }
             }
@@ -518,7 +518,7 @@ public class MLPTrainer {
 
         for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++) {
             for (int h : hiddenNodesToUse) {
-                savedGradients[index][features[index]][h] += hiddenGrad[h];
+                savedGradients[index][features[index]][h] += df_dH1_input[h];
             }
         }
     }
