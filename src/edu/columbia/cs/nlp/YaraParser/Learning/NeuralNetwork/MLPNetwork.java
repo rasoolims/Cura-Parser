@@ -147,14 +147,14 @@ public class MLPNetwork implements Serializable {
         double reluBiasInit = 0.2;
 
         for (int i = 0; i < numWords; i++) {
-            double stdDev = Math.sqrt(6.0 / (numWords + wordEmbedDim));
+            double stdDev = Math.sqrt(1.0 / wordEmbedDim);
             for (int j = 0; j < wordEmbedDim; j++) {
                 matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < numPos; i++) {
-            double stdDev = Math.sqrt(6.0 / (numPos + posEmbedDim));
+            double stdDev = Math.sqrt(1.0 / posEmbedDim);
             if (i != IndexMaps.UnknownIndex) {
                 for (int j = 0; j < posEmbedDim; j++) {
                     matrices.modify(EmbeddingTypes.POS, i, j, random.nextDouble() * 2 * stdDev - stdDev);
@@ -163,7 +163,7 @@ public class MLPNetwork implements Serializable {
         }
 
         for (int i = 0; i < numDepLabels; i++) {
-            double stdDev = Math.sqrt(6.0 / (numDepLabels + depEmbedDim));
+            double stdDev = Math.sqrt(1.0 / depEmbedDim);
             if (i != maps.labelUnkIndex) {
                 for (int j = 0; j < depEmbedDim; j++) {
                     matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextDouble() * 2 * stdDev - stdDev);
@@ -172,7 +172,7 @@ public class MLPNetwork implements Serializable {
         }
 
         for (int i = 0; i < hiddenLayerDim; i++) {
-            double stdDev = Math.sqrt(6.0 / (hiddenLayerDim + hiddenLayerIntDim));
+            double stdDev = Math.sqrt(2.0 / hiddenLayerIntDim);
             if (activationType == ActivationType.RELU)
                 matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, reluBiasInit);
             else
@@ -193,7 +193,7 @@ public class MLPNetwork implements Serializable {
 
         if (secondHiddenLayerDim > 0) {
             for (int i = 0; i < secondHiddenLayerDim; i++) {
-                double stdDev = Math.sqrt(6.0 / (secondHiddenLayerDim + hiddenLayerDim));
+                double stdDev = Math.sqrt(2.0 / hiddenLayerDim);
                 if (activationType == ActivationType.RELU)
                     matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, reluBiasInit);
                 else
