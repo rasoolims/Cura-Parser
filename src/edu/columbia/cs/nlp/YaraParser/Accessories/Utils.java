@@ -122,6 +122,16 @@ public class Utils {
         return o;
     }
 
+    public static double[][] dotTranspose(double[] x, double[] y) {
+        double[][] o = new double[x.length][y.length];
+        for (int i = 0; i < x.length; i++) {
+            for (int j = 0; j < y.length; j++) {
+                o[i][j] = x[i] * y[j];
+            }
+        }
+        return o;
+    }
+
     public static double[] prod(double[] x, double[] y) {
         assert x.length == y.length;
 

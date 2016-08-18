@@ -36,6 +36,23 @@ public class UtilsTest {
         assert dot[2] == -1;
     }
 
+
+    @Test
+    public void testDotTransposeVectors() {
+        double[] x = new double[]{2, 4, 7};
+        double[] y = new double[]{1, -3};
+
+        double[][] dot = Utils.dotTranspose(x, y);
+        assert dot.length == x.length;
+        assert dot[0].length == y.length;
+        assert dot[0][0] == 2;
+        assert dot[0][1] == -6;
+        assert dot[1][0] == 4;
+        assert dot[1][1] == -12;
+        assert dot[2][0] == 7;
+        assert dot[2][1] == -21;
+    }
+
     @Test
     public void TestProd() {
         double[] x = new double[]{1, 2, 3};
