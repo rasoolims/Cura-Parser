@@ -25,14 +25,27 @@ public class UtilsTest {
     }
 
     @Test
-    public void testDotTranspose() {
+    public void TestDotTranspose() {
         double[][] x = new double[][]{{1, 3, 5}, {2, 7, 6}};
         double[] y = new double[]{1, -1};
 
-        double[] dot = Utils.dot(x, y, true);
+        double[] dot = Utils.dotTranspose(x, y);
         assert dot.length == x[0].length;
         assert dot[0] == -1;
         assert dot[1] == -4;
         assert dot[2] == -1;
+    }
+
+    @Test
+    public void TestProd() {
+        double[] x = new double[]{1, 2, 3};
+        double[] y = new double[]{-1, -2, -3};
+
+        double[] prod = Utils.prod(x, y);
+
+        assert prod.length == x.length;
+        assert prod[0] == -1;
+        assert prod[1] == -4;
+        assert prod[2] == -9;
     }
 }

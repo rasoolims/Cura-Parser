@@ -112,7 +112,18 @@ public class Utils {
         return o;
     }
 
-    public static double[] dot(double[][] x, double[] y, boolean transposeFirst) {
+    public static double[] prod(double[] x, double[] y) {
+        assert x.length == y.length;
+
+        double[] o = new double[x.length];
+        for (int i = 0; i < o.length; i++) {
+            o[i] = x[i] * y[i];
+        }
+        return o;
+    }
+
+
+    public static double[] dotTranspose(double[][] x, double[] y) {
         assert x.length == y.length;
 
         double[] o = new double[x[0].length];
