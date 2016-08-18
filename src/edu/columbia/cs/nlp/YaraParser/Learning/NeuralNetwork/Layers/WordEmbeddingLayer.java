@@ -15,7 +15,7 @@ public class WordEmbeddingLayer extends EmbeddingLayer {
     /**
      * For using the pre-computation trick for different slots.
      */
-    HashMap<Integer, Integer>[] precomputationMap;
+    private HashMap<Integer, Integer>[] precomputationMap;
 
     /**
      * @param nIn    Vocabulary size.
@@ -33,5 +33,9 @@ public class WordEmbeddingLayer extends EmbeddingLayer {
 
     public int preComputeId(int index, int wordId) {
         return precomputationMap[index].get(wordId);
+    }
+
+    public int numOfEmbeddingSlot(){
+        return precomputationMap.length;
     }
 }
