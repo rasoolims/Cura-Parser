@@ -97,8 +97,6 @@ public class IndexMaps implements Serializable {
                 }
                 embeddingsDictionary.put(wordIndex, e);
             }
-
-
         }
         return eDim;
     }
