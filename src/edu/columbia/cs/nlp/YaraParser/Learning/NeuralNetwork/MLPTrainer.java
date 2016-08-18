@@ -92,7 +92,7 @@ public class MLPTrainer {
         final double[][] secondHiddenLayer = net.matrices.getSecondHiddenLayer();
         final double[] secondHiddenLayerBias = net.matrices.getSecondHiddenLayerBias();
 
-        if(secondHiddenLayer!=null){
+        if (secondHiddenLayer != null) {
             for (int h = 0; h < secondHiddenLayer.length; h++) {
                 if (regularizeAllLayers) {
                     regCost += Math.pow(secondHiddenLayerBias[h], 2);
@@ -412,7 +412,7 @@ public class MLPTrainer {
 
     private void gradientWithOneHiddenLayer(NetworkMatrices g, double[][][] savedGradients, HashSet<Integer>[] featuresSeen, int[]
             features, int[] label, double[] hidden, double[][] softmaxLayer, double[][] hiddenLayer, double[][] wordEmbeddings, HashSet<Integer>
-            hiddenNodesToUse, double[] activationHidden, double[] delta) throws Exception {
+                                                    hiddenNodesToUse, double[] activationHidden, double[] delta) throws Exception {
         int offset;
         double[] activationGradW = new double[activationHidden.length];
         for (int i = 0; i < delta.length; i++) {
@@ -460,8 +460,9 @@ public class MLPTrainer {
 
     private void gradientWithTwoHiddenLayers(NetworkMatrices g, double[][][] savedGradients, HashSet<Integer>[] featuresSeen, int[]
             features, int[] label, double[] hidden, double[] hidden2, double[][] softmaxLayer, double[][] hiddenLayer, double[][]
-            secondHidden, double[][] wordEmbeddings, HashSet<Integer> hiddenNodesToUse, HashSet<Integer> secondHiddenNodesToUse,
-                                             double[] activationHidden,double[] secondActivationHidden, double[] delta) throws Exception {
+                                                     secondHidden, double[][] wordEmbeddings, HashSet<Integer> hiddenNodesToUse, HashSet<Integer>
+            secondHiddenNodesToUse,
+                                             double[] activationHidden, double[] secondActivationHidden, double[] delta) throws Exception {
         int offset;
         double[] activationGradW2 = new double[secondActivationHidden.length];
         for (int i = 0; i < delta.length; i++) {
@@ -483,7 +484,7 @@ public class MLPTrainer {
         double[] activationGradW = new double[activationHidden.length];
         for (int h : secondHiddenNodesToUse) {
             for (int h1 : hiddenNodesToUse) {
-                g.modify(EmbeddingTypes.SECONDHIDDENLAYER, h, h1, hiddenGrad2[h]*activationHidden[h1]);
+                g.modify(EmbeddingTypes.SECONDHIDDENLAYER, h, h1, hiddenGrad2[h] * activationHidden[h1]);
                 activationGradW[h1] += secondActivationHidden[h] * secondHidden[h][h1];
             }
         }

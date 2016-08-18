@@ -144,58 +144,63 @@ public class MLPNetwork implements Serializable {
 
     private void initializeLayers(ActivationType activationType) throws Exception {
         Random random = new Random();
-        double stdDev = 1e-2;
         double reluBiasInit = 0.2;
 
         for (int i = 0; i < numWords; i++) {
+            double stdDev = Math.sqrt(6.0 / (numWords + wordEmbedDim));
             for (int j = 0; j < wordEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * 1.0 / Math.sqrt(wordEmbedDim));
+                matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < numPos; i++) {
+            double stdDev = Math.sqrt(6.0 / (numPos + posEmbedDim));
             if (i != IndexMaps.UnknownIndex) {
                 for (int j = 0; j < posEmbedDim; j++) {
-                    matrices.modify(EmbeddingTypes.POS, i, j, random.nextGaussian() * 1.0 / Math.sqrt(posEmbedDim));
+                    matrices.modify(EmbeddingTypes.POS, i, j, random.nextDouble() * 2 * stdDev - stdDev);
                 }
             }
         }
 
         for (int i = 0; i < numDepLabels; i++) {
+            double stdDev = Math.sqrt(6.0 / (numDepLabels + depEmbedDim));
             if (i != maps.labelUnkIndex) {
                 for (int j = 0; j < depEmbedDim; j++) {
-                    matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextGaussian() * 1.0 / Math.sqrt(depEmbedDim));
+                    matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextDouble() * 2 * stdDev - stdDev);
                 }
             }
         }
 
         for (int i = 0; i < hiddenLayerDim; i++) {
+            double stdDev = Math.sqrt(6.0 / (hiddenLayerDim + hiddenLayerIntDim));
             if (activationType == ActivationType.RELU)
                 matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, reluBiasInit);
             else
-                matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, random.nextGaussian() * stdDev);
+                matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, random.nextDouble() * 2 * stdDev - stdDev);
 
             for (int j = 0; j < hiddenLayerIntDim; j++) {
-                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * stdDev);
+                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextDouble() * 2 * stdDev - stdDev);
             }
         }
 
         int s2Dim = secondHiddenLayerDim > 0 ? secondHiddenLayerDim : hiddenLayerDim;
         for (int i = 0; i < softmaxLayerDim; i++) {
+            double stdDev = Math.sqrt(6.0 / (softmaxLayerDim + s2Dim));
             for (int j = 0; j < s2Dim; j++) {
-                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * stdDev);
+                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextDouble() * 2 * stdDev - stdDev);
             }
         }
 
         if (secondHiddenLayerDim > 0) {
             for (int i = 0; i < secondHiddenLayerDim; i++) {
+                double stdDev = Math.sqrt(6.0 / (secondHiddenLayerDim + hiddenLayerDim));
                 if (activationType == ActivationType.RELU)
                     matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, reluBiasInit);
                 else
-                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, random.nextGaussian() * stdDev);
+                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, random.nextDouble() * 2 * stdDev - stdDev);
 
                 for (int j = 0; j < hiddenLayerDim; j++) {
-                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYER, i, j, random.nextGaussian() * stdDev);
+                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYER, i, j, random.nextDouble() * 2 * stdDev - stdDev);
                 }
             }
         }

@@ -45,11 +45,12 @@ public abstract class Updater {
         update(gradients.getHiddenLayerBias(), gradientHistory.getHiddenLayerBias(),
                 gradientHistoryVariance == null ? null : gradientHistoryVariance.getHiddenLayerBias(), EmbeddingTypes.HIDDENLAYERBIAS);
 
-        if (gradientHistory.getSecondHiddenLayer()!=null) {
+        if (gradientHistory.getSecondHiddenLayer() != null) {
             update(gradients.getSecondHiddenLayer(), gradientHistory.getSecondHiddenLayer(),
                     gradientHistoryVariance == null ? null : gradientHistoryVariance.getSecondHiddenLayer(), EmbeddingTypes.SECONDHIDDENLAYER);
             update(gradients.getSecondHiddenLayerBias(), gradientHistory.getSecondHiddenLayerBias(),
-                    gradientHistoryVariance == null ? null : gradientHistoryVariance.getSecondHiddenLayerBias(), EmbeddingTypes.SECONDHIDDENLAYERBIAS);
+                    gradientHistoryVariance == null ? null : gradientHistoryVariance.getSecondHiddenLayerBias(), EmbeddingTypes
+                            .SECONDHIDDENLAYERBIAS);
         }
 
         update(gradients.getSoftmaxLayer(), gradientHistory.getSoftmaxLayer(),
