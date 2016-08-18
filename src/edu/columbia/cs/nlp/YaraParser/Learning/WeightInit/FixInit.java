@@ -1,7 +1,5 @@
 package edu.columbia.cs.nlp.YaraParser.Learning.WeightInit;
 
-import java.util.Random;
-
 /**
  * Created by Mohammad Sadegh Rasooli.
  * ML-NLP Lab, Department of Computer Science, Columbia University
