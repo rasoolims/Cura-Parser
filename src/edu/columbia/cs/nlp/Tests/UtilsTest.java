@@ -48,4 +48,17 @@ public class UtilsTest {
         assert prod[1] == -4;
         assert prod[2] == -9;
     }
+
+    @Test
+    public void TestSum() {
+        double[] x = new double[]{1, 2, 3};
+        double[] y = new double[]{-1, -2, -3};
+
+        double[] prod = Utils.sum(x, y);
+
+        assert prod.length == x.length;
+        assert prod[0] == 0;
+        assert prod[1] == 0;
+        assert prod[2] == 0;
+    }
 }
