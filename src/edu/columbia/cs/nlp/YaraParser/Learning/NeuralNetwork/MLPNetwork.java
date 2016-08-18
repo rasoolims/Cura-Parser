@@ -147,14 +147,14 @@ public class MLPNetwork implements Serializable {
         double reluBiasInit = 0.2;
 
         for (int i = 0; i < numWords; i++) {
-            double stdDev = Math.sqrt(1.0 / wordEmbedDim);
+            double stdDev = Math.sqrt(6.0 / (numWords + wordEmbedDim));
             for (int j = 0; j < wordEmbedDim; j++) {
                 matrices.modify(EmbeddingTypes.WORD, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         for (int i = 0; i < numPos; i++) {
-            double stdDev = Math.sqrt(1.0 / posEmbedDim);
+            double stdDev = Math.sqrt(6.0 / (numPos + posEmbedDim));
             if (i != IndexMaps.UnknownIndex) {
                 for (int j = 0; j < posEmbedDim; j++) {
                     matrices.modify(EmbeddingTypes.POS, i, j, random.nextDouble() * 2 * stdDev - stdDev);
@@ -163,7 +163,7 @@ public class MLPNetwork implements Serializable {
         }
 
         for (int i = 0; i < numDepLabels; i++) {
-            double stdDev = Math.sqrt(1.0 / depEmbedDim);
+            double stdDev = Math.sqrt(6.0 / (numDepLabels + depEmbedDim));
             if (i != maps.labelUnkIndex) {
                 for (int j = 0; j < depEmbedDim; j++) {
                     matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, random.nextDouble() * 2 * stdDev - stdDev);
