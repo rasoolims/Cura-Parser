@@ -13,25 +13,25 @@ import java.util.Random;
 
 public class WordEmbeddingLayer extends EmbeddingLayer {
     /**
-     * For using the precomputation trick.
+     * For using the pre-computation trick for different slots.
      */
-    HashMap<Integer, Integer> precomputationMap;
+    HashMap<Integer, Integer>[] precomputationMap;
 
     /**
      * @param nIn    Vocabulary size.
      * @param nOut   Embedding dimension.
      * @param random
      */
-    public WordEmbeddingLayer(int nIn, int nOut, Random random, HashMap<Integer, Integer> precomputationMap) {
+    public WordEmbeddingLayer(int nIn, int nOut, Random random, HashMap<Integer, Integer>[] precomputationMap) {
         super(nIn, nOut, random);
         this.precomputationMap = precomputationMap;
     }
 
-    public boolean isFrequent(int index) {
-        return precomputationMap.containsKey(index);
+    public boolean isFrequent(int index, int wordId) {
+        return precomputationMap[index].containsKey(wordId);
     }
 
-    public int preComputeId(int index) {
-        return precomputationMap.get(index);
+    public int preComputeId(int index, int wordId) {
+        return precomputationMap[index].get(wordId);
     }
 }
