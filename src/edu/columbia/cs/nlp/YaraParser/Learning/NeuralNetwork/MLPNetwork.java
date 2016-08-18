@@ -13,9 +13,7 @@ import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Activation;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Cubic;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Relu;
-import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.Initializer;
-import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.ReluInit;
-import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.UniformInit;
+import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.*;
 import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
@@ -147,65 +145,31 @@ public class MLPNetwork implements Serializable {
 
     private void initializeLayers(ActivationType activationType) throws Exception {
         Random random = new Random();
-        double reluBiasInit = 0.2;
+        Initializer hiddenBiasInit = activationType == ActivationType.RELU ? new FixInit(random, 0, 0, 0.2) :
+                new NormalInit(random, 10000, 0);
 
         Initializer wordEmbeddingInitializer = new UniformInit(random, wordEmbedDim, wordEmbedDim);
-        for (int i = 0; i < numWords; i++) {
-            for (int j = 0; j < wordEmbedDim; j++) {
-                matrices.modify(EmbeddingTypes.WORD, i, j, wordEmbeddingInitializer.next());
-            }
-        }
+        wordEmbeddingInitializer.init(matrices.getWordEmbedding());
 
         Initializer posEmbeddingInitializer = new UniformInit(random, posEmbedDim, posEmbedDim);
-        for (int i = 0; i < numPos; i++) {
-            if (i != IndexMaps.UnknownIndex) {
-                for (int j = 0; j < posEmbedDim; j++) {
-                    matrices.modify(EmbeddingTypes.POS, i, j, posEmbeddingInitializer.next());
-                }
-            }
-        }
+        posEmbeddingInitializer.init(matrices.getPosEmbedding());
+
 
         Initializer labelEmbeddingInitializer = new UniformInit(random, depEmbedDim, depEmbedDim);
-        for (int i = 0; i < numDepLabels; i++) {
-            if (i != maps.labelUnkIndex) {
-                for (int j = 0; j < depEmbedDim; j++) {
-                    matrices.modify(EmbeddingTypes.DEPENDENCY, i, j, labelEmbeddingInitializer.next());
-                }
-            }
-        }
+        labelEmbeddingInitializer.init(matrices.getLabelEmbedding());
 
         Initializer hiddenLayerInitializer = new ReluInit(random, hiddenLayerDim, hiddenLayerIntDim);
-        for (int i = 0; i < hiddenLayerDim; i++) {
-            if (activationType == ActivationType.RELU)
-                matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, reluBiasInit);
-            else
-                matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, hiddenLayerInitializer.next());
-
-            for (int j = 0; j < hiddenLayerIntDim; j++) {
-                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, hiddenLayerInitializer.next());
-            }
-        }
+        hiddenLayerInitializer.init(matrices.getHiddenLayer());
+        hiddenBiasInit.init(matrices.getHiddenLayerBias());
 
         int s2Dim = secondHiddenLayerDim > 0 ? secondHiddenLayerDim : hiddenLayerDim;
         Initializer softmaxLayerInitializer = new ReluInit(random, softmaxLayerDim, s2Dim);
-        for (int i = 0; i < softmaxLayerDim; i++) {
-            for (int j = 0; j < s2Dim; j++) {
-                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, softmaxLayerInitializer.next());
-            }
-        }
+        softmaxLayerInitializer.init(matrices.getSoftmaxLayer());
 
         if (secondHiddenLayerDim > 0) {
             Initializer secondHiddenLayerInitializer = new ReluInit(random, secondHiddenLayerDim, hiddenLayerDim);
-            for (int i = 0; i < secondHiddenLayerDim; i++) {
-                if (activationType == ActivationType.RELU)
-                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, reluBiasInit);
-                else
-                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, secondHiddenLayerInitializer.next());
-
-                for (int j = 0; j < hiddenLayerDim; j++) {
-                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYER, i, j, secondHiddenLayerInitializer.next());
-                }
-            }
+            secondHiddenLayerInitializer.init(matrices.getSecondHiddenLayer());
+            hiddenBiasInit.init(matrices.getSecondHiddenLayerBias());
         }
     }
 

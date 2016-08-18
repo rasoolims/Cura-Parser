@@ -23,4 +23,14 @@ public abstract class Initializer {
     }
 
     public abstract double next();
+
+    public void init(double[][] m) {
+        for (int i = 0; i < m.length; i++)
+            init(m[i]);
+    }
+
+    public void init(double[] v) {
+        for (int i = 0; i < v.length; i++)
+            v[i] = next();
+    }
 }
