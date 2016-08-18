@@ -31,8 +31,8 @@ public class Layer {
         this.activation = activation;
         this.useBias = useBias;
         w = new double[nOut][nIn];
-
         initializer.init(w);
+
         if (useBias) {
             b = new double[nOut];
             biasInitializer.init(b);
