@@ -169,6 +169,7 @@ public class MLPNetwork implements Serializable {
             }
         }
 
+        double h1ReluInit = Math.sqrt(2/hiddenLayerIntDim);
         for (int i = 0; i < hiddenLayerDim; i++) {
             if (activationType == ActivationType.RELU)
                 matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, reluBiasInit);
@@ -176,18 +177,23 @@ public class MLPNetwork implements Serializable {
                 matrices.modify(EmbeddingTypes.HIDDENLAYERBIAS, i, -1, random.nextGaussian() * stdDev);
 
             for (int j = 0; j < hiddenLayerIntDim; j++) {
-                matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * stdDev);
+                if (activationType == ActivationType.RELU)
+                    matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * h1ReluInit);
+                else
+                    matrices.modify(EmbeddingTypes.HIDDENLAYER, i, j, random.nextGaussian() * stdDev);
             }
         }
 
         int s2Dim = secondHiddenLayerDim > 0 ? secondHiddenLayerDim : hiddenLayerDim;
+        double xavierInit = Math.sqrt(1.0/(softmaxLayerDim+getMatrices().getSoftmaxLayer()[0].length));
         for (int i = 0; i < softmaxLayerDim; i++) {
             for (int j = 0; j < s2Dim; j++) {
-                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * stdDev);
+                matrices.modify(EmbeddingTypes.SOFTMAX, i, j, random.nextGaussian() * xavierInit);
             }
         }
 
         if (secondHiddenLayerDim > 0) {
+            double h2ReluInit = Math.sqrt(2/hiddenLayerDim);
             for (int i = 0; i < secondHiddenLayerDim; i++) {
                 if (activationType == ActivationType.RELU)
                     matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, reluBiasInit);
@@ -195,7 +201,10 @@ public class MLPNetwork implements Serializable {
                     matrices.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, random.nextGaussian() * stdDev);
 
                 for (int j = 0; j < hiddenLayerDim; j++) {
-                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYER, i, j, random.nextGaussian() * stdDev);
+                    if (activationType == ActivationType.RELU)
+                    matrices.modify(EmbeddingTypes.SECONDHIDDENLAYER, i, j, random.nextGaussian() * h2ReluInit);
+                    else
+                        matrices.modify(EmbeddingTypes.SECONDHIDDENLAYER, i, j, random.nextGaussian() * stdDev);
                 }
             }
         }
