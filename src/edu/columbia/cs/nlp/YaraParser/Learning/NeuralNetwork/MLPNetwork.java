@@ -309,7 +309,10 @@ public class MLPNetwork implements Serializable {
                 for (int h = 0; h < hidden.length; h++) {
                     secondHidden[i] += secondHiddenLayer[i][h] * hidden[h];
                 }
+            }
+            for (int i = 0; i < secondHidden.length; i++) {
                 secondHidden[i] += secondHiddenLayerBias[i];
+                secondHidden[i] = activation.activate(secondHidden[i]);
             }
         }
 
