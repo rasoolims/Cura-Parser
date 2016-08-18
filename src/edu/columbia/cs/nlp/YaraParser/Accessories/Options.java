@@ -149,8 +149,10 @@ public class Options implements Serializable {
                 options.generalProperties.evaluate = true;
             else if (args[i].equals("parse_tagged"))
                 options.generalProperties.parseTaggedFile = true;
-            else if (args[i].equals("-train-file") || args[i].equals("-input"))
+            else if (args[i].equals("-train-file"))
                 options.trainingOptions.trainFile = args[i + 1];
+            else if (args[i].equals("-input"))
+                options.generalProperties.inputFile = args[i + 1];
             else if (args[i].equals("-punc"))
                 options.changePunc(args[i + 1]);
             else if (args[i].equals("-model"))
