@@ -1,4 +1,4 @@
-package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
+package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers;
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Activation;

@@ -1,7 +1,7 @@
 package edu.columbia.cs.nlp.Tests;
 
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Relu;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layer;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.Layer;
 import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.FixInit;
 import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.Initializer;
 import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.NormalInit;

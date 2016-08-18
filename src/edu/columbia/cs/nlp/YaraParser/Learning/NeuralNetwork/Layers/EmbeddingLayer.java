@@ -1,9 +1,6 @@
-package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
+package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers;
 
-import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Activation;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Identity;
-import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.FixInit;
-import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.Initializer;
 import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.UniformInit;
 
 import java.util.Random;
@@ -18,11 +15,10 @@ import java.util.Random;
 
 public class EmbeddingLayer extends Layer {
     /**
-     *
-     * @param nIn Vocabulary size.
+     * @param nIn  Vocabulary size.
      * @param nOut Embedding dimension.
      */
     public EmbeddingLayer(int nIn, int nOut, Random random) {
-       super(new Identity(), nIn, nOut, new UniformInit(random, nOut), null, false);
+        super(new Identity(), nIn, nOut, new UniformInit(random, nOut), null, false);
     }
 }

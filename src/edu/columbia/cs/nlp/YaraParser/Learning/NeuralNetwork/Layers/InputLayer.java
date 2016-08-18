@@ -1,4 +1,4 @@
-package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
+package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers;
 
 /**
  * Created by Mohammad Sadegh Rasooli.

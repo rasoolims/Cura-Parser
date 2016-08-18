@@ -1,4 +1,4 @@
-package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
+package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -27,11 +27,11 @@ public class WordEmbeddingLayer extends EmbeddingLayer {
         this.precomputationMap = precomputationMap;
     }
 
-    public boolean isFrequent(int index){
+    public boolean isFrequent(int index) {
         return precomputationMap.containsKey(index);
     }
 
-    public int preComputeId(int index){
+    public int preComputeId(int index) {
         return precomputationMap.get(index);
     }
 }
