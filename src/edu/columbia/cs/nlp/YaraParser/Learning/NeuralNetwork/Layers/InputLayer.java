@@ -8,6 +8,7 @@ package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
+import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Activation;
 import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.Initializer;
 
@@ -93,4 +94,47 @@ public class InputLayer extends Layer {
         }
     }
 
+
+    /**
+     * Uses pre-computed maps in order to speed things up.
+     *
+     * @param input
+     * @return
+     */
+    @Override
+    public double[] forward(double[] input) {
+        int offset = 0;
+        double[] hidden = new double[nOut()];
+        for (int j = 0; j < input.length; j++) {
+            int tok = (int) input[j];
+            EmbeddingLayer embedding;
+            if (j < numWordLayers)
+                embedding = wordEmbeddings;
+            else if (j < numWordLayers + numPosLayers)
+                embedding = posEmbeddings;
+            else embedding = depEmbeddings;
+
+            if (saved != null && (j >= numWordLayers || wordEmbeddings.isFrequent(j, tok))) {
+                int id = tok;
+                if (j < numWordLayers)
+                    id = wordEmbeddings.preComputeId(j, tok);
+                double[] s = saved[j][id];
+                for (int i = 0; i < hidden.length; i++) {
+                    hidden[i] += s[i];
+                }
+            } else {
+                for (int i = 0; i < hidden.length; i++) {
+                    for (int k = 0; k < embedding.dim(); k++) {
+                        hidden[i] += w[i][offset + k] * embedding.w(tok, k);
+                    }
+                }
+            }
+            offset += embedding.dim();
+        }
+
+        if (useBias)
+            Utils.sumi(hidden, b);
+
+        return activation.activate(hidden);
+    }
 }
