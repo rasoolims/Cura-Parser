@@ -41,7 +41,7 @@ public class Utils {
      * @param m2
      */
     public static void sumi(double[][] m1, double[][] m2) {
-        if (m1 == null) return;
+        if (m1 == null || m2 == null) return;
         for (int i = 0; i < m1.length; i++) sumi(m1[i], m2[i]);
     }
 
@@ -52,8 +52,13 @@ public class Utils {
      * @param v2
      */
     public static void sumi(double[] v1, double[] v2) {
-        if (v1 == null) return;
+        if (v1 == null || v2 == null) return;
         for (int i = 0; i < v1.length; i++) v1[i] += v2[i];
+    }
+
+    public static void sumi(double[] v1, double[] v2, HashSet<Integer> v1ToUSe) {
+        if (v1 == null || v2 == null) return;
+        for (int i : v1ToUSe) v1[i] += v2[i];
     }
 
     public static boolean equals(double[][] o1, double[][] o2) {
@@ -122,6 +127,31 @@ public class Utils {
         return o;
     }
 
+    public static double[] dot(double[][] x, double[] y, HashSet<Integer> xToUse) {
+        assert x[0].length == y.length;
+
+        double[] o = new double[x.length];
+        for (int i : xToUse) {
+            for (int j = 0; j < y.length; j++) {
+                o[i] += x[i][j] * y[j];
+            }
+        }
+        return o;
+    }
+
+    public static double[] dot(double[][] x, double[] y, HashSet<Integer> xToUse, HashSet<Integer> yToUse) {
+        assert x[0].length == y.length;
+
+        double[] o = new double[x.length];
+        for (int i : xToUse) {
+            for (int j : yToUse) {
+                o[i] += x[i][j] * y[j];
+            }
+        }
+        return o;
+    }
+
+
     public static double[][] dotTranspose(double[] x, double[] y) {
         double[][] o = new double[x.length][y.length];
         for (int i = 0; i < x.length; i++) {
@@ -143,10 +173,22 @@ public class Utils {
     }
 
     public static double[] sum(double[] x, double[] y) {
+        if (y == null) return Utils.clone(x);
         assert x.length == y.length;
 
         double[] o = new double[x.length];
         for (int i = 0; i < o.length; i++) {
+            o[i] = x[i] + y[i];
+        }
+        return o;
+    }
+
+    public static double[] sum(double[] x, double[] y, HashSet<Integer> xToUse) {
+        if (y == null) return Utils.clone(x);
+        assert x.length == y.length;
+
+        double[] o = new double[x.length];
+        for (int i : xToUse) {
             o[i] = x[i] + y[i];
         }
         return o;

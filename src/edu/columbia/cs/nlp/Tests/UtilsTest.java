@@ -3,6 +3,8 @@ package edu.columbia.cs.nlp.Tests;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
 import org.junit.Test;
 
+import java.util.HashSet;
+
 /**
  * Created by Mohammad Sadegh Rasooli.
  * ML-NLP Lab, Department of Computer Science, Columbia University
@@ -22,6 +24,30 @@ public class UtilsTest {
         assert dot[0] == -1;
         assert dot[1] == -4;
         assert dot[2] == -1;
+    }
+
+    @Test
+    public void testDotDropout() {
+        double[][] x = new double[][]{{1, 2}, {3, 7}, {5, 6}};
+        double[] y = new double[]{1, -1};
+        HashSet<Integer> xToUse = new HashSet<>();
+        xToUse.add(0);
+        xToUse.add(2);
+
+        double[] dot = Utils.dot(x, y, xToUse);
+        assert dot.length == x.length;
+        assert dot[0] == -1;
+        assert dot[1] == 0;
+        assert dot[2] == -1;
+
+        HashSet<Integer> yToUse = new HashSet<>();
+        yToUse.add(0);
+
+        dot = Utils.dot(x, y, xToUse, yToUse);
+        assert dot.length == x.length;
+        assert dot[0] == 1;
+        assert dot[1] == 0;
+        assert dot[2] == 5;
     }
 
     @Test
