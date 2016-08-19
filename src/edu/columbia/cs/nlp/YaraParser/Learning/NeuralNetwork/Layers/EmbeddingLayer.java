@@ -27,6 +27,10 @@ public class EmbeddingLayer extends Layer {
         return nIn();
     }
 
+    public double[] w(int index){
+        return w[index];
+    }
+
     public void addPretrainedVectors(HashMap<Integer, double[]> embeddingsDictionary) {
         int numOfPretrained = 0;
         for (int i = 0; i < nOut(); i++) {
