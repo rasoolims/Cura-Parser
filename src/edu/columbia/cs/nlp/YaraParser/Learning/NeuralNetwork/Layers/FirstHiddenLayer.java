@@ -18,7 +18,7 @@ import java.util.Random;
 /**
  * This class shows the first hidden layer layer which its input is a concatenation of different embedding layer.
  */
-public class InputLayer extends Layer {
+public class FirstHiddenLayer extends Layer {
     WordEmbeddingLayer wordEmbeddings;
     EmbeddingLayer posEmbeddings;
     EmbeddingLayer depEmbeddings;
@@ -29,12 +29,12 @@ public class InputLayer extends Layer {
     // pre-computed items.
     private double[][][] saved;
 
-    public InputLayer(Activation activation, int nIn, int nOut, Initializer initializer,
-                      int numWordLayers, int numPosLayers, int numDepLayers,
-                      Random random, HashMap<Integer, Integer>[] precomputationMap,
-                      int numW, int numPos, int numDep,
-                      int wDim, int posDim, int depDim,
-                      HashMap<Integer, double[]> embeddingsDictionary) {
+    public FirstHiddenLayer(Activation activation, int nIn, int nOut, Initializer initializer,
+                            int numWordLayers, int numPosLayers, int numDepLayers,
+                            Random random, HashMap<Integer, Integer>[] precomputationMap,
+                            int numW, int numPos, int numDep,
+                            int wDim, int posDim, int depDim,
+                            HashMap<Integer, double[]> embeddingsDictionary) {
         super(activation, nIn, nOut, initializer);
         assert wordEmbeddings.numOfEmbeddingSlot() == numWordLayers;
         this.wordEmbeddings = new WordEmbeddingLayer(numW, wDim, random, precomputationMap);
