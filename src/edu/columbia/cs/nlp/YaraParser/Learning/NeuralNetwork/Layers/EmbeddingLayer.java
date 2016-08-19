@@ -3,6 +3,7 @@ package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Identity;
 import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.UniformInit;
 
+import java.util.HashMap;
 import java.util.Random;
 
 /**
@@ -20,5 +21,21 @@ public class EmbeddingLayer extends Layer {
      */
     public EmbeddingLayer(int nIn, int nOut, Random random) {
         super(new Identity(), nIn, nOut, new UniformInit(random, nOut), null, false);
+    }
+
+    public int dim() {
+        return nIn();
+    }
+
+    public void addPretrainedVectors(HashMap<Integer, double[]> embeddingsDictionary) {
+        int numOfPretrained = 0;
+        for (int i = 0; i < nOut(); i++) {
+            double[] embeddings = embeddingsDictionary.get(i);
+            if (embeddings != null) {
+                w[i] = embeddings;
+                numOfPretrained++;
+            }
+        }
+        System.out.println("num of pre-trained embedding " + numOfPretrained + " out of " + nOut());
     }
 }

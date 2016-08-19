@@ -13,11 +13,11 @@ import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.Initializer;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 public class Layer {
-    Activation activation;
+    protected Activation activation;
 
-    double[][] w;
-    double[] b;
-    boolean useBias;
+    protected double[][] w;
+    protected double[] b;
+    protected boolean useBias;
 
     public Layer(Activation activation, int nIn, int nOut, Initializer initializer) {
         this(activation, nIn, nOut, initializer, new FixInit(0));
@@ -75,5 +75,21 @@ public class Layer {
 
     public final double[] getB() {
         return b;
+    }
+
+    public int nOut() {
+        return w.length;
+    }
+
+    public int nIn() {
+        return w[0].length;
+    }
+
+    public double w(int i, int j) {
+        return w[i][j];
+    }
+
+    public double b(int i) {
+        return b[i];
     }
 }

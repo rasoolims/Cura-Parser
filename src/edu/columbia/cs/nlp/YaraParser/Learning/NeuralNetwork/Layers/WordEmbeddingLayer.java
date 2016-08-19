@@ -2,6 +2,7 @@ package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers;
 
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -35,7 +36,15 @@ public class WordEmbeddingLayer extends EmbeddingLayer {
         return precomputationMap[index].get(wordId);
     }
 
-    public int numOfEmbeddingSlot(){
+    public int numOfEmbeddingSlot() {
         return precomputationMap.length;
+    }
+
+    public int numOfPrecomputedItems(int index) {
+        return precomputationMap[index].size();
+    }
+
+    public Set<Integer> preComputedIds(int index) {
+        return precomputationMap[index].keySet();
     }
 }
