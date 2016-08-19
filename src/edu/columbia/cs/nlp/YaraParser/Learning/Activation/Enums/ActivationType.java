@@ -10,5 +10,7 @@ package edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums;
 
 public enum ActivationType {
     RELU,
-    CUBIC
+    CUBIC,
+    IDENTITY,
+    SOFTMAX
 }
