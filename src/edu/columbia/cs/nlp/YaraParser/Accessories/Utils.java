@@ -61,6 +61,16 @@ public class Utils {
         for (int i : v1ToUSe) v1[i] += v2[i];
     }
 
+    public static int argmax(double[] o) {
+        int argmax = 0;
+        for (int i = 1; i < o.length; i++) {
+            if (o[i] > o[argmax])
+                argmax = i;
+        }
+        return argmax;
+    }
+
+
     public static boolean equals(double[][] o1, double[][] o2) {
         if (o1.length != o2.length)
             return false;
@@ -127,6 +137,33 @@ public class Utils {
         return o;
     }
 
+    public static void avgMatrices(double[][] m, double[][] toAvgM, double r1, double r2) {
+        if (m == null) return;
+        for (int i = 0; i < m.length; i++) {
+            avgVectors(m[i], toAvgM[i], r1, r2);
+        }
+    }
+
+    public static void avgVectors(double[] v1, double[] toAvgV, double r1, double r2) {
+        if (v1 == null) return;
+        for (int j = 0; j < v1.length; j++) {
+            toAvgV[j] = r1 * v1[j] + r2 * toAvgV[j];
+        }
+    }
+
+    public static double[] dot4Output(double[][] x, double[] y, double[] labels) {
+        assert x[0].length == y.length;
+
+        double[] o = new double[x.length];
+        for (int i = 0; i < o.length; i++) {
+            for (int j = 0; j < y.length; j++) {
+                if (labels[i] >= 0)
+                    o[i] += x[i][j] * y[j];
+            }
+        }
+        return o;
+    }
+
     public static double[] dot(double[][] x, double[] y, HashSet<Integer> xToUse) {
         assert x[0].length == y.length;
 
@@ -181,6 +218,32 @@ public class Utils {
             o[i] = x[i] + y[i];
         }
         return o;
+    }
+
+    public static double[] sum4Output(double[] x, double[] y, double[] labels) {
+        if (y == null) return x;
+        assert x.length == y.length;
+
+        double[] o = new double[x.length];
+        for (int i = 0; i < o.length; i++) {
+            if (labels[i] >= 0)
+                o[i] = x[i] + y[i];
+        }
+        return o;
+    }
+
+    public static  boolean allZero(double[] x){
+        if(x==null) return true;
+        for(double v:x)
+            if (v!=0.0) return false;
+        return true;
+    }
+
+    public static  boolean allZero(double[][] x){
+        if(x==null) return true;
+        for(double[] v:x)
+            if (!allZero(v)) return false;
+        return true;
     }
 
     public static double[] sum(double[] x, double[] y, HashSet<Integer> xToUse) {
