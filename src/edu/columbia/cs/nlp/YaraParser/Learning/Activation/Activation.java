@@ -22,6 +22,18 @@ public abstract class Activation implements Serializable {
         return a;
     }
 
+    /**
+     * Should be usually used for output layers.
+     *
+     * @param values
+     * @param labels  <0 not allowed, 1 gold, >=0 allowed.
+     * @param takeLog if to take log of the output.
+     * @return
+     */
+    public double[] activate(double[] values, double[] labels, boolean takeLog) {
+        return activate(values);
+    }
+
     public abstract double gradient(double value, double gradient);
 
     public double[] gradient(double[] values, double[] gradients) {
