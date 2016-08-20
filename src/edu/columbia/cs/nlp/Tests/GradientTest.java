@@ -125,64 +125,68 @@ public class GradientTest {
 
     @Test
     public void TestWordEmbeddingGradients() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            Options options = new Options();
-            options.networkProperties.activationType = type;
-            options.networkProperties.hiddenLayer1Size = 10;
-            options.trainingOptions.trainFile = txtFilePath;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                    .generalProperties.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                    .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                Options options = new Options();
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
 
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
 
-            classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
 
-            double eps = 0.000001;
-            for (int i = 0; i < network.getNumWordLayers(); i++) {
-                for (int slot = 0; slot < network.getwDim(); slot++) {
-                    int tok = (int) instances.get(0).getFeatures()[i];
-                    double gradForTok = gradients.getWordEmbedding()[tok][slot] / instances.size();
+                double eps = 0.000001;
+                for (int i = 0; i < network.getNumWordLayers(); i++) {
+                    for (int slot = 0; slot < network.getwDim(); slot++) {
+                        int tok = (int) instances.get(0).getFeatures()[i];
+                        double gradForTok = gradients.getWordEmbedding()[tok][slot] / instances.size();
 
-                    MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork, EmbeddingTypes.WORD, tok, slot, eps);
-                    plusNetwork.preCompute();
-                    MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork, EmbeddingTypes.WORD, tok, slot, -eps);
-                    negNetwork.preCompute();
-                    double diff = 0;
+                        MLPNetwork plusNetwork = network.clone();
+                        purturb(plusNetwork, EmbeddingTypes.WORD, tok, slot, eps);
+                        plusNetwork.preCompute();
+                        MLPNetwork negNetwork = network.clone();
+                        purturb(negNetwork, EmbeddingTypes.WORD, tok, slot, -eps);
+                        negNetwork.preCompute();
+                        double diff = 0;
 
-                    for (NeuralTrainingInstance instance : instances) {
-                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                        for (NeuralTrainingInstance instance : instances) {
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
 
-                        int goldLabel = instance.gold();
-                        diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                            int goldLabel = instance.gold();
+                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                        }
+                        diff /= (2 * eps * instances.size());
+
+                        System.out.println(gradForTok + "\t" + diff);
+                        assert Math.abs(gradForTok - diff) <= 0.0000001;
                     }
-                    diff /= (2 * eps * instances.size());
-
-                    System.out.println(gradForTok + "\t" + diff);
-                    assert Math.abs(gradForTok - diff) <= 0.0000001;
                 }
             }
         }
@@ -190,64 +194,68 @@ public class GradientTest {
 
     @Test
     public void TestPretrainedWordEmbeddingGradients() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            writeWordEmbedText();
-            Options options = new Options();
-            options.trainingOptions.wordEmbeddingFile = embedFilePath;
-            options.networkProperties.activationType = type;
-            options.networkProperties.hiddenLayer1Size = 10;
-            options.trainingOptions.trainFile = txtFilePath;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                    .generalProperties.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                    .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
-            classifier.calculateCost(instances, 1, gradients, savedGradients);
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
 
-            double eps = 0.000001;
-            for (int i = 0; i < network.getNumWordLayers(); i++) {
-                for (int slot = 0; slot < network.getwDim(); slot++) {
-                    int tok = (int) instances.get(0).getFeatures()[i];
-                    double gradForTok = gradients.getWordEmbedding()[tok][slot] / instances.size();
+                double eps = 0.000001;
+                for (int i = 0; i < network.getNumWordLayers(); i++) {
+                    for (int slot = 0; slot < network.getwDim(); slot++) {
+                        int tok = (int) instances.get(0).getFeatures()[i];
+                        double gradForTok = gradients.getWordEmbedding()[tok][slot] / instances.size();
 
-                    MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork, EmbeddingTypes.WORD, tok, slot, eps);
-                    plusNetwork.preCompute();
-                    MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork, EmbeddingTypes.WORD, tok, slot, -eps);
-                    negNetwork.preCompute();
-                    double diff = 0;
+                        MLPNetwork plusNetwork = network.clone();
+                        purturb(plusNetwork, EmbeddingTypes.WORD, tok, slot, eps);
+                        plusNetwork.preCompute();
+                        MLPNetwork negNetwork = network.clone();
+                        purturb(negNetwork, EmbeddingTypes.WORD, tok, slot, -eps);
+                        negNetwork.preCompute();
+                        double diff = 0;
 
-                    for (NeuralTrainingInstance instance : instances) {
-                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                        for (NeuralTrainingInstance instance : instances) {
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
 
-                        int goldLabel = instance.gold();
-                        diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                            int goldLabel = instance.gold();
+                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                        }
+                        diff /= (2 * eps * instances.size());
+
+                        System.out.println(gradForTok + "\t" + diff);
+                        assert Math.abs(gradForTok - diff) <= 0.0000001;
                     }
-                    diff /= (2 * eps * instances.size());
-
-                    System.out.println(gradForTok + "\t" + diff);
-                    assert Math.abs(gradForTok - diff) <= 0.0000001;
                 }
             }
         }
@@ -255,160 +263,176 @@ public class GradientTest {
 
     @Test
     public void TestWordEmbeddingUpdates() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            Options options = new Options();
-            options.networkProperties.activationType = type;
-            options.networkProperties.hiddenLayer1Size = 10;
-            options.trainingOptions.trainFile = txtFilePath;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                    .generalProperties.lowercase, "", 1);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                    .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
-            classifier.calculateCost(instances, 1, gradients, savedGradients);
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 1);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
 
-            double[] oovEmbedding = Utils.clone(network.getWordEmbedding()[0]);
-            double[] nullEmbedding = Utils.clone(network.getWordEmbedding()[1]);
-            double[] rootEmbedding = Utils.clone(network.getWordEmbedding()[2]);
-            double[] simpleWordEmbedding = Utils.clone(network.getWordEmbedding()[3]);
-            for (int i = 0; i < 3; i++) {
-                classifier.fit(instances, i, true);
+                double[] oovEmbedding = Utils.clone(network.getWordEmbedding()[0]);
+                double[] nullEmbedding = Utils.clone(network.getWordEmbedding()[1]);
+                double[] rootEmbedding = Utils.clone(network.getWordEmbedding()[2]);
+                double[] simpleWordEmbedding = Utils.clone(network.getWordEmbedding()[3]);
+                for (int i = 0; i < 3; i++) {
+                    classifier.fit(instances, i, true);
+                }
+
+                assert !Utils.equals(network.getWordEmbedding()[0], oovEmbedding);
+                assert !Utils.equals(network.getWordEmbedding()[1], nullEmbedding);
+                assert !Utils.equals(network.getWordEmbedding()[2], rootEmbedding);
+                assert !Utils.equals(network.getWordEmbedding()[3], simpleWordEmbedding);
             }
-
-            assert !Utils.equals(network.getWordEmbedding()[0], oovEmbedding);
-            assert !Utils.equals(network.getWordEmbedding()[1], nullEmbedding);
-            assert !Utils.equals(network.getWordEmbedding()[2], rootEmbedding);
-            assert !Utils.equals(network.getWordEmbedding()[3], simpleWordEmbedding);
         }
     }
 
     @Test
     public void TestPretrainedtWordEmbeddingUpdates() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            writeWordEmbedText();
-            Options options = new Options();
-            options.trainingOptions.wordEmbeddingFile = embedFilePath;
-            options.networkProperties.activationType = type;
-            options.networkProperties.hiddenLayer1Size = 10;
-            options.trainingOptions.trainFile = txtFilePath;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                    .generalProperties.lowercase, "", 1);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                    .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
-            classifier.calculateCost(instances, 1, gradients, savedGradients);
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 1);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
 
-            double[] oovEmbedding = Utils.clone(network.getWordEmbedding()[0]);
-            double[] nullEmbedding = Utils.clone(network.getWordEmbedding()[1]);
-            double[] rootEmbedding = Utils.clone(network.getWordEmbedding()[2]);
-            double[] simpleWordEmbedding = Utils.clone(network.getWordEmbedding()[3]);
-            for (int i = 0; i < 3; i++) {
-                classifier.fit(instances, i, true);
+                double[] oovEmbedding = Utils.clone(network.getWordEmbedding()[0]);
+                double[] nullEmbedding = Utils.clone(network.getWordEmbedding()[1]);
+                double[] rootEmbedding = Utils.clone(network.getWordEmbedding()[2]);
+                double[] simpleWordEmbedding = Utils.clone(network.getWordEmbedding()[3]);
+                for (int i = 0; i < 3; i++) {
+                    classifier.fit(instances, i, true);
+                }
+
+                assert !Utils.equals(network.getWordEmbedding()[0], oovEmbedding);
+                assert !Utils.equals(network.getWordEmbedding()[1], nullEmbedding);
+                assert !Utils.equals(network.getWordEmbedding()[2], rootEmbedding);
+                assert !Utils.equals(network.getWordEmbedding()[3], simpleWordEmbedding);
             }
-
-            assert !Utils.equals(network.getWordEmbedding()[0], oovEmbedding);
-            assert !Utils.equals(network.getWordEmbedding()[1], nullEmbedding);
-            assert !Utils.equals(network.getWordEmbedding()[2], rootEmbedding);
-            assert !Utils.equals(network.getWordEmbedding()[3], simpleWordEmbedding);
         }
     }
 
     @Test
     public void TestPOSEmbeddingGradients() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            Options options = new Options();
-            options.networkProperties.activationType = type;
-            options.networkProperties.hiddenLayer1Size = 10;
-            options.trainingOptions.trainFile = txtFilePath;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                    .generalProperties.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                    .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
-            classifier.calculateCost(instances, 1, gradients, savedGradients);
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
 
-            double eps = 0.000001;
-            for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++) {
-                for (int slot = 0; slot < network.getpDim(); slot++) {
-                    int tok = (int) instances.get(0).getFeatures()[i];
-                    double gradForTok = gradients.getPosEmbedding()[tok][slot] / instances.size();
+                double eps = 0.000001;
+                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++) {
+                    for (int slot = 0; slot < network.getpDim(); slot++) {
+                        int tok = (int) instances.get(0).getFeatures()[i];
+                        double gradForTok = gradients.getPosEmbedding()[tok][slot] / instances.size();
 
-                    MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork, EmbeddingTypes.POS, tok, slot, eps);
-                    plusNetwork.preCompute();
-                    MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork, EmbeddingTypes.POS, tok, slot, -eps);
-                    negNetwork.preCompute();
-                    double diff = 0;
+                        MLPNetwork plusNetwork = network.clone();
+                        purturb(plusNetwork, EmbeddingTypes.POS, tok, slot, eps);
+                        plusNetwork.preCompute();
+                        MLPNetwork negNetwork = network.clone();
+                        purturb(negNetwork, EmbeddingTypes.POS, tok, slot, -eps);
+                        negNetwork.preCompute();
+                        double diff = 0;
 
-                    for (NeuralTrainingInstance instance : instances) {
-                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                        for (NeuralTrainingInstance instance : instances) {
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
 
-                        int goldLabel = instance.gold();
-                        diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                            int goldLabel = instance.gold();
+                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                        }
+                        diff /= (2 * eps * instances.size());
+
+                        System.out.println(gradForTok + "\t" + diff);
+                        assert Math.abs(gradForTok - diff) <= 0.0000001;
                     }
-                    diff /= (2 * eps * instances.size());
-
-                    System.out.println(gradForTok + "\t" + diff);
-                    assert Math.abs(gradForTok - diff) <= 0.0000001;
                 }
             }
         }
@@ -416,63 +440,69 @@ public class GradientTest {
 
     @Test
     public void TestLabelEmbeddingGradients() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            Options options = new Options();
-            options.networkProperties.activationType = type;
-            options.networkProperties.hiddenLayer1Size = 10;
-            options.trainingOptions.trainFile = txtFilePath;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                    .generalProperties.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                    .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
-            classifier.calculateCost(instances, 1, gradients, savedGradients);
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
 
-            double eps = 0.000001;
-            for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                 i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++) {
-                for (int slot = 0; slot < network.getDepDim(); slot++) {
-                    int tok = (int) instances.get(0).getFeatures()[i];
-                    double gradForTok = gradients.getDepEmbedding()[tok][slot] / instances.size();
+                double eps = 0.000001;
+                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++) {
+                    for (int slot = 0; slot < network.getDepDim(); slot++) {
+                        int tok = (int) instances.get(0).getFeatures()[i];
+                        double gradForTok = gradients.getDepEmbedding()[tok][slot] / instances.size();
 
-                    MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork, EmbeddingTypes.DEPENDENCY, tok, slot, eps);
-                    plusNetwork.preCompute();
-                    MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork, EmbeddingTypes.DEPENDENCY, tok, slot, -eps);
-                    negNetwork.preCompute();
-                    double diff = 0;
+                        MLPNetwork plusNetwork = network.clone();
+                        purturb(plusNetwork, EmbeddingTypes.DEPENDENCY, tok, slot, eps);
+                        plusNetwork.preCompute();
+                        MLPNetwork negNetwork = network.clone();
+                        purturb(negNetwork, EmbeddingTypes.DEPENDENCY, tok, slot, -eps);
+                        negNetwork.preCompute();
+                        double diff = 0;
 
-                    for (NeuralTrainingInstance instance : instances) {
-                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                        for (NeuralTrainingInstance instance : instances) {
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
 
-                        int goldLabel = instance.gold();
-                        diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                            int goldLabel = instance.gold();
+                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                        }
+                        diff /= (2 * eps * instances.size());
+
+                        System.out.println(type + "\t" + gradForTok + "\t" + diff);
+                        assert Math.abs(gradForTok - diff) <= 0.0000001;
                     }
-                    diff /= (2 * eps * instances.size());
-
-                    System.out.println(type + "\t" + gradForTok + "\t" + diff);
-                    assert Math.abs(gradForTok - diff) <= 0.0000001;
                 }
             }
         }
@@ -480,48 +510,121 @@ public class GradientTest {
 
     @Test
     public void TestHiddenLayerGradients() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            Options options = new Options();
-            options.networkProperties.activationType = type;
-            options.trainingOptions.trainFile = txtFilePath;
-            options.networkProperties.hiddenLayer1Size = 10;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                    .generalProperties.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                    .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
-            classifier.calculateCost(instances, 1, gradients, savedGradients);
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
 
-            double eps = 0.000001;
-            for (int i = 0; i < network.layer(0).nOut(); i++) {
-                for (int slot = 0; slot < network.layer(0).nIn(); slot++) {
+                double eps = 0.000001;
+                for (int i = 0; i < network.layer(0).nOut(); i++) {
+                    for (int slot = 0; slot < network.layer(0).nIn(); slot++) {
+                        int tok = i;
+                        double gradForTok = gradients.layer(0).getW()[tok][slot] / instances.size();
+
+                        MLPNetwork plusNetwork = network.clone();
+                        purturb(plusNetwork, EmbeddingTypes.HIDDENLAYER, tok, slot, eps);
+                        plusNetwork.preCompute();
+                        MLPNetwork negNetwork = network.clone();
+                        purturb(negNetwork, EmbeddingTypes.HIDDENLAYER, tok, slot, -eps);
+                        negNetwork.preCompute();
+                        double diff = 0;
+
+                        for (NeuralTrainingInstance instance : instances) {
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                            int goldLabel = instance.gold();
+                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                        }
+                        diff /= (2 * eps * instances.size());
+
+                        System.out.println(gradForTok + "\t" + diff);
+                        assert Math.abs(gradForTok - diff) <= 0.0000001;
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    public void TestHiddenLayerBiasGradients() throws Exception {
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                double eps = 0.000001;
+                for (int i = 0; i < network.layer(0).nOut(); i++) {
                     int tok = i;
-                    double gradForTok = gradients.layer(0).getW()[tok][slot] / instances.size();
+                    double gradForTok = gradients.layer(0).getB()[tok] / instances.size();
 
                     MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork, EmbeddingTypes.HIDDENLAYER, tok, slot, eps);
+                    purturb(plusNetwork, EmbeddingTypes.HIDDENLAYERBIAS, tok, -1, eps);
                     plusNetwork.preCompute();
                     MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork, EmbeddingTypes.HIDDENLAYER, tok, slot, -eps);
+                    purturb(negNetwork, EmbeddingTypes.HIDDENLAYERBIAS, tok, -1, -eps);
                     negNetwork.preCompute();
                     double diff = 0;
 
@@ -542,112 +645,126 @@ public class GradientTest {
     }
 
     @Test
-    public void TestHiddenLayerBiasGradients() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            Options options = new Options();
-            options.networkProperties.activationType = type;
-            options.trainingOptions.trainFile = txtFilePath;
-            options.networkProperties.hiddenLayer1Size = 10;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                    .generalProperties.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                    .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
-            classifier.calculateCost(instances, 1, gradients, savedGradients);
+    public void TestSoftmaxLayerGradients() throws Exception {
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
 
-            double eps = 0.000001;
-            for (int i = 0; i < network.layer(0).nOut(); i++) {
-                int tok = i;
-                double gradForTok = gradients.layer(0).getB()[tok] / instances.size();
+                double eps = 0.000001;
+                for (int i = 0; i < network.getNumOutputs(); i++) {
+                    for (int slot = 0; slot < network.layer(network.numLayers() - 1).nIn(); slot++) {
+                        int tok = i;
+                        double gradForTok = gradients.layer(gradients.numLayers() - 1).getW()[tok][slot] / instances.size();
 
-                MLPNetwork plusNetwork = network.clone();
-                purturb(plusNetwork, EmbeddingTypes.HIDDENLAYERBIAS, tok, -1, eps);
-                plusNetwork.preCompute();
-                MLPNetwork negNetwork = network.clone();
-                purturb(negNetwork, EmbeddingTypes.HIDDENLAYERBIAS, tok, -1, -eps);
-                negNetwork.preCompute();
-                double diff = 0;
+                        MLPNetwork plusNetwork = network.clone();
+                        purturb(plusNetwork, EmbeddingTypes.SOFTMAX, tok, slot, eps);
 
-                for (NeuralTrainingInstance instance : instances) {
-                    double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                    double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                        plusNetwork.preCompute();
+                        MLPNetwork negNetwork = network.clone();
+                        purturb(negNetwork, EmbeddingTypes.SOFTMAX, tok, slot, -eps);
+                        plusNetwork.preCompute();
+                        double diff = 0;
 
-                    int goldLabel = instance.gold();
-                    diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                        for (NeuralTrainingInstance instance : instances) {
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                            int goldLabel = instance.gold();
+                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                        }
+                        diff /= (2 * eps * instances.size());
+
+                        System.out.println(gradForTok + "\t" + diff);
+                        assert Math.abs(gradForTok - diff) <= 0.0000001;
+                    }
                 }
-                diff /= (2 * eps * instances.size());
-
-                System.out.println(gradForTok + "\t" + diff);
-                assert Math.abs(gradForTok - diff) <= 0.0000001;
             }
         }
     }
 
     @Test
-    public void TestSoftmaxLayerGradients() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            Options options = new Options();
-            options.networkProperties.activationType = type;
-            options.trainingOptions.trainFile = txtFilePath;
-            options.networkProperties.hiddenLayer1Size = 10;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                    .generalProperties.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                    .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
-            classifier.calculateCost(instances, 1, gradients, savedGradients);
+    public void TestSoftmaxLayerBiasGradients() throws Exception {
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.networkProperties.outputBiasTerm = true;
+                options.networkProperties.outputBiasTerm = true;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
 
-            double eps = 0.000001;
-            for (int i = 0; i < network.getNumOutputs(); i++) {
-                for (int slot = 0; slot < network.layer(network.numLayers() - 1).nIn(); slot++) {
+                double eps = 0.000001;
+                for (int i = 0; i < network.getNumOutputs(); i++) {
                     int tok = i;
-                    double gradForTok = gradients.layer(gradients.numLayers() - 1).getW()[tok][slot] / instances.size();
+                    double gradForTok = gradients.layer(gradients.numLayers() - 1).getB()[tok] / instances.size();
 
                     MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork, EmbeddingTypes.SOFTMAX, tok, slot, eps);
-
+                    purturb(plusNetwork, EmbeddingTypes.SOFTMAXBIAS, tok, -1, eps);
                     plusNetwork.preCompute();
                     MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork, EmbeddingTypes.SOFTMAX, tok, slot, -eps);
-                    plusNetwork.preCompute();
+                    purturb(negNetwork, EmbeddingTypes.SOFTMAXBIAS, tok, -1, -eps);
+                    negNetwork.preCompute();
                     double diff = 0;
 
                     for (NeuralTrainingInstance instance : instances) {
@@ -667,130 +784,74 @@ public class GradientTest {
     }
 
     @Test
-    public void TestSoftmaxLayerBiasGradients() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            Options options = new Options();
-            options.networkProperties.activationType = type;
-            options.trainingOptions.trainFile = txtFilePath;
-            options.networkProperties.hiddenLayer1Size = 10;
-            options.networkProperties.outputBiasTerm = true;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                    .generalProperties.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                    .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
-            classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-            double eps = 0.000001;
-            for (int i = 0; i < network.getNumOutputs(); i++) {
-                int tok = i;
-                double gradForTok = gradients.layer(gradients.numLayers() - 1).getB()[tok] / instances.size();
-
-                MLPNetwork plusNetwork = network.clone();
-                purturb(plusNetwork, EmbeddingTypes.SOFTMAXBIAS, tok, -1, eps);
-                plusNetwork.preCompute();
-                MLPNetwork negNetwork = network.clone();
-                purturb(negNetwork, EmbeddingTypes.SOFTMAXBIAS, tok, -1, -eps);
-                negNetwork.preCompute();
-                double diff = 0;
-
-                for (NeuralTrainingInstance instance : instances) {
-                    double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                    double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                    int goldLabel = instance.gold();
-                    diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                }
-                diff /= (2 * eps * instances.size());
-
-                System.out.println(gradForTok + "\t" + diff);
-                assert Math.abs(gradForTok - diff) <= 0.0000001;
-            }
-        }
-    }
-
-    @Test
     public void TestMultiThreadGradients() throws Exception {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            Options options = new Options();
-            options.networkProperties.activationType = type;
-            options.trainingOptions.trainFile = txtFilePath;
-            options.networkProperties.hiddenLayer1Size = 10;
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled,
-                    options.generalProperties.lowercase, "", 0);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
-                    options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-            // to make sure that RELU can be really effective.
-            Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
-            normalInit.init(network.layer(0).getB());
-            double[][][] savedGradients = network.instantiateSavedGradients();
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
-            MLPNetwork gradients = network.clone(true, false);
-            classifier.calculateCost(instances, instances.size(), gradients, savedGradients);
-            MLPTrainer classifierMultiThread = new MLPTrainer(network, options);
-            classifierMultiThread.cost(instances);
+        int[] h2Sizes = new int[]{0, 5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled,
+                        options.generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
+                        options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(0).nOut());
+                normalInit.init(network.layer(0).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, instances.size(), gradients, savedGradients);
+                MLPTrainer classifierMultiThread = new MLPTrainer(network, options);
+                classifierMultiThread.cost(instances);
 
-            final ArrayList<Layer> gradientsMultiThread = classifierMultiThread.getGradients();
-            double eps = 1e-15;
+                final ArrayList<Layer> gradientsMultiThread = classifierMultiThread.getGradients();
+                double eps = 1e-15;
 
-            ArrayList<Layer> allMatrices1 = gradients.getLayers();
-            ArrayList<Layer> allMatrices2 = gradientsMultiThread;
+                ArrayList<Layer> allMatrices1 = gradients.getLayers();
+                ArrayList<Layer> allMatrices2 = gradientsMultiThread;
 
-            for (int i = 0; i < allMatrices1.size(); i++) {
-                double[][] m1 = allMatrices1.get(i).getW();
-                double[][] m2 = allMatrices2.get(i).getW();
-                if (m1 == null) continue;
+                for (int i = 0; i < allMatrices1.size(); i++) {
+                    double[][] m1 = allMatrices1.get(i).getW();
+                    double[][] m2 = allMatrices2.get(i).getW();
+                    if (m1 == null) continue;
 
-                for (int j = 0; j < m1.length; j++)
-                    for (int h = 0; h < m1[j].length; h++) {
-                        if (Math.abs(m1[j][h] - m2[j][h]) > eps)
-                            System.out.println(i + "\t" + j + "\t" + h + "\t" + m1[j][h] + "\t" + m2[j][h]);
-                        assert Math.abs(m1[j][h] - m2[j][h]) <= eps;
+                    for (int j = 0; j < m1.length; j++)
+                        for (int h = 0; h < m1[j].length; h++) {
+                            if (Math.abs(m1[j][h] - m2[j][h]) > eps)
+                                System.out.println(i + "\t" + j + "\t" + h + "\t" + m1[j][h] + "\t" + m2[j][h]);
+                            assert Math.abs(m1[j][h] - m2[j][h]) <= eps;
+                        }
+                }
+
+                for (int i = 0; i < allMatrices1.size(); i++) {
+                    double[] v1 = allMatrices1.get(i).getB();
+                    double[] v2 = allMatrices2.get(i).getB();
+                    if (v1 == null) continue;
+
+                    for (int j = 0; j < v1.length; j++) {
+                        if (Math.abs(v1[j] - v2[j]) > eps)
+                            System.out.println(i + "\t" + j + "\t" + v1[j] + "\t" + v2[j]);
+                        assert Math.abs(v1[j] - v2[j]) <= eps;
                     }
-            }
-
-            for (int i = 0; i < allMatrices1.size(); i++) {
-                double[] v1 = allMatrices1.get(i).getB();
-                double[] v2 = allMatrices2.get(i).getB();
-                if (v1 == null) continue;
-
-                for (int j = 0; j < v1.length; j++) {
-                    if (Math.abs(v1[j] - v2[j]) > eps)
-                        System.out.println(i + "\t" + j + "\t" + v1[j] + "\t" + v2[j]);
-                    assert Math.abs(v1[j] - v2[j]) <= eps;
                 }
             }
         }
