@@ -334,7 +334,7 @@ public class MLPTrainer {
 
             // backwarding to all other layers.
             for (int i = net.numLayers() - 2; i >= 0; i--) {
-                delta = g.layer(i).backward(delta, i, zs.get(i + 1), zs.get(i), featuresSeen, savedGradients, net);
+                delta = g.layer(i).backward(delta, i, zs.get(i + 1), activations.get(i), featuresSeen, savedGradients, net);
             }
         }
 

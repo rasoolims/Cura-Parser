@@ -645,6 +645,143 @@ public class GradientTest {
     }
 
     @Test
+    public void TestSecondHiddenLayerGradients() throws Exception {
+        int[] h2Sizes = new int[]{5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(1).nOut());
+                normalInit.init(network.layer(1).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                double eps = 0.000001;
+                for (int i = 0; i < network.layer(1).nOut(); i++) {
+                    for (int slot = 0; slot < network.layer(1).nIn(); slot++) {
+                        int tok = i;
+                        double gradForTok = gradients.layer(1).getW()[tok][slot] / instances.size();
+
+                        MLPNetwork plusNetwork = network.clone();
+                        purturb(plusNetwork, EmbeddingTypes.SECONDHIDDENLAYER, tok, slot, eps);
+                        plusNetwork.preCompute();
+                        MLPNetwork negNetwork = network.clone();
+                        purturb(negNetwork, EmbeddingTypes.SECONDHIDDENLAYER, tok, slot, -eps);
+                        negNetwork.preCompute();
+                        double diff = 0;
+
+                        for (NeuralTrainingInstance instance : instances) {
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                            int goldLabel = instance.gold();
+                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                        }
+                        diff /= (2 * eps * instances.size());
+
+                        System.out.println(gradForTok + "\t" + diff);
+                        assert Math.abs(gradForTok - diff) <= 0.0000001;
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    public void TestSecondHiddenLayerBiasGradients() throws Exception {
+        int[] h2Sizes = new int[]{5, 10, 15};
+        for (int h2Size : h2Sizes) {
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.networkProperties.hiddenLayer2Size = h2Size;
+                options.trainingOptions.trainFile = txtFilePath;
+                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                        .generalProperties.lowercase, "", 0);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+                // to make sure that RELU can be really effective.
+                Initializer normalInit = new NormalInit(new Random(), network.layer(1).nOut());
+                normalInit.init(network.layer(1).getB());
+                double[][][] savedGradients = network.instantiateSavedGradients();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
+                MLPNetwork gradients = network.clone(true, false);
+                classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                double eps = 0.000001;
+                for (int i = 0; i < network.layer(1).nOut(); i++) {
+                    int tok = i;
+                    double gradForTok = gradients.layer(1).getB()[tok] / instances.size();
+
+                    MLPNetwork plusNetwork = network.clone();
+                    purturb(plusNetwork, EmbeddingTypes.SECONDHIDDENLAYERBIAS, tok, -1, eps);
+                    plusNetwork.preCompute();
+                    MLPNetwork negNetwork = network.clone();
+                    purturb(negNetwork, EmbeddingTypes.SECONDHIDDENLAYERBIAS, tok, -1, -eps);
+                    negNetwork.preCompute();
+                    double diff = 0;
+
+                    for (NeuralTrainingInstance instance : instances) {
+                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                        int goldLabel = instance.gold();
+                        diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                    }
+                    diff /= (2 * eps * instances.size());
+
+                    System.out.println(gradForTok + "\t" + diff);
+                    assert Math.abs(gradForTok - diff) <= 0.0000001;
+                }
+            }
+        }
+    }
+
+
+    @Test
     public void TestSoftmaxLayerGradients() throws Exception {
         int[] h2Sizes = new int[]{0, 5, 10, 15};
         for (int h2Size : h2Sizes) {
