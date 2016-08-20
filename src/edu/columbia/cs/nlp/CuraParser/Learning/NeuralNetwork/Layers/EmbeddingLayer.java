@@ -38,7 +38,7 @@ public class EmbeddingLayer extends Layer {
     public void addPretrainedVectors(HashMap<Integer, double[]> embeddingsDictionary) {
         if (embeddingsDictionary == null) return;
         int numOfPretrained = 0;
-        for (int i = 0; i < nIn(); i++) {
+        for (int i = 0; i < vocabSize(); i++) {
             double[] embeddings = embeddingsDictionary.get(i);
             if (embeddings != null) {
                 w[i] = embeddings;
