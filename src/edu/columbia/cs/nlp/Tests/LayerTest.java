@@ -1,11 +1,11 @@
 package edu.columbia.cs.nlp.Tests;
 
-import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Relu;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.Layer;
-import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.FixInit;
-import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.Initializer;
-import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.NormalInit;
-import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.ReluInit;
+import edu.columbia.cs.nlp.CuraParser.Learning.Activation.Relu;
+import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers.Layer;
+import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.FixInit;
+import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.Initializer;
+import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.NormalInit;
+import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.ReluInit;
 import org.junit.Test;
 
 import java.util.Random;

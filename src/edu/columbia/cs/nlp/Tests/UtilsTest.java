@@ -1,6 +1,6 @@
 package edu.columbia.cs.nlp.Tests;
 
-import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
+import edu.columbia.cs.nlp.CuraParser.Accessories.Utils;
 import org.junit.Test;
 
 import java.util.HashSet;

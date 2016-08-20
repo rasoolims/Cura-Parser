@@ -1,17 +1,17 @@
 package edu.columbia.cs.nlp.Tests;
 
-import edu.columbia.cs.nlp.YaraParser.Accessories.CoNLLReader;
-import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
-import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.FirstHiddenLayer;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.Layer;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.WordEmbeddingLayer;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
-import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
-import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.BeamTrainer;
+import edu.columbia.cs.nlp.CuraParser.Accessories.CoNLLReader;
+import edu.columbia.cs.nlp.CuraParser.Accessories.Options;
+import edu.columbia.cs.nlp.CuraParser.Accessories.Utils;
+import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers.FirstHiddenLayer;
+import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers.Layer;
+import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers.WordEmbeddingLayer;
+import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.MLPNetwork;
+import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
+import edu.columbia.cs.nlp.CuraParser.Structures.NeuralTrainingInstance;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.ParserType;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.BeamTrainer;
 import org.junit.Test;
 
 import java.io.BufferedWriter;

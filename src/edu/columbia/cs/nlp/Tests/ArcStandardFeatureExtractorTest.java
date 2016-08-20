@@ -1,15 +1,15 @@
 package edu.columbia.cs.nlp.Tests;
 
-import edu.columbia.cs.nlp.YaraParser.Accessories.CoNLLReader;
-import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
-import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
-import edu.columbia.cs.nlp.YaraParser.Structures.Sentence;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.Configuration;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Features.FeatureExtractor;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.Actions;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.ArcStandard;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.ShiftReduceParser;
+import edu.columbia.cs.nlp.CuraParser.Accessories.CoNLLReader;
+import edu.columbia.cs.nlp.CuraParser.Accessories.Options;
+import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
+import edu.columbia.cs.nlp.CuraParser.Structures.Sentence;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.Configuration;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Features.FeatureExtractor;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.Actions;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ArcStandard;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ShiftReduceParser;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
