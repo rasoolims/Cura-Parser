@@ -16,7 +16,17 @@ import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Parsers.Shift
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class FeatureExtractor {
-    public static int[] extractBaseFeatures(Configuration configuration, int labelNullIndex, ShiftReduceParser parser) throws Exception {
+    /**
+     * It is double[] not int[] because of some technical/structural constraints in the network but all the features
+     * should naturally be integers.
+     *
+     * @param configuration
+     * @param labelNullIndex
+     * @param parser
+     * @return
+     * @throws Exception
+     */
+    public static double[] extractBaseFeatures(Configuration configuration, int labelNullIndex, ShiftReduceParser parser) throws Exception {
         if (parser instanceof ArcEager)
             return extractArcEagerFeatures(configuration, labelNullIndex);
         else if (parser instanceof ArcStandard)
@@ -24,7 +34,7 @@ public class FeatureExtractor {
         else throw new NotImplementedException();
     }
 
-    private static int[] extractArcEagerFeatures(Configuration configuration, int labelNullIndex) throws Exception {
+    private static double[] extractArcEagerFeatures(Configuration configuration, int labelNullIndex) throws Exception {
         State state = configuration.state;
         Sentence sentence = configuration.sentence;
 
@@ -236,7 +246,7 @@ public class FeatureExtractor {
                 }
             }
         }
-        int[] baseFeatureIds = new int[55];
+        double[] baseFeatureIds = new double[55];
 
         int index = 0;
         baseFeatureIds[index++] = s0w;
@@ -300,7 +310,7 @@ public class FeatureExtractor {
         return baseFeatureIds;
     }
 
-    private static int[] extractArcStandardFeatures(Configuration configuration, int labelNullIndex) throws Exception {
+    private static double[] extractArcStandardFeatures(Configuration configuration, int labelNullIndex) throws Exception {
         State state = configuration.state;
         Sentence sentence = configuration.sentence;
 
@@ -499,7 +509,7 @@ public class FeatureExtractor {
 
 
         }
-        int[] baseFeatureIds = new int[52];
+        double[] baseFeatureIds = new double[52];
 
         int index = 0;
         baseFeatureIds[index++] = s0w;

@@ -9,19 +9,19 @@ package edu.columbia.cs.nlp.YaraParser.Structures;
  */
 
 public class NeuralTrainingInstance {
-    private final int[] features;
-    private final int[] label;
+    private final double[] features;
+    private final double[] label;
 
-    public NeuralTrainingInstance(int[] features, int[] label) {
+    public NeuralTrainingInstance(double[] features, double[] label) {
         this.features = features;
         this.label = label;
     }
 
-    public int[] getFeatures() {
+    public double[] getFeatures() {
         return features;
     }
 
-    public int[] getLabel() {
+    public double[] getLabel() {
         return label;
     }
 

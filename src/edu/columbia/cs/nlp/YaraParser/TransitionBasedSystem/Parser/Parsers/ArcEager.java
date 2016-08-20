@@ -135,8 +135,8 @@ public class ArcEager extends ShiftReduceParser {
         for (Configuration configuration : oracles.keySet()) {
             if (!configuration.state.isTerminalState()) {
                 State currentState = configuration.state;
-                int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, this);
-                double[] scores = network.output(features, new int[network.getSoftmaxLayerDim()]);
+                double[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, this);
+                double[] scores = network.output(features, new double[network.getNumOutputs()]);
 
                 int accepted = 0;
                 // I only assumed that we need zero cost ones

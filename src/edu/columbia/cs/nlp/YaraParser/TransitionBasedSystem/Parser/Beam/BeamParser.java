@@ -49,7 +49,7 @@ public class BeamParser {
     ShiftReduceParser parser;
 
     public BeamParser(MLPNetwork network, int numOfThreads, ParserType parserType) throws Exception {
-        this.dependencyRelations = network.depLabels;
+        this.dependencyRelations = network.getDepLabels();
         this.network = network;
         this.numThreads = numOfThreads;
         this.maps = network.maps;
@@ -73,7 +73,7 @@ public class BeamParser {
             boolean canReduce = parser.canDo(Actions.Reduce, currentState);
             boolean canRightArc = parser.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = parser.canDo(Actions.LeftArc, currentState);
-            int[] labels = new int[network.getSoftmaxLayerDim()];
+            double[] labels = new double[network.getNumOutputs()];
             if (!canShift) labels[0] = -1;
             if (!canReduce) labels[1] = -1;
             if (!canRightArc)
@@ -82,7 +82,7 @@ public class BeamParser {
             if (!canLeftArc)
                 for (int i = 0; i < maps.relSize(); i++)
                     labels[maps.relSize() + 2 + i] = -1;
-            int[] features = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+            double[] features = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
             double[] scores = network.output(features, labels);
 
             if (!canShift

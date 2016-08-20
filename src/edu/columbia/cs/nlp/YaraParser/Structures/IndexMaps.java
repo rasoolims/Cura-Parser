@@ -105,6 +105,10 @@ public class IndexMaps implements Serializable {
         return embeddingsDictionary.get(wordIndex);
     }
 
+    public HashMap<Integer, double[]> getEmbeddingsDictionary() {
+        return embeddingsDictionary;
+    }
+
     public void emptyEmbeddings() {
         embeddingsDictionary = null;
     }
@@ -141,9 +145,9 @@ public class IndexMaps implements Serializable {
         }
 
         for (NeuralTrainingInstance instance : instances) {
-            int[] feats = instance.getFeatures();
+            double[] feats = instance.getFeatures();
             for (int i = 0; i < numWordLayer; i++) {
-                int f = feats[i];
+                int f = (int) feats[i];
                 if (counts[i].containsKey(f))
                     counts[i].put(f, counts[i].get(f) + 1);
                 else

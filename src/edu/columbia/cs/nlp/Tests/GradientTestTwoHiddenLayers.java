@@ -1,24 +1,7 @@
 package edu.columbia.cs.nlp.Tests;
 
-import edu.columbia.cs.nlp.YaraParser.Accessories.CoNLLReader;
-import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
-import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
-import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPTrainer;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.NetworkMatrices;
-import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
-import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
-import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
-import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Trainer.BeamTrainer;
-import org.junit.Test;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -117,1008 +100,1004 @@ public class GradientTestTwoHiddenLayers {
             "21\tlater\t_\tRB\tRB\t_\t16\tadvmod\t_\t_\n" +
             "22\t.\t_\t.\t.\t_\t3\tpunct\t_\t_\n";
 
-
-    @Test
-    public void TestWordEmbeddingGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(),
-                        network.getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double eps = 0.000001;
-                for (int i = 0; i < network.getNumWordLayers(); i++) {
-                    for (int slot = 0; slot < network.getWordEmbedDim(); slot++) {
-                        int tok = instances.get(0).getFeatures()[i];
-                        double gradForTok = gradients.getWordEmbedding()[tok][slot] / instances.size();
-
-                        MLPNetwork plusNetwork = network.clone();
-                        purturb(plusNetwork.getMatrices(), EmbeddingTypes.WORD, tok, slot, eps);
-                        plusNetwork.preCompute();
-                        MLPNetwork negNetwork = network.clone();
-                        purturb(negNetwork.getMatrices(), EmbeddingTypes.WORD, tok, slot, -eps);
-                        negNetwork.preCompute();
-                        double diff = 0;
-
-                        for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                            int goldLabel = instance.gold();
-                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                        }
-                        diff /= (2 * eps * instances.size());
-
-                        System.out.println(gradForTok + "\t" + diff);
-                        assert Math.abs(gradForTok - diff) <= 0.0000001;
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    public void TestPretrainedWordEmbeddingGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.wordEmbeddingFile = embedFilePath;
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double eps = 0.000001;
-                for (int i = 0; i < network.getNumWordLayers(); i++) {
-                    for (int slot = 0; slot < network.getWordEmbedDim(); slot++) {
-                        int tok = instances.get(0).getFeatures()[i];
-                        double gradForTok = gradients.getWordEmbedding()[tok][slot] / instances.size();
-
-                        MLPNetwork plusNetwork = network.clone();
-                        purturb(plusNetwork.getMatrices(), EmbeddingTypes.WORD, tok, slot, eps);
-                        plusNetwork.preCompute();
-                        MLPNetwork negNetwork = network.clone();
-                        purturb(negNetwork.getMatrices(), EmbeddingTypes.WORD, tok, slot, -eps);
-                        negNetwork.preCompute();
-                        double diff = 0;
-
-                        for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                            int goldLabel = instance.gold();
-                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                        }
-                        diff /= (2 * eps * instances.size());
-
-                        System.out.println(gradForTok + "\t" + diff);
-                        assert Math.abs(gradForTok - diff) <= 0.0000001;
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    public void TestWordEmbeddingUpdates() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 1);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double[] oovEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[0]);
-                double[] nullEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[1]);
-                double[] rootEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[2]);
-                double[] simpleWordEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[3]);
-                for (int i = 0; i < 3; i++) {
-                    classifier.fit(instances, i, true);
-                }
-
-                assert !Utils.equals(network.getMatrices().getWordEmbedding()[0], oovEmbedding);
-                assert !Utils.equals(network.getMatrices().getWordEmbedding()[1], nullEmbedding);
-                assert !Utils.equals(network.getMatrices().getWordEmbedding()[2], rootEmbedding);
-                assert !Utils.equals(network.getMatrices().getWordEmbedding()[3], simpleWordEmbedding);
-            }
-        }
-    }
-
-    @Test
-    public void TestPretrainedtWordEmbeddingUpdates() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 1);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double[] oovEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[0]);
-                double[] nullEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[1]);
-                double[] rootEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[2]);
-                double[] simpleWordEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[3]);
-                for (int i = 0; i < 3; i++) {
-                    classifier.fit(instances, i, true);
-                }
-
-                assert !Utils.equals(network.getMatrices().getWordEmbedding()[0], oovEmbedding);
-                assert !Utils.equals(network.getMatrices().getWordEmbedding()[1], nullEmbedding);
-                assert !Utils.equals(network.getMatrices().getWordEmbedding()[2], rootEmbedding);
-                assert !Utils.equals(network.getMatrices().getWordEmbedding()[3], simpleWordEmbedding);
-            }
-        }
-    }
-
-    @Test
-    public void TestPOSEmbeddingGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double eps = 0.000001;
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++) {
-                    for (int slot = 0; slot < network.getPosEmbedDim(); slot++) {
-                        int tok = instances.get(0).getFeatures()[i];
-                        double gradForTok = gradients.getPosEmbedding()[tok][slot] / instances.size();
-
-                        MLPNetwork plusNetwork = network.clone();
-                        purturb(plusNetwork.getMatrices(), EmbeddingTypes.POS, tok, slot, eps);
-                        plusNetwork.preCompute();
-                        MLPNetwork negNetwork = network.clone();
-                        purturb(negNetwork.getMatrices(), EmbeddingTypes.POS, tok, slot, -eps);
-                        negNetwork.preCompute();
-                        double diff = 0;
-
-                        for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                            int goldLabel = instance.gold();
-                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                        }
-                        diff /= (2 * eps * instances.size());
-
-                        System.out.println(gradForTok + "\t" + diff);
-                        assert Math.abs(gradForTok - diff) <= 0.0000001;
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    public void TestLabelEmbeddingGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double eps = 0.000001;
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++) {
-                    for (int slot = 0; slot < network.getDepEmbedDim(); slot++) {
-                        int tok = instances.get(0).getFeatures()[i];
-                        double gradForTok = gradients.getLabelEmbedding()[tok][slot] / instances.size();
-
-                        MLPNetwork plusNetwork = network.clone();
-                        purturb(plusNetwork.getMatrices(), EmbeddingTypes.DEPENDENCY, tok, slot, eps);
-                        plusNetwork.preCompute();
-                        MLPNetwork negNetwork = network.clone();
-                        purturb(negNetwork.getMatrices(), EmbeddingTypes.DEPENDENCY, tok, slot, -eps);
-                        negNetwork.preCompute();
-                        double diff = 0;
-
-                        for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                            int goldLabel = instance.gold();
-                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                        }
-                        diff /= (2 * eps * instances.size());
-
-                        System.out.println(plusNetwork.activationType + "\t" + gradForTok + "\t" + diff);
-                        assert Math.abs(gradForTok - diff) <= 0.0000001;
-                    }
-                }
-            }
-        }
-
-    }
-
-    @Test
-    public void TestHiddenLayerGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double eps = 0.000001;
-                for (int i = 0; i < network.getHiddenLayerDim(); i++) {
-                    for (int slot = 0; slot < network.getHiddenLayerIntDim(); slot++) {
-                        int tok = i;
-                        double gradForTok = gradients.getHiddenLayer()[tok][slot] / instances.size();
-
-                        MLPNetwork plusNetwork = network.clone();
-                        purturb(plusNetwork.getMatrices(), EmbeddingTypes.HIDDENLAYER, tok, slot, eps);
-                        plusNetwork.preCompute();
-                        MLPNetwork negNetwork = network.clone();
-                        purturb(negNetwork.getMatrices(), EmbeddingTypes.HIDDENLAYER, tok, slot, -eps);
-                        negNetwork.preCompute();
-                        double diff = 0;
-
-                        for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                            int goldLabel = instance.gold();
-                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                        }
-                        diff /= (2 * eps * instances.size());
-
-                        System.out.println(gradForTok + "\t" + diff);
-                        assert Math.abs(gradForTok - diff) <= 0.0000001;
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    public void TestHiddenLayerBiasGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double eps = 0.000001;
-                for (int i = 0; i < network.getHiddenLayerDim(); i++) {
-                    int tok = i;
-                    double gradForTok = gradients.getHiddenLayerBias()[tok] / instances.size();
-
-                    MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork.getMatrices(), EmbeddingTypes.HIDDENLAYERBIAS, tok, -1, eps);
-                    plusNetwork.preCompute();
-                    MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork.getMatrices(), EmbeddingTypes.HIDDENLAYERBIAS, tok, -1, -eps);
-                    negNetwork.preCompute();
-                    double diff = 0;
-
-                    for (NeuralTrainingInstance instance : instances) {
-                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                        int goldLabel = instance.gold();
-                        diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                    }
-                    diff /= (2 * eps * instances.size());
-
-                    System.out.println(gradForTok + "\t" + diff);
-                    assert Math.abs(gradForTok - diff) <= 0.0000001;
-                }
-            }
-        }
-    }
-
-
-    @Test
-    public void TestSecondHiddenLayerGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double eps = 0.000001;
-                for (int i = 0; i < network.getSecondHiddenLayerDim(); i++) {
-                    for (int slot = 0; slot < network.getHiddenLayerDim(); slot++) {
-                        int tok = i;
-                        double gradForTok = gradients.getSecondHiddenLayer()[tok][slot] / instances.size();
-
-                        MLPNetwork plusNetwork = network.clone();
-                        purturb(plusNetwork.getMatrices(), EmbeddingTypes.SECONDHIDDENLAYER, tok, slot, eps);
-                        plusNetwork.preCompute();
-                        MLPNetwork negNetwork = network.clone();
-                        purturb(negNetwork.getMatrices(), EmbeddingTypes.SECONDHIDDENLAYER, tok, slot, -eps);
-                        negNetwork.preCompute();
-                        double diff = 0;
-
-                        for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                            int goldLabel = instance.gold();
-                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                        }
-                        diff /= (2 * eps * instances.size());
-
-                        System.out.println(gradForTok + "\t" + diff);
-                        assert Math.abs(gradForTok - diff) <= 0.0000001;
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    public void TestSecondHiddenLayerBiasGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double eps = 0.000001;
-                for (int i = 0; i < network.getSecondHiddenLayerDim(); i++) {
-                    int tok = i;
-                    double gradForTok = gradients.getSecondHiddenLayerBias()[tok] / instances.size();
-
-                    MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork.getMatrices(), EmbeddingTypes.SECONDHIDDENLAYERBIAS, tok, -1, eps);
-                    plusNetwork.preCompute();
-                    MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork.getMatrices(), EmbeddingTypes.SECONDHIDDENLAYERBIAS, tok, -1, -eps);
-                    negNetwork.preCompute();
-                    double diff = 0;
-
-                    for (NeuralTrainingInstance instance : instances) {
-                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                        int goldLabel = instance.gold();
-                        diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                    }
-                    diff /= (2 * eps * instances.size());
-
-                    System.out.println(gradForTok + "\t" + diff);
-                    assert Math.abs(gradForTok - diff) <= 0.0000001;
-                }
-            }
-        }
-    }
-
-    @Test
-    public void TestSoftmaxLayerGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double eps = 0.000001;
-                for (int i = 0; i < network.getSoftmaxLayerDim(); i++) {
-                    for (int slot = 0; slot < network.getSecondHiddenLayerDim(); slot++) {
-                        int tok = i;
-                        double gradForTok = gradients.getSoftmaxLayer()[tok][slot] / instances.size();
-
-                        MLPNetwork plusNetwork = network.clone();
-                        purturb(plusNetwork.getMatrices(), EmbeddingTypes.SOFTMAX, tok, slot, eps);
-                        plusNetwork.preCompute();
-                        MLPNetwork negNetwork = network.clone();
-                        purturb(negNetwork.getMatrices(), EmbeddingTypes.SOFTMAX, tok, slot, -eps);
-                        negNetwork.preCompute();
-                        double diff = 0;
-
-                        for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                            int goldLabel = instance.gold();
-                            diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                        }
-                        diff /= (2 * eps * instances.size());
-
-                        System.out.println(gradForTok + "\t" + diff);
-                        assert Math.abs(gradForTok - diff) <= 0.0000001;
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    public void TestSoftmaxLayerBiasGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
-                        .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
-
-                double eps = 0.000001;
-                for (int i = 0; i < network.getSoftmaxLayerDim(); i++) {
-                    int tok = i;
-                    double gradForTok = gradients.getSoftmaxLayerBias()[tok] / instances.size();
-
-                    MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork.getMatrices(), EmbeddingTypes.SOFTMAXBIAS, tok, -1, eps);
-                    plusNetwork.preCompute();
-                    MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork.getMatrices(), EmbeddingTypes.SOFTMAXBIAS, tok, -1, -eps);
-                    negNetwork.preCompute();
-                    double diff = 0;
-
-                    for (NeuralTrainingInstance instance : instances) {
-                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
-
-                        int goldLabel = instance.gold();
-                        diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
-                    }
-                    diff /= (2 * eps * instances.size());
-
-                    System.out.println(gradForTok + "\t" + diff);
-                    assert Math.abs(gradForTok - diff) <= 0.0000001;
-                }
-            }
-        }
-    }
-
-    @Test
-    public void TestMultiThreadGradients() throws Exception {
-        int[] h2sizes = new int[]{5, 10, 15};
-
-        for (int h2Size : h2sizes) {
-            for (ActivationType type : ActivationType.values()) {
-                writeText();
-                Options options = new Options();
-                options.networkProperties.activationType = type;
-                options.networkProperties.hiddenLayer1Size = 10;
-                options.networkProperties.hiddenLayer2Size = h2Size;
-                options.trainingOptions.trainFile = txtFilePath;
-                IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled,
-                        options.generalProperties.lowercase, "", 0);
-                ArrayList<Integer> dependencyLabels = new ArrayList<>();
-                for (int lab = 0; lab < maps.relSize(); lab++)
-                    dependencyLabels.add(lab);
-                CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
-                        options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-                int wDim = 8;
-                int pDim = 4;
-                int lDim = 6;
-                BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
-                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
-                maps.constructPreComputeMap(instances, 22, 10000);
-                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
-
-                double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
-                for (int i = 0; i < network.getNumWordLayers(); i++)
-                    savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
-                    savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
-                for (int i = network.getNumWordLayers() + network.getNumPosLayers();
-                     i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
-                    savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
-
-                MLPTrainer classifier = new MLPTrainer(network, options);
-                MLPTrainer classifierMultiThread = new MLPTrainer(network, options);
-                network.preCompute();
-
-                NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
-                        .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
-                        .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
-
-                classifier.calculateCost(instances, instances.size(), gradients, savedGradients);
-                classifierMultiThread.cost(instances);
-
-                final NetworkMatrices gradientsMultiThread = classifierMultiThread.getGradients();
-                double eps = 1e-15;
-
-                ArrayList<double[][]> allMatrices1 = gradients.getAllMatrices();
-                ArrayList<double[][]> allMatrices2 = gradientsMultiThread.getAllMatrices();
-                ArrayList<double[]> allVectors1 = gradients.getAllVectors();
-                ArrayList<double[]> allVectors2 = gradientsMultiThread.getAllVectors();
-
-                for (int i = 0; i < allMatrices1.size(); i++) {
-                    double[][] m1 = allMatrices1.get(i);
-                    double[][] m2 = allMatrices2.get(i);
-                    if (m1 == null) continue;
-
-                    for (int j = 0; j < m1.length; j++)
-                        for (int h = 0; h < m1[j].length; h++) {
-                            if (Math.abs(m1[j][h] - m2[j][h]) > eps)
-                                System.out.println(i + "\t" + j + "\t" + h + "\t" + m1[j][h] + "\t" + m2[j][h]);
-                            assert Math.abs(m1[j][h] - m2[j][h]) <= eps;
-                        }
-                }
-
-                for (int i = 0; i < allVectors1.size(); i++) {
-                    double[] v1 = allVectors1.get(i);
-                    double[] v2 = allVectors2.get(i);
-                    if (v1 == null) continue;
-
-                    for (int j = 0; j < v1.length; j++) {
-                        if (Math.abs(v1[j] - v2[j]) > eps)
-                            System.out.println(i + "\t" + j + "\t" + v1[j] + "\t" + v2[j]);
-                        assert Math.abs(v1[j] - v2[j]) <= eps;
-                    }
-                }
-            }
-        }
-    }
-
-    private void purturb(NetworkMatrices matrices, EmbeddingTypes type, int tokNum, int slotNum, double eps) {
-        if (type == EmbeddingTypes.WORD) {
-            matrices.getWordEmbedding()[tokNum][slotNum] += eps;
-        } else if (type == EmbeddingTypes.POS) {
-            matrices.getPosEmbedding()[tokNum][slotNum] += eps;
-        } else if (type == EmbeddingTypes.DEPENDENCY) {
-            matrices.getLabelEmbedding()[tokNum][slotNum] += eps;
-        } else if (type == EmbeddingTypes.HIDDENLAYER) {
-            matrices.getHiddenLayer()[tokNum][slotNum] += eps;
-        } else if (type == EmbeddingTypes.SECONDHIDDENLAYER) {
-            matrices.getSecondHiddenLayer()[tokNum][slotNum] += eps;
-        } else if (type == EmbeddingTypes.SOFTMAX) {
-            matrices.getSoftmaxLayer()[tokNum][slotNum] += eps;
-        } else if (type == EmbeddingTypes.HIDDENLAYERBIAS) {
-            matrices.getHiddenLayerBias()[tokNum] += eps;
-        } else if (type == EmbeddingTypes.SECONDHIDDENLAYERBIAS) {
-            matrices.getSecondHiddenLayerBias()[tokNum] += eps;
-        } else if (type == EmbeddingTypes.SOFTMAXBIAS) {
-            matrices.getSoftmaxLayerBias()[tokNum] += eps;
-        }
-    }
-
+    /*
+     @Test
+     public void TestWordEmbeddingGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(),
+                         network.getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double eps = 0.000001;
+                 for (int i = 0; i < network.getNumWordLayers(); i++) {
+                     for (int slot = 0; slot < network.getWordEmbedDim(); slot++) {
+                         int tok = instances.get(0).getFeatures()[i];
+                         double gradForTok = gradients.getWordEmbedding()[tok][slot] / instances.size();
+
+                         MLPNetwork plusNetwork = network.clone();
+                         purturb(plusNetwork.getMatrices(), EmbeddingTypes.WORD, tok, slot, eps);
+                         plusNetwork.preCompute();
+                         MLPNetwork negNetwork = network.clone();
+                         purturb(negNetwork.getMatrices(), EmbeddingTypes.WORD, tok, slot, -eps);
+                         negNetwork.preCompute();
+                         double diff = 0;
+
+                         for (NeuralTrainingInstance instance : instances) {
+                             double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                             double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                             int goldLabel = instance.gold();
+                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                         }
+                         diff /= (2 * eps * instances.size());
+
+                         System.out.println(gradForTok + "\t" + diff);
+                         assert Math.abs(gradForTok - diff) <= 0.0000001;
+                     }
+                 }
+             }
+         }
+     }
+
+     @Test
+     public void TestPretrainedWordEmbeddingGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double eps = 0.000001;
+                 for (int i = 0; i < network.getNumWordLayers(); i++) {
+                     for (int slot = 0; slot < network.getWordEmbedDim(); slot++) {
+                         int tok = instances.get(0).getFeatures()[i];
+                         double gradForTok = gradients.getWordEmbedding()[tok][slot] / instances.size();
+
+                         MLPNetwork plusNetwork = network.clone();
+                         purturb(plusNetwork.getMatrices(), EmbeddingTypes.WORD, tok, slot, eps);
+                         plusNetwork.preCompute();
+                         MLPNetwork negNetwork = network.clone();
+                         purturb(negNetwork.getMatrices(), EmbeddingTypes.WORD, tok, slot, -eps);
+                         negNetwork.preCompute();
+                         double diff = 0;
+
+                         for (NeuralTrainingInstance instance : instances) {
+                             double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                             double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                             int goldLabel = instance.gold();
+                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                         }
+                         diff /= (2 * eps * instances.size());
+
+                         System.out.println(gradForTok + "\t" + diff);
+                         assert Math.abs(gradForTok - diff) <= 0.0000001;
+                     }
+                 }
+             }
+         }
+     }
+
+     @Test
+     public void TestWordEmbeddingUpdates() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 1);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double[] oovEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[0]);
+                 double[] nullEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[1]);
+                 double[] rootEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[2]);
+                 double[] simpleWordEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[3]);
+                 for (int i = 0; i < 3; i++) {
+                     classifier.fit(instances, i, true);
+                 }
+
+                 assert !Utils.equals(network.getMatrices().getWordEmbedding()[0], oovEmbedding);
+                 assert !Utils.equals(network.getMatrices().getWordEmbedding()[1], nullEmbedding);
+                 assert !Utils.equals(network.getMatrices().getWordEmbedding()[2], rootEmbedding);
+                 assert !Utils.equals(network.getMatrices().getWordEmbedding()[3], simpleWordEmbedding);
+             }
+         }
+     }
+
+     @Test
+     public void TestPretrainedtWordEmbeddingUpdates() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 1);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double[] oovEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[0]);
+                 double[] nullEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[1]);
+                 double[] rootEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[2]);
+                 double[] simpleWordEmbedding = Utils.clone(network.getMatrices().getWordEmbedding()[3]);
+                 for (int i = 0; i < 3; i++) {
+                     classifier.fit(instances, i, true);
+                 }
+
+                 assert !Utils.equals(network.getMatrices().getWordEmbedding()[0], oovEmbedding);
+                 assert !Utils.equals(network.getMatrices().getWordEmbedding()[1], nullEmbedding);
+                 assert !Utils.equals(network.getMatrices().getWordEmbedding()[2], rootEmbedding);
+                 assert !Utils.equals(network.getMatrices().getWordEmbedding()[3], simpleWordEmbedding);
+             }
+         }
+     }
+
+     @Test
+     public void TestPOSEmbeddingGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double eps = 0.000001;
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++) {
+                     for (int slot = 0; slot < network.getPosEmbedDim(); slot++) {
+                         int tok = instances.get(0).getFeatures()[i];
+                         double gradForTok = gradients.getPosEmbedding()[tok][slot] / instances.size();
+
+                         MLPNetwork plusNetwork = network.clone();
+                         purturb(plusNetwork.getMatrices(), EmbeddingTypes.POS, tok, slot, eps);
+                         plusNetwork.preCompute();
+                         MLPNetwork negNetwork = network.clone();
+                         purturb(negNetwork.getMatrices(), EmbeddingTypes.POS, tok, slot, -eps);
+                         negNetwork.preCompute();
+                         double diff = 0;
+
+                         for (NeuralTrainingInstance instance : instances) {
+                             double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                             double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                             int goldLabel = instance.gold();
+                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                         }
+                         diff /= (2 * eps * instances.size());
+
+                         System.out.println(gradForTok + "\t" + diff);
+                         assert Math.abs(gradForTok - diff) <= 0.0000001;
+                     }
+                 }
+             }
+         }
+     }
+
+     @Test
+     public void TestLabelEmbeddingGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double eps = 0.000001;
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++) {
+                     for (int slot = 0; slot < network.getDepEmbedDim(); slot++) {
+                         int tok = instances.get(0).getFeatures()[i];
+                         double gradForTok = gradients.getLabelEmbedding()[tok][slot] / instances.size();
+
+                         MLPNetwork plusNetwork = network.clone();
+                         purturb(plusNetwork.getMatrices(), EmbeddingTypes.DEPENDENCY, tok, slot, eps);
+                         plusNetwork.preCompute();
+                         MLPNetwork negNetwork = network.clone();
+                         purturb(negNetwork.getMatrices(), EmbeddingTypes.DEPENDENCY, tok, slot, -eps);
+                         negNetwork.preCompute();
+                         double diff = 0;
+
+                         for (NeuralTrainingInstance instance : instances) {
+                             double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                             double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                             int goldLabel = instance.gold();
+                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                         }
+                         diff /= (2 * eps * instances.size());
+
+                         System.out.println(plusNetwork.activationType + "\t" + gradForTok + "\t" + diff);
+                         assert Math.abs(gradForTok - diff) <= 0.0000001;
+                     }
+                 }
+             }
+         }
+
+     }
+
+     @Test
+     public void TestHiddenLayerGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double eps = 0.000001;
+                 for (int i = 0; i < network.getHiddenLayerDim(); i++) {
+                     for (int slot = 0; slot < network.getHiddenLayerIntDim(); slot++) {
+                         int tok = i;
+                         double gradForTok = gradients.getHiddenLayer()[tok][slot] / instances.size();
+
+                         MLPNetwork plusNetwork = network.clone();
+                         purturb(plusNetwork.getMatrices(), EmbeddingTypes.HIDDENLAYER, tok, slot, eps);
+                         plusNetwork.preCompute();
+                         MLPNetwork negNetwork = network.clone();
+                         purturb(negNetwork.getMatrices(), EmbeddingTypes.HIDDENLAYER, tok, slot, -eps);
+                         negNetwork.preCompute();
+                         double diff = 0;
+
+                         for (NeuralTrainingInstance instance : instances) {
+                             double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                             double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                             int goldLabel = instance.gold();
+                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                         }
+                         diff /= (2 * eps * instances.size());
+
+                         System.out.println(gradForTok + "\t" + diff);
+                         assert Math.abs(gradForTok - diff) <= 0.0000001;
+                     }
+                 }
+             }
+         }
+     }
+
+     @Test
+     public void TestHiddenLayerBiasGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double eps = 0.000001;
+                 for (int i = 0; i < network.getHiddenLayerDim(); i++) {
+                     int tok = i;
+                     double gradForTok = gradients.getHiddenLayerBias()[tok] / instances.size();
+
+                     MLPNetwork plusNetwork = network.clone();
+                     purturb(plusNetwork.getMatrices(), EmbeddingTypes.HIDDENLAYERBIAS, tok, -1, eps);
+                     plusNetwork.preCompute();
+                     MLPNetwork negNetwork = network.clone();
+                     purturb(negNetwork.getMatrices(), EmbeddingTypes.HIDDENLAYERBIAS, tok, -1, -eps);
+                     negNetwork.preCompute();
+                     double diff = 0;
+
+                     for (NeuralTrainingInstance instance : instances) {
+                         double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                         double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                         int goldLabel = instance.gold();
+                         diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                     }
+                     diff /= (2 * eps * instances.size());
+
+                     System.out.println(gradForTok + "\t" + diff);
+                     assert Math.abs(gradForTok - diff) <= 0.0000001;
+                 }
+             }
+         }
+     }
+
+
+     @Test
+     public void TestSecondHiddenLayerGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double eps = 0.000001;
+                 for (int i = 0; i < network.getSecondHiddenLayerDim(); i++) {
+                     for (int slot = 0; slot < network.getHiddenLayerDim(); slot++) {
+                         int tok = i;
+                         double gradForTok = gradients.getSecondHiddenLayer()[tok][slot] / instances.size();
+
+                         MLPNetwork plusNetwork = network.clone();
+                         purturb(plusNetwork.getMatrices(), EmbeddingTypes.SECONDHIDDENLAYER, tok, slot, eps);
+                         plusNetwork.preCompute();
+                         MLPNetwork negNetwork = network.clone();
+                         purturb(negNetwork.getMatrices(), EmbeddingTypes.SECONDHIDDENLAYER, tok, slot, -eps);
+                         negNetwork.preCompute();
+                         double diff = 0;
+
+                         for (NeuralTrainingInstance instance : instances) {
+                             double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                             double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                             int goldLabel = instance.gold();
+                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                         }
+                         diff /= (2 * eps * instances.size());
+
+                         System.out.println(gradForTok + "\t" + diff);
+                         assert Math.abs(gradForTok - diff) <= 0.0000001;
+                     }
+                 }
+             }
+         }
+     }
+
+     @Test
+     public void TestSecondHiddenLayerBiasGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double eps = 0.000001;
+                 for (int i = 0; i < network.getSecondHiddenLayerDim(); i++) {
+                     int tok = i;
+                     double gradForTok = gradients.getSecondHiddenLayerBias()[tok] / instances.size();
+
+                     MLPNetwork plusNetwork = network.clone();
+                     purturb(plusNetwork.getMatrices(), EmbeddingTypes.SECONDHIDDENLAYERBIAS, tok, -1, eps);
+                     plusNetwork.preCompute();
+                     MLPNetwork negNetwork = network.clone();
+                     purturb(negNetwork.getMatrices(), EmbeddingTypes.SECONDHIDDENLAYERBIAS, tok, -1, -eps);
+                     negNetwork.preCompute();
+                     double diff = 0;
+
+                     for (NeuralTrainingInstance instance : instances) {
+                         double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                         double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                         int goldLabel = instance.gold();
+                         diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                     }
+                     diff /= (2 * eps * instances.size());
+
+                     System.out.println(gradForTok + "\t" + diff);
+                     assert Math.abs(gradForTok - diff) <= 0.0000001;
+                 }
+             }
+         }
+     }
+
+     @Test
+     public void TestSoftmaxLayerGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double eps = 0.000001;
+                 for (int i = 0; i < network.getSoftmaxLayerDim(); i++) {
+                     for (int slot = 0; slot < network.getSecondHiddenLayerDim(); slot++) {
+                         int tok = i;
+                         double gradForTok = gradients.getSoftmaxLayer()[tok][slot] / instances.size();
+
+                         MLPNetwork plusNetwork = network.clone();
+                         purturb(plusNetwork.getMatrices(), EmbeddingTypes.SOFTMAX, tok, slot, eps);
+                         plusNetwork.preCompute();
+                         MLPNetwork negNetwork = network.clone();
+                         purturb(negNetwork.getMatrices(), EmbeddingTypes.SOFTMAX, tok, slot, -eps);
+                         negNetwork.preCompute();
+                         double diff = 0;
+
+                         for (NeuralTrainingInstance instance : instances) {
+                             double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                             double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                             int goldLabel = instance.gold();
+                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                         }
+                         diff /= (2 * eps * instances.size());
+
+                         System.out.println(gradForTok + "\t" + diff);
+                         assert Math.abs(gradForTok - diff) <= 0.0000001;
+                     }
+                 }
+             }
+         }
+     }
+
+     @Test
+     public void TestSoftmaxLayerBiasGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
+                         .generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options
+                         .generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+                 classifier.calculateCost(instances, 1, gradients, savedGradients);
+
+                 double eps = 0.000001;
+                 for (int i = 0; i < network.getSoftmaxLayerDim(); i++) {
+                     int tok = i;
+                     double gradForTok = gradients.getSoftmaxLayerBias()[tok] / instances.size();
+
+                     MLPNetwork plusNetwork = network.clone();
+                     purturb(plusNetwork.getMatrices(), EmbeddingTypes.SOFTMAXBIAS, tok, -1, eps);
+                     plusNetwork.preCompute();
+                     MLPNetwork negNetwork = network.clone();
+                     purturb(negNetwork.getMatrices(), EmbeddingTypes.SOFTMAXBIAS, tok, -1, -eps);
+                     negNetwork.preCompute();
+                     double diff = 0;
+
+                     for (NeuralTrainingInstance instance : instances) {
+                         double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
+                         double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+
+                         int goldLabel = instance.gold();
+                         diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
+                     }
+                     diff /= (2 * eps * instances.size());
+
+                     System.out.println(gradForTok + "\t" + diff);
+                     assert Math.abs(gradForTok - diff) <= 0.0000001;
+                 }
+             }
+         }
+     }
+
+     @Test
+     public void TestMultiThreadGradients() throws Exception {
+         int[] h2sizes = new int[]{5, 10, 15};
+
+         for (int h2Size : h2sizes) {
+             for (ActivationType type : ActivationType.values()) {
+                 writeText();
+                 Options options = new Options();
+                 options.networkProperties.activationType = type;
+                 options.networkProperties.hiddenLayer1Size = 10;
+                 options.networkProperties.hiddenLayer2Size = h2Size;
+                 options.trainingOptions.trainFile = txtFilePath;
+                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled,
+                         options.generalProperties.lowercase, "", 0);
+                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                 for (int lab = 0; lab < maps.relSize(); lab++)
+                     dependencyLabels.add(lab);
+                 CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+                 ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
+                         options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                 int wDim = 8;
+                 int pDim = 4;
+                 int lDim = 6;
+                 BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+                         options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                 List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+                 maps.constructPreComputeMap(instances, 22, 10000);
+                 MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+                 double[][][] savedGradients = new double[network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers()][][];
+                 for (int i = 0; i < network.getNumWordLayers(); i++)
+                     savedGradients[i] = new double[network.maps.preComputeMap[i].size()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++)
+                     savedGradients[i] = new double[network.getNumPos()][network.getHiddenLayerDim()];
+                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
+                      i < network.getNumWordLayers() + network.getNumPosLayers() + network.getNumDepLayers(); i++)
+                     savedGradients[i] = new double[network.getNumDepLabels()][network.getHiddenLayerDim()];
+
+                 MLPTrainer classifier = new MLPTrainer(network, options);
+                 MLPTrainer classifierMultiThread = new MLPTrainer(network, options);
+                 network.preCompute();
+
+                 NetworkMatrices gradients = new NetworkMatrices(network.getNumWords(), network.getWordEmbedDim(), network.getNumPos(), network
+                         .getPosEmbedDim(), network.getNumDepLabels(), network.getDepEmbedDim(), network.getHiddenLayerDim(), network
+                         .getHiddenLayerIntDim(), network.getSecondHiddenLayerDim(), network.getSoftmaxLayerDim());
+
+                 classifier.calculateCost(instances, instances.size(), gradients, savedGradients);
+                 classifierMultiThread.cost(instances);
+
+                 final NetworkMatrices gradientsMultiThread = classifierMultiThread.getGradients();
+                 double eps = 1e-15;
+
+                 ArrayList<double[][]> allMatrices1 = gradients.getAllMatrices();
+                 ArrayList<double[][]> allMatrices2 = gradientsMultiThread.getAllMatrices();
+                 ArrayList<double[]> allVectors1 = gradients.getAllVectors();
+                 ArrayList<double[]> allVectors2 = gradientsMultiThread.getAllVectors();
+
+                 for (int i = 0; i < allMatrices1.size(); i++) {
+                     double[][] m1 = allMatrices1.get(i);
+                     double[][] m2 = allMatrices2.get(i);
+                     if (m1 == null) continue;
+
+                     for (int j = 0; j < m1.length; j++)
+                         for (int h = 0; h < m1[j].length; h++) {
+                             if (Math.abs(m1[j][h] - m2[j][h]) > eps)
+                                 System.out.println(i + "\t" + j + "\t" + h + "\t" + m1[j][h] + "\t" + m2[j][h]);
+                             assert Math.abs(m1[j][h] - m2[j][h]) <= eps;
+                         }
+                 }
+
+                 for (int i = 0; i < allVectors1.size(); i++) {
+                     double[] v1 = allVectors1.get(i);
+                     double[] v2 = allVectors2.get(i);
+                     if (v1 == null) continue;
+
+                     for (int j = 0; j < v1.length; j++) {
+                         if (Math.abs(v1[j] - v2[j]) > eps)
+                             System.out.println(i + "\t" + j + "\t" + v1[j] + "\t" + v2[j]);
+                         assert Math.abs(v1[j] - v2[j]) <= eps;
+                     }
+                 }
+             }
+         }
+     }
+
+     private void purturb(MLPNetwork network, EmbeddingTypes type, int tokNum, int slotNum, double eps) {
+         if (type == EmbeddingTypes.WORD || type == EmbeddingTypes.POS || type == EmbeddingTypes.DEPENDENCY) {
+             ((FirstHiddenLayer)network.layer(0)).modify(type, tokNum, slotNum, eps);
+         }  else if (type == EmbeddingTypes.HIDDENLAYER) {
+             network.layer(0).modifyW(tokNum,slotNum,eps);
+         } else if (type == EmbeddingTypes.SECONDHIDDENLAYER) {
+             network.layer(1).modifyW(tokNum,slotNum,eps);
+         } else if (type == EmbeddingTypes.SOFTMAX) {
+             network.layer(network.numLayers()-1).modifyW(tokNum,slotNum,eps);
+         } else if (type == EmbeddingTypes.HIDDENLAYERBIAS) {
+             network.layer(0).modifyB(tokNum,eps);
+         }else if (type == EmbeddingTypes.SECONDHIDDENLAYERBIAS) {
+             network.layer(1).modifyB(tokNum,eps);
+         }  else if (type == EmbeddingTypes.SOFTMAXBIAS) {
+             network.layer(network.numLayers()-1).modifyB(tokNum,eps);
+         }
+     }
+     */
     private void writeText() throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter(txtFilePath));
         writer.write(conllText);

@@ -77,7 +77,7 @@ public class ArcEagerFeatureExtractorTest {
         /**
          * actions = shift, shift, left-arc, left-arc, shift, right-arc, reduce, left-arc
          */
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+        double[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[0] == IndexMaps.NullIndex;
         assert baseFeatures[4] == (sentence.getWords()[0]);
         assert baseFeatures[19] == IndexMaps.NullIndex;
@@ -118,7 +118,7 @@ public class ArcEagerFeatureExtractorTest {
         Sentence sentence = dataSet.get(0).getSentence();
         Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
 
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+        double[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[1] == IndexMaps.NullIndex;
         assert baseFeatures[23] == IndexMaps.NullIndex;
         assert baseFeatures[46] == maps.labelNullIndex;
@@ -267,7 +267,7 @@ public class ArcEagerFeatureExtractorTest {
         Sentence sentence = dataSet.get(0).getSentence();
         Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
 
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+        double[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert baseFeatures[1] == IndexMaps.NullIndex;
         assert baseFeatures[23] == IndexMaps.NullIndex;
         assert baseFeatures[46] == maps.labelNullIndex;

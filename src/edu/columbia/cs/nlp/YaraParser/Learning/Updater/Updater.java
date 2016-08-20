@@ -1,8 +1,11 @@
 package edu.columbia.cs.nlp.YaraParser.Learning.Updater;
 
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.FirstHiddenLayer;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.Layer;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
-import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.NetworkMatrices;
 import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
+
+import java.util.ArrayList;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -15,9 +18,9 @@ import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 public abstract class Updater {
     MLPNetwork mlpNetwork;
     double learningRate;
-    NetworkMatrices gradientHistory;
+    ArrayList<Layer> gradientHistory;
     // only for ADAM/ADAMAX
-    NetworkMatrices gradientHistoryVariance;
+    ArrayList<Layer> gradientHistoryVariance;
     // iteration.
     int t;
     boolean outputBiasTerm;
@@ -25,39 +28,33 @@ public abstract class Updater {
     public Updater(MLPNetwork mlpNetwork, double learningRate, boolean outputBiasTerm) {
         this.mlpNetwork = mlpNetwork;
         this.learningRate = learningRate;
-        gradientHistory = new NetworkMatrices(mlpNetwork.getNumWords(), mlpNetwork.getWordEmbedDim(), mlpNetwork.getNumPos(),
-                mlpNetwork.getPosEmbedDim(), mlpNetwork.getNumDepLabels(), mlpNetwork.getDepEmbedDim(), mlpNetwork.getHiddenLayerDim(),
-                mlpNetwork.getHiddenLayerIntDim(), mlpNetwork.getSecondHiddenLayerDim(), mlpNetwork.getSoftmaxLayerDim());
+        ArrayList<Layer> netLayers = mlpNetwork.getLayers();
+        gradientHistory = new ArrayList<>(netLayers.size());
+        for (int i = 0; i < netLayers.size(); i++)
+            gradientHistory.add(netLayers.get(i).copy(true, false));
         gradientHistoryVariance = null;
         t = 1;
         this.outputBiasTerm = outputBiasTerm;
     }
 
-    public void update(NetworkMatrices gradients) throws Exception {
-        update(gradients.getWordEmbedding(), gradientHistory.getWordEmbedding(),
-                gradientHistoryVariance == null ? null : gradientHistoryVariance.getWordEmbedding(), EmbeddingTypes.WORD);
-        update(gradients.getPosEmbedding(), gradientHistory.getPosEmbedding(),
-                gradientHistoryVariance == null ? null : gradientHistoryVariance.getPosEmbedding(), EmbeddingTypes.POS);
-        update(gradients.getLabelEmbedding(), gradientHistory.getLabelEmbedding(),
-                gradientHistoryVariance == null ? null : gradientHistoryVariance.getLabelEmbedding(), EmbeddingTypes.DEPENDENCY);
-        update(gradients.getHiddenLayer(), gradientHistory.getHiddenLayer(),
-                gradientHistoryVariance == null ? null : gradientHistoryVariance.getHiddenLayer(), EmbeddingTypes.HIDDENLAYER);
-        update(gradients.getHiddenLayerBias(), gradientHistory.getHiddenLayerBias(),
-                gradientHistoryVariance == null ? null : gradientHistoryVariance.getHiddenLayerBias(), EmbeddingTypes.HIDDENLAYERBIAS);
+    public void update(ArrayList<Layer> gradients) throws Exception {
+        for (int i = 0; i < gradients.size(); i++) {
+            update(gradients.get(i).getW(), gradientHistory.get(i).getW(), gradientHistoryVariance == null ? null :
+                    gradientHistoryVariance.get(i).getW(), i);
+            update(gradients.get(i).getB(), gradientHistory.get(i).getB(), gradientHistoryVariance == null ? null :
+                    gradientHistoryVariance.get(i).getB(), i);
 
-        if (gradientHistory.getSecondHiddenLayer() != null) {
-            update(gradients.getSecondHiddenLayer(), gradientHistory.getSecondHiddenLayer(),
-                    gradientHistoryVariance == null ? null : gradientHistoryVariance.getSecondHiddenLayer(), EmbeddingTypes.SECONDHIDDENLAYER);
-            update(gradients.getSecondHiddenLayerBias(), gradientHistory.getSecondHiddenLayerBias(),
-                    gradientHistoryVariance == null ? null : gradientHistoryVariance.getSecondHiddenLayerBias(), EmbeddingTypes
-                            .SECONDHIDDENLAYERBIAS);
+            if (i == 0) {
+                FirstHiddenLayer layer = (FirstHiddenLayer) gradients.get(i);
+                FirstHiddenLayer layerH = (FirstHiddenLayer) gradientHistory.get(i);
+                update(layer.getWordEmbeddings().getW(), layerH.getWordEmbeddings().getW(), gradientHistoryVariance == null ? null :
+                        ((FirstHiddenLayer) gradientHistoryVariance.get(i)).getWordEmbeddings().getW(), EmbeddingTypes.WORD);
+                update(layer.getPosEmbeddings().getW(), layerH.getPosEmbeddings().getW(), gradientHistoryVariance == null ? null :
+                        ((FirstHiddenLayer) gradientHistoryVariance.get(i)).getPosEmbeddings().getW(), EmbeddingTypes.POS);
+                update(layer.getDepEmbeddings().getW(), layerH.getDepEmbeddings().getW(), gradientHistoryVariance == null ? null :
+                        ((FirstHiddenLayer) gradientHistoryVariance.get(i)).getDepEmbeddings().getW(), EmbeddingTypes.DEPENDENCY);
+            }
         }
-
-        update(gradients.getSoftmaxLayer(), gradientHistory.getSoftmaxLayer(),
-                gradientHistoryVariance == null ? null : gradientHistoryVariance.getSoftmaxLayer(), EmbeddingTypes.SOFTMAX);
-        if (outputBiasTerm)
-            update(gradients.getSoftmaxLayerBias(), gradientHistory.getSoftmaxLayerBias(),
-                    gradientHistoryVariance == null ? null : gradientHistoryVariance.getSoftmaxLayerBias(), EmbeddingTypes.SOFTMAXBIAS);
         t++;
     }
 
@@ -69,11 +66,13 @@ public abstract class Updater {
         this.learningRate = learningRate;
     }
 
-    protected abstract void update(double[][] g, double[][] h, double[][] v, EmbeddingTypes embeddingTypes) throws Exception;
+    protected abstract void update(double[][] g, double[][] h, double[][] v, int i) throws Exception;
 
-    protected abstract void update(double[] g, double[] h, double[] v, EmbeddingTypes embeddingTypes) throws Exception;
+    protected abstract void update(double[][] g, double[][] h, double[][] v, EmbeddingTypes types) throws Exception;
 
-    public final NetworkMatrices getGradientHistory() {
+    protected abstract void update(double[] g, double[] h, double[] v, int i) throws Exception;
+
+    public final ArrayList<Layer> getGradientHistory() {
         return gradientHistory;
     }
 }

@@ -9,11 +9,18 @@ package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
  */
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
+import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Activation;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Cubic;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
+import edu.columbia.cs.nlp.YaraParser.Learning.Activation.LogisticSoftMax;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Relu;
-import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.*;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.FirstHiddenLayer;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.Layer;
+import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.FixInit;
+import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.Initializer;
+import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.XavierInit;
+import edu.columbia.cs.nlp.YaraParser.Learning.WeightInit.enums.WeightInit;
 import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.TransitionBasedSystem.Parser.Enums.ParserType;
@@ -26,30 +33,25 @@ import java.util.Random;
  * Manual MLP model
  */
 public class MLPNetwork implements Serializable {
-    final public IndexMaps maps;
     final public Options options;
-    final public ArrayList<Integer> depLabels;
-    public final Activation activation;
-    public final ActivationType activationType;
-    final int numDepLabels;
-    final int depEmbedDim;
-    final int wordEmbedDim;
-    final int hiddenLayerDim;
-    final int hiddenLayerIntDim;
-    final int secondHiddenLayerDim;
-    final int numWords;
-    final int numPos;
-    final int posEmbedDim;
-    final int softmaxLayerDim;
-    //todo make them private.
-    NetworkMatrices matrices;
-    double[][][] saved;
-    private int numWordLayers;
-    private int numPosLayers;
-    private int numDepLayers;
+    //todo try to get rid of this.
+    public IndexMaps maps;
+    int numWordLayers;
+    int numPosLayers;
+    int numDepLayers;
+    int numOutputs;
+    int numDepLabels;
+    int wDim;
+    int pDim;
+    int depDim;
+    ArrayList<Integer> depLabels;
+    private ArrayList<Layer> layers;
 
     public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int wDim, int pDim, int lDim, ParserType parserType)
             throws Exception {
+        Random random = new Random();
+        this.maps = maps;
+
         if (parserType == ParserType.ArcEager) {
             numWordLayers = 22;
             numPosLayers = 22;
@@ -59,280 +61,130 @@ public class MLPNetwork implements Serializable {
             numPosLayers = 20;
             numDepLayers = 12;
         }
-        this.maps = maps;
-        this.options = options;
+        this.wDim = wDim;
+        this.pDim = pDim;
+        this.depDim = lDim;
+        int numWords = maps.vocabSize() + 2;
+        int numDepLabels = maps.relSize() + 2;
+        int numPos = maps.posSize() + 2;
+        this.layers = new ArrayList<>();
+        int nIn = numWordLayers * wDim + numPosLayers * pDim + numDepLayers * lDim;
+
+        WeightInit hiddenInit = options.networkProperties.activationType == ActivationType.RELU ? WeightInit.RELU : WeightInit.UNIFORM;
+        WeightInit hiddenBiasInit = options.networkProperties.activationType == ActivationType.RELU ? WeightInit.FIX : WeightInit.UNIFORM;
+        Activation activation = options.networkProperties.activationType == ActivationType.RELU ? new Relu() : new Cubic();
+        Initializer hiddenInitializer = WeightInit.initializer(hiddenInit, random, nIn, options.networkProperties.hiddenLayer1Size, 0);
+        Initializer hiddenBiasInitializer = WeightInit.initializer(hiddenBiasInit, random, nIn, options.networkProperties.hiddenLayer1Size, 0.2);
+
+        Layer inputLayer = new FirstHiddenLayer(activation, nIn, options.networkProperties.hiddenLayer1Size, hiddenInitializer, hiddenBiasInitializer,
+                numWordLayers, numPosLayers, numDepLayers, random, maps.preComputeMap, numWords, numPos, numDepLabels, wDim, pDim, lDim,
+                maps.getEmbeddingsDictionary());
+
+        layers.add(inputLayer);
+
+        if (options.networkProperties.hiddenLayer2Size > 0) {
+            layers.add(new Layer(activation, options.networkProperties.hiddenLayer1Size, options.networkProperties.hiddenLayer2Size,
+                    hiddenInitializer, hiddenBiasInitializer));
+        }
+
+
+        int outputnIn = layers.get(layers.size() - 1).nOut();
+        numOutputs = 2 * (depLabels.size() + 1);
+        layers.add(new Layer(new LogisticSoftMax(), outputnIn, numOutputs, new XavierInit(random, outputnIn, numOutputs), new FixInit(0),
+                options.networkProperties.outputBiasTerm));
+
         this.depLabels = depLabels;
-        softmaxLayerDim = 2 * (depLabels.size() + 1);
-        numWords = maps.vocabSize() + 2;
-        numDepLabels = maps.relSize() + 2;
-        depEmbedDim = lDim;
-        wordEmbedDim = wDim;
-        hiddenLayerDim = options.networkProperties.hiddenLayer1Size;
-        secondHiddenLayerDim = options.networkProperties.hiddenLayer2Size;
-        numPos = maps.posSize() + 2;
-        posEmbedDim = pDim;
-
-        this.activationType = options.networkProperties.activationType;
-        activation = activationType == ActivationType.RELU ? new Relu() : new Cubic();
-
-        hiddenLayerIntDim = numPosLayers * wDim + numPosLayers * posEmbedDim + numDepLayers * depEmbedDim;
-        matrices = new NetworkMatrices(numWords, wDim, numPos, posEmbedDim, numDepLabels, depEmbedDim, hiddenLayerDim,
-                hiddenLayerIntDim, secondHiddenLayerDim, softmaxLayerDim);
-        initializeLayers(activationType);
-        addPretrainedWordEmbeddings(maps);
-        preCompute();
+        this.numDepLabels = depLabels.size();
+        this.options = options;
     }
 
-    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int numDepLabels, int depEmbedDim, int wordEmbedDim, int
-            hiddenLayerDim, int hiddenLayerIntDim, int secondHiddenLayerDim, int numWords, int numPos, int posEmbedDim, int softmaxLayerDim,
-                      NetworkMatrices matrices, double[][][] saved, ActivationType activationType, int numWordLayers, int numPosLayers, int
-                              numDepLayers) {
-        this.maps = maps;
+    public MLPNetwork(Options options, ArrayList<Layer> layers, int numWordLayers, int numPosLayers, int numDepLayers, int numOutputs,
+                      ArrayList<Integer> depLabels) {
         this.options = options;
-        this.depLabels = depLabels;
-        this.numDepLabels = numDepLabels;
-        this.depEmbedDim = depEmbedDim;
-        this.wordEmbedDim = wordEmbedDim;
-        this.hiddenLayerDim = hiddenLayerDim;
-        this.hiddenLayerIntDim = hiddenLayerIntDim;
-        this.secondHiddenLayerDim = secondHiddenLayerDim;
-        this.numWords = numWords;
-        this.numPos = numPos;
-        this.posEmbedDim = posEmbedDim;
-        this.softmaxLayerDim = softmaxLayerDim;
-        this.matrices = matrices;
-        this.saved = saved;
-        this.activationType = activationType;
-        activation = activationType == ActivationType.RELU ? new Relu() : new Cubic();
+        this.layers = layers;
         this.numWordLayers = numWordLayers;
         this.numPosLayers = numPosLayers;
         this.numDepLayers = numDepLayers;
+        this.numOutputs = numOutputs;
+        this.numDepLabels = depLabels.size();
+        this.depLabels = depLabels;
+        this.maps = null;
     }
 
-    public static void averageNetworks(final MLPNetwork toAverageFrom, MLPNetwork averaged, final double r1, final double r2) {
-        ArrayList<double[][]> matrices1 = toAverageFrom.matrices.getAllMatrices();
-        ArrayList<double[][]> matrices2 = averaged.matrices.getAllMatrices();
-        for (int m = 0; m < matrices1.size(); m++) {
-            if (matrices1.get(m) == null) continue;
-            for (int i = 0; i < matrices1.get(m).length; i++) {
-                for (int j = 0; j < matrices1.get(m)[i].length; j++) {
-                    matrices2.get(m)[i][j] = r1 * matrices1.get(m)[i][j] + r2 * matrices2.get(m)[i][j];
-                }
-            }
-        }
-
-        ArrayList<double[]> vectors1 = toAverageFrom.matrices.getAllVectors();
-        ArrayList<double[]> vectors2 = averaged.matrices.getAllVectors();
-        for (int m = 0; m < vectors1.size(); m++) {
-            if (vectors1.get(m) == null) continue;
-            for (int i = 0; i < vectors1.get(m).length; i++) {
-                vectors2.get(m)[i] = r1 * vectors1.get(m)[i] + r2 * vectors2.get(m)[i];
-            }
+    public void averageNetworks(MLPNetwork averaged, final double r1, final double r2) {
+        ArrayList<Layer> avgLayers = averaged.getLayers();
+        assert avgLayers.size() == layers.size();
+        for (int i = 0; i < layers.size(); i++) {
+            Utils.avgMatrices(layers.get(i).getW(), avgLayers.get(i).getW(), r1, r2);
+            Utils.avgVectors(layers.get(i).getB(), avgLayers.get(i).getB(), r1, r2);
         }
     }
 
-    private void addPretrainedWordEmbeddings(IndexMaps maps) {
-        int numOfPretrained = 0;
-        for (int i = 0; i < numWords; i++) {
-            double[] embeddings = maps.embeddings(i);
-            if (embeddings != null) {
-                matrices.resetToPretrainedWordEmbeddings(i, embeddings);
-                numOfPretrained++;
-            }
-        }
-        System.out.println("num of pre-trained embedding " + numOfPretrained + " out of " + maps.vocabSize());
+    public double[] output(final double[] feats, final double[] labels) {
+        return output(feats, labels, true);
     }
 
-    private void initializeLayers(ActivationType activationType) throws Exception {
-        Random random = new Random();
-        Initializer hiddenBiasInit = activationType == ActivationType.RELU ? new FixInit(0.2) :
-                new NormalInit(random, 10000);
-
-        Initializer wordEmbeddingInitializer = new UniformInit(random, wordEmbedDim);
-        wordEmbeddingInitializer.init(matrices.getWordEmbedding());
-
-        Initializer posEmbeddingInitializer = new UniformInit(random, posEmbedDim);
-        posEmbeddingInitializer.init(matrices.getPosEmbedding());
-
-
-        Initializer labelEmbeddingInitializer = new UniformInit(random, depEmbedDim);
-        labelEmbeddingInitializer.init(matrices.getLabelEmbedding());
-
-        Initializer hiddenLayerInitializer = new ReluInit(random, hiddenLayerDim, hiddenLayerIntDim);
-        hiddenLayerInitializer.init(matrices.getHiddenLayer());
-        hiddenBiasInit.init(matrices.getHiddenLayerBias());
-
-        int s2Dim = secondHiddenLayerDim > 0 ? secondHiddenLayerDim : hiddenLayerDim;
-        Initializer softmaxLayerInitializer = new ReluInit(random, softmaxLayerDim, s2Dim);
-        softmaxLayerInitializer.init(matrices.getSoftmaxLayer());
-
-        if (secondHiddenLayerDim > 0) {
-            Initializer secondHiddenLayerInitializer = new ReluInit(random, secondHiddenLayerDim, hiddenLayerDim);
-            secondHiddenLayerInitializer.init(matrices.getSecondHiddenLayer());
-            hiddenBiasInit.init(matrices.getSecondHiddenLayerBias());
+    public double[] output(final double[] feats, final double[] labels, boolean logOut) {
+        double[] o = feats;
+        for (int l = 0; l < layers.size() - 1; l++) {
+            o = layers.get(l).activate(layers.get(l).forward(o));
         }
-    }
-
-    public void modify(EmbeddingTypes t, int i, int j, double change) throws Exception {
-        matrices.modify(t, i, j, change);
-    }
-
-    public void preCompute() {
-        final double[][] hiddenLayer = matrices.getHiddenLayer();
-        final double[][] wordEmbeddings = matrices.getWordEmbedding();
-        final double[][] posEmbeddings = matrices.getPosEmbedding();
-        final double[][] labelEmbeddings = matrices.getLabelEmbedding();
-
-        saved = new double[numWordLayers + numPosLayers + numDepLayers][][];
-        for (int i = 0; i < numWordLayers; i++)
-            saved[i] = new double[maps.preComputeMap[i].size()][hiddenLayerDim];
-        for (int i = numWordLayers; i < numWordLayers + numPosLayers; i++)
-            saved[i] = new double[numPos][hiddenLayerDim];
-        for (int i = numWordLayers + numPosLayers; i < numWordLayers + numPosLayers + numDepLayers; i++)
-            saved[i] = new double[numDepLabels][hiddenLayerDim];
-
-        int offset = 0;
-        for (int pos = 0; pos < numWordLayers; pos++) {
-            for (int tok : maps.preComputeMap[pos].keySet()) {
-                int id = maps.preComputeMap[pos].get(tok);
-                for (int h = 0; h < hiddenLayerDim; h++) {
-                    for (int k = 0; k < wordEmbedDim; k++) {
-                        saved[pos][id][h] += hiddenLayer[h][offset + k] * wordEmbeddings[tok][k];
-                    }
-                }
-            }
-            offset += wordEmbedDim;
-        }
-
-        for (int pos = 0; pos < numPosLayers; pos++) {
-            for (int tok = 0; tok < numPos; tok++) {
-                int indOffset = numWordLayers;
-                for (int h = 0; h < hiddenLayerDim; h++) {
-                    for (int k = 0; k < posEmbedDim; k++) {
-                        saved[pos + indOffset][tok][h] += hiddenLayer[h][offset + k] * posEmbeddings[tok][k];
-                    }
-                }
-            }
-            offset += posEmbedDim;
-        }
-
-        for (int pos = 0; pos < numDepLayers; pos++) {
-            for (int tok = 0; tok < numDepLabels; tok++) {
-                int indOffset = numWordLayers + numPosLayers;
-                for (int h = 0; h < hiddenLayerDim; h++) {
-                    for (int k = 0; k < depEmbedDim; k++) {
-                        saved[pos + indOffset][tok][h] += hiddenLayer[h][offset + k] * labelEmbeddings[tok][k];
-                    }
-                }
-            }
-            offset += depEmbedDim;
-        }
-    }
-
-    public double[] output(final int[] feats, final int[] labels) {
-        final double[][] softmaxLayer = matrices.getSoftmaxLayer();
-        final double[] softmaxLayerBias = matrices.getSoftmaxLayerBias();
-        final double[][] hiddenLayer = matrices.getHiddenLayer();
-        final double[] hiddenLayerBias = matrices.getHiddenLayerBias();
-        final double[][] wordEmbeddings = matrices.getWordEmbedding();
-        final double[][] posEmbeddings = matrices.getPosEmbedding();
-        final double[][] labelEmbeddings = matrices.getLabelEmbedding();
-        double[] hidden = new double[hiddenLayer.length];
-
-        int offset = 0;
-        for (int j = 0; j < feats.length; j++) {
-            int tok = feats[j];
-            double[][] embedding;
-            if (j < numWordLayers)
-                embedding = wordEmbeddings;
-            else if (j < numWordLayers + numPosLayers)
-                embedding = posEmbeddings;
-            else embedding = labelEmbeddings;
-
-            if (saved != null && (j >= numWordLayers || maps.preComputeMap[j].containsKey(tok))) {
-                int id = tok;
-                if (j < numWordLayers)
-                    id = maps.preComputeMap[j].get(tok);
-                double[] s = saved[j][id];
-                for (int i = 0; i < hidden.length; i++) {
-                    hidden[i] += s[i];
-                }
-            } else {
-                for (int i = 0; i < hidden.length; i++) {
-                    for (int k = 0; k < embedding[tok].length; k++) {
-                        hidden[i] += hiddenLayer[i][offset + k] * embedding[tok][k];
-                    }
-                }
-            }
-            offset += embedding[tok].length;
-        }
-
-        for (int i = 0; i < hidden.length; i++) {
-            hidden[i] += hiddenLayerBias[i];
-            hidden[i] = activation.activate(hidden[i]);
-        }
-
-
-        double[] secondHidden = new double[secondHiddenLayerDim];
-        if (secondHiddenLayerDim > 0) {
-            final double[][] secondHiddenLayer = matrices.getSecondHiddenLayer();
-            final double[] secondHiddenLayerBias = matrices.getSecondHiddenLayerBias();
-            for (int i = 0; i < secondHidden.length; i++) {
-                for (int h = 0; h < hidden.length; h++) {
-                    secondHidden[i] += secondHiddenLayer[i][h] * hidden[h];
-                }
-            }
-            for (int i = 0; i < secondHidden.length; i++) {
-                secondHidden[i] += secondHiddenLayerBias[i];
-                secondHidden[i] = activation.activate(secondHidden[i]);
-            }
-        }
-
-        double[] lastHidden = secondHiddenLayerDim > 0 ? secondHidden : hidden;
-
-        double[] probs = new double[softmaxLayerBias.length];
-        double sum = 0;
-        int argmax = 0;
-        int numActiveLabels = 0;
-        for (int i = 0; i < probs.length; i++) {
-            if (labels[i] >= 0) {
-                for (int j = 0; j < lastHidden.length; j++) {
-                    probs[i] += softmaxLayer[i][j] * lastHidden[j];
-                }
-                probs[i] += softmaxLayerBias[i];
-                if (probs[i] > probs[argmax])
-                    argmax = i;
-            }
-        }
-
-        double max = probs[argmax];
-        for (int i = 0; i < probs.length; i++) {
-            if (labels[i] >= 0) {
-                numActiveLabels++;
-                probs[i] = probs[i] - max;
-                sum += Math.exp(probs[i]);
-            }
-        }
-
-        for (int i = 0; i < probs.length; i++) {
-            if (sum != 0)
-                probs[i] -= Math.log(sum);
-            else
-                probs[i] = 1.0 / numActiveLabels;
-        }
-        return probs;
-    }
-
-    public IndexMaps getMaps() {
-        return maps;
+        o = layers.get(layers.size() - 1).forward(o, labels, logOut);
+        return o;
     }
 
     public Options getOptions() {
         return options;
     }
 
-    public ArrayList<Integer> getDepLabels() {
-        return depLabels;
+    public ArrayList<Layer> getLayers() {
+        return layers;
+    }
+
+    public Layer layer(int index) {
+        return layers.get(index);
+    }
+
+    public int numLayers() {
+        return layers.size();
+    }
+
+    /**
+     * This is used just for testing.
+     *
+     * @return
+     */
+    public MLPNetwork clone() {
+        return clone(false, true);
+    }
+
+    public void emptyPrecomputedMap() {
+        ((FirstHiddenLayer) layer(0)).emptyPrecomputedMap();
+    }
+
+    public void modify(int layerIndex, int i, int j, double change) {
+        if (j == -1)
+            layers.get(layerIndex).modifyB(i, change);
+        else
+            layers.get(layerIndex).modifyW(i, j, change);
+    }
+
+    public void modify(EmbeddingTypes embeddingTypes, int i, int j, double change) {
+        ((FirstHiddenLayer) layers.get(0)).modify(embeddingTypes, i, j, change);
+    }
+
+    public MLPNetwork clone(boolean zeroOut, boolean deepCopy) {
+        ArrayList<Layer> layers = new ArrayList<>(this.layers.size());
+        for (int l = 0; l < this.layers.size(); l++) {
+            layers.add(this.layers.get(l).copy(zeroOut, deepCopy));
+        }
+        MLPNetwork network = new MLPNetwork(options, layers, numWordLayers, numPosLayers, numDepLayers, numOutputs, depLabels);
+        ((FirstHiddenLayer) network.layer(0)).setPrecomputationMap(((FirstHiddenLayer) layer(0)).getPrecomputationMap());
+        return network;
+    }
+
+    public int getNumOutputs() {
+        return numOutputs;
     }
 
     public int getNumWordLayers() {
@@ -351,58 +203,49 @@ public class MLPNetwork implements Serializable {
         return numDepLabels;
     }
 
-    public int getDepEmbedDim() {
-        return depEmbedDim;
+    public ArrayList<Integer> getDepLabels() {
+        return depLabels;
     }
 
-    public int getWordEmbedDim() {
-        return wordEmbedDim;
+    public void preCompute() {
+        ((FirstHiddenLayer) layer(0)).preCompute();
     }
 
-    public int getHiddenLayerDim() {
-        return hiddenLayerDim;
+    public double[][][] instantiateSavedGradients() {
+        int numDepLabels = ((FirstHiddenLayer) layer(0)).getDepEmbeddings().vocabSize();
+        int numPos = ((FirstHiddenLayer) layer(0)).getPosEmbeddings().vocabSize();
+        double[][][] savedGradients = new double[getNumWordLayers() + getNumPosLayers() + getNumDepLayers()][][];
+        for (int i = 0; i < getNumWordLayers(); i++)
+            savedGradients[i] = new double[((FirstHiddenLayer) layer(0)).getWordEmbeddings().numOfPrecomputedItems(i)][layer(0).nOut()];
+        for (int i = getNumWordLayers(); i < getNumWordLayers() + getNumPosLayers(); i++)
+            savedGradients[i] = new double[numPos][layer(0).nOut()];
+        for (int i = getNumWordLayers() + getNumPosLayers();
+             i < getNumWordLayers() + getNumPosLayers() + getNumDepLayers(); i++)
+            savedGradients[i] = new double[numDepLabels][layer(0).nOut()];
+        return savedGradients;
     }
 
-    public int getHiddenLayerIntDim() {
-        return hiddenLayerIntDim;
+    public int getwDim() {
+        return wDim;
     }
 
-    public int getSecondHiddenLayerDim() {
-        return secondHiddenLayerDim;
+    public int getpDim() {
+        return pDim;
     }
 
-    public int getNumWords() {
-        return numWords;
+    public int getDepDim() {
+        return depDim;
     }
 
-    public int getNumPos() {
-        return numPos;
+    public final double[][] getWordEmbedding() {
+        return ((FirstHiddenLayer) layer(0)).getWordEmbeddings().getW();
     }
 
-    public int getPosEmbedDim() {
-        return posEmbedDim;
+    public final double[][] getPosEmbedding() {
+        return ((FirstHiddenLayer) layer(0)).getPosEmbeddings().getW();
     }
 
-    public int getSoftmaxLayerDim() {
-        return softmaxLayerDim;
+    public final double[][] getDepEmbedding() {
+        return ((FirstHiddenLayer) layer(0)).getDepEmbeddings().getW();
     }
-
-    public NetworkMatrices getMatrices() {
-        return matrices;
-    }
-
-    /**
-     * This is used just for testing.
-     *
-     * @return
-     */
-    public MLPNetwork clone() {
-        MLPNetwork network = new MLPNetwork(maps, options, depLabels, numDepLabels, depEmbedDim, wordEmbedDim, hiddenLayerDim,
-                hiddenLayerIntDim, secondHiddenLayerDim, numWords, numPos, posEmbedDim, softmaxLayerDim, null, null, activationType,
-                numWordLayers, numPosLayers, numDepLayers);
-        network.matrices = matrices.clone();
-        return network;
-    }
-
-
 }

@@ -43,17 +43,38 @@ public class SGD extends Updater {
     }
 
     @Override
-    protected void update(double[] g, double[] h, double[] v, EmbeddingTypes embeddingTypes) throws Exception {
+    protected void update(double[][] g, double[][] h, double[][] v, int layerIndex) throws Exception {
+        for (int i = 0; i < g.length; i++) {
+            for (int j = 0; j < g[i].length; j++) {
+                if (type == SGDType.VANILLA) {
+                    mlpNetwork.modify(layerIndex, i, j, -learningRate * g[i][j]);
+                } else if (type == SGDType.MOMENTUM) {
+                    h[i][j] = momentum * h[i][j] - g[i][j];
+                    mlpNetwork.modify(layerIndex, i, j, learningRate * h[i][j]);
+                } else if (type == SGDType.NESTEROV) {
+                    double hPrev = h[i][j];
+                    h[i][j] = momentum * h[i][j] - learningRate * g[i][j];
+                    mlpNetwork.modify(layerIndex, i, j, -momentum * hPrev + (1 + momentum) * h[i][j]);
+                } else {
+                    throw new Exception("SGD type not supported");
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void update(double[] g, double[] h, double[] v, int layerIndex) throws Exception {
+        if (g == null) return;
         for (int i = 0; i < g.length; i++) {
             if (type == SGDType.VANILLA) {
-                mlpNetwork.modify(embeddingTypes, i, -1, -learningRate * g[i]);
+                mlpNetwork.modify(layerIndex, i, -1, -learningRate * g[i]);
             } else if (type == SGDType.MOMENTUM) {
                 h[i] = momentum * h[i] - g[i];
-                mlpNetwork.modify(embeddingTypes, i, -1, learningRate * h[i]);
+                mlpNetwork.modify(layerIndex, i, -1, learningRate * h[i]);
             } else if (type == SGDType.NESTEROV) {
                 double hPrev = h[i];
                 h[i] = momentum * h[i] - learningRate * g[i];
-                mlpNetwork.modify(embeddingTypes, i, -1, -momentum * hPrev + (1 + momentum) * h[i]);
+                mlpNetwork.modify(layerIndex, i, -1, -momentum * hPrev + (1 + momentum) * h[i]);
             } else {
                 throw new Exception("SGD type not supported");
             }

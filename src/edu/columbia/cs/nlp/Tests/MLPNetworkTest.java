@@ -2,6 +2,10 @@ package edu.columbia.cs.nlp.Tests;
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.CoNLLReader;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
+import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.FirstHiddenLayer;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.Layer;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.WordEmbeddingLayer;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
@@ -112,6 +116,102 @@ public class MLPNetworkTest {
             "22\t.\t_\t.\t.\t_\t3\tpunct\t_\t_\n";
 
     @Test
+    public void testClone() throws Exception {
+        writeText();
+        Options options = new Options();
+        options.networkProperties.hiddenLayer1Size = 10;
+        options.generalProperties.inputFile = txtFilePath;
+        IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
+                options.generalProperties.lowercase, "", 0);
+        ArrayList<Integer> dependencyLabels = new ArrayList<>();
+        for (int lab = 0; lab < maps.relSize(); lab++)
+            dependencyLabels.add(lab);
+        CoNLLReader reader = new CoNLLReader(options.generalProperties.inputFile);
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
+                options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+        int wDim = 8;
+        int pDim = 4;
+        int lDim = 6;
+        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+                maps.labelNullIndex, maps.rareWords);
+        List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+        maps.constructPreComputeMap(instances, 22, 10000);
+
+        MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+        network.preCompute();
+        MLPNetwork clonedNetwork = network.clone();
+        clonedNetwork.emptyPrecomputedMap();
+
+        assert clonedNetwork.numLayers() == network.numLayers();
+        for (int i = 0; i < clonedNetwork.numLayers(); i++) {
+            Layer layer1 = network.layer(i);
+            Layer layer2 = clonedNetwork.layer(i);
+            assert Utils.equals(layer1.getW(), layer2.getW());
+            if (layer1.getB() != null)
+                assert Utils.equals(layer1.getB(), layer2.getB());
+
+            if (layer1 instanceof FirstHiddenLayer) {
+                WordEmbeddingLayer wordEmbeddingLayer1 = ((FirstHiddenLayer) layer1).getWordEmbeddings();
+                Layer posEmbeddingLayer1 = ((FirstHiddenLayer) layer1).getPosEmbeddings();
+                Layer depEmbeddingLayer1 = ((FirstHiddenLayer) layer1).getDepEmbeddings();
+
+                WordEmbeddingLayer wordEmbeddingLayer2 = ((FirstHiddenLayer) layer2).getWordEmbeddings();
+                Layer posEmbeddingLayer2 = ((FirstHiddenLayer) layer2).getPosEmbeddings();
+                Layer depEmbeddingLayer2 = ((FirstHiddenLayer) layer2).getDepEmbeddings();
+
+                assert Utils.equals(wordEmbeddingLayer1.getW(), wordEmbeddingLayer2.getW());
+                assert Utils.equals(posEmbeddingLayer1.getW(), posEmbeddingLayer2.getW());
+                assert Utils.equals(depEmbeddingLayer1.getW(), depEmbeddingLayer2.getW());
+            }
+        }
+    }
+
+
+    @Test
+    public void testCloneAllZero() throws Exception {
+        writeText();
+        Options options = new Options();
+        options.networkProperties.hiddenLayer1Size = 10;
+        options.generalProperties.inputFile = txtFilePath;
+        IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
+                options.generalProperties.lowercase, "", 0);
+        ArrayList<Integer> dependencyLabels = new ArrayList<>();
+        for (int lab = 0; lab < maps.relSize(); lab++)
+            dependencyLabels.add(lab);
+        CoNLLReader reader = new CoNLLReader(options.generalProperties.inputFile);
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
+                options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+        int wDim = 8;
+        int pDim = 4;
+        int lDim = 6;
+        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+                maps.labelNullIndex, maps.rareWords);
+        List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+        maps.constructPreComputeMap(instances, 22, 10000);
+
+        MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+        network.preCompute();
+        MLPNetwork clonedNetwork = network.clone(true, false);
+
+        assert clonedNetwork.numLayers() == network.numLayers();
+        for (int i = 0; i < clonedNetwork.numLayers(); i++) {
+            Layer layer2 = clonedNetwork.layer(i);
+            assert Utils.allZero(layer2.getW());
+            assert Utils.allZero(layer2.getB());
+
+            if (layer2 instanceof FirstHiddenLayer) {
+                WordEmbeddingLayer wordEmbeddingLayer2 = ((FirstHiddenLayer) layer2).getWordEmbeddings();
+                Layer posEmbeddingLayer2 = ((FirstHiddenLayer) layer2).getPosEmbeddings();
+                Layer depEmbeddingLayer2 = ((FirstHiddenLayer) layer2).getDepEmbeddings();
+
+                assert Utils.allZero(wordEmbeddingLayer2.getW());
+                assert Utils.allZero(posEmbeddingLayer2.getW());
+                assert Utils.allZero(depEmbeddingLayer2.getW());
+            }
+        }
+    }
+
+    @Test
     public void testSaved() throws Exception {
         writeText();
         Options options = new Options();
@@ -136,6 +236,7 @@ public class MLPNetworkTest {
         MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
         network.preCompute();
         MLPNetwork clonedNetwork = network.clone();
+        clonedNetwork.emptyPrecomputedMap();
 
         double eps = 1e-15;
         for (NeuralTrainingInstance instance : instances) {
@@ -180,6 +281,7 @@ public class MLPNetworkTest {
             MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
             network.preCompute();
             MLPNetwork clonedNetwork = network.clone();
+            clonedNetwork.emptyPrecomputedMap();
 
             double eps = 1e-15;
             for (NeuralTrainingInstance instance : instances) {
@@ -196,6 +298,155 @@ public class MLPNetworkTest {
         }
     }
 
+    @Test
+    public void testOutput() throws Exception {
+        writeText();
+        Options options = new Options();
+        options.networkProperties.hiddenLayer1Size = 10;
+        options.generalProperties.inputFile = txtFilePath;
+        options.networkProperties.outputBiasTerm = true;
+        IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
+                options.generalProperties.lowercase, "", 0);
+        ArrayList<Integer> dependencyLabels = new ArrayList<>();
+        for (int lab = 0; lab < maps.relSize(); lab++)
+            dependencyLabels.add(lab);
+        CoNLLReader reader = new CoNLLReader(options.generalProperties.inputFile);
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
+                options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+        int wDim = 4;
+        int pDim = 4;
+        int lDim = 4;
+
+        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+                maps.labelNullIndex, maps.rareWords);
+        List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+        maps.constructPreComputeMap(instances, 22, 10000);
+
+        MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+        double[][] w = network.getWordEmbedding();
+        for (int i = 0; i < w.length; i++) {
+            for (int j = 0; j < w[i].length; j++)
+                w[i][j] = 1;
+        }
+
+        double[][] p = network.getPosEmbedding();
+        for (int i = 0; i < p.length; i++) {
+            for (int j = 0; j < p[i].length; j++)
+                p[i][j] = 1;
+        }
+
+        double[][] l = network.getPosEmbedding();
+        for (int i = 0; i < l.length; i++) {
+            for (int j = 0; j < l[i].length; j++)
+                l[i][j] = 1;
+        }
+
+        double[] hBias = network.layer(0).getB();
+        for (int i = 0; i < hBias.length; i++)
+            hBias[i] = 1;
+
+        double[][] hW = network.layer(0).getW();
+        for (int i = 0; i < hW.length; i++) {
+            for (int j = 0; j < hW[i].length; j++)
+                hW[i][j] = 1;
+        }
+
+        double[] sBias = network.layer(1).getB();
+        for (int i = 0; i < sBias.length; i++)
+            sBias[i] = 1;
+
+        double[][] sW = network.layer(1).getW();
+        for (int i = 0; i < sW.length; i++) {
+            for (int j = 0; j < sW[i].length; j++)
+                sW[i][j] = 1;
+        }
+
+        network.preCompute();
+
+        for (NeuralTrainingInstance instance : instances) {
+            double[] preComputedOutput = network.output(instance.getFeatures(), new double[network.getNumOutputs()]);
+
+            for (int i = 0; i < preComputedOutput.length; i++)
+                assert preComputedOutput[i] == Math.log(1.0 / network.getNumOutputs());
+        }
+    }
+
+    @Test
+    public void testForward() throws Exception {
+        writeText();
+        Options options = new Options();
+        options.networkProperties.hiddenLayer1Size = 10;
+        options.generalProperties.inputFile = txtFilePath;
+        options.networkProperties.outputBiasTerm = true;
+        IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
+                options.generalProperties.lowercase, "", 0);
+        ArrayList<Integer> dependencyLabels = new ArrayList<>();
+        for (int lab = 0; lab < maps.relSize(); lab++)
+            dependencyLabels.add(lab);
+        CoNLLReader reader = new CoNLLReader(options.generalProperties.inputFile);
+        ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
+                options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+        int wDim = 4;
+        int pDim = 4;
+        int lDim = 4;
+
+        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+                maps.labelNullIndex, maps.rareWords);
+        List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
+        maps.constructPreComputeMap(instances, 22, 10000);
+
+        MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+
+        double[][] w = network.getWordEmbedding();
+        for (int i = 0; i < w.length; i++) {
+            for (int j = 0; j < w[i].length; j++)
+                w[i][j] = 3;
+        }
+
+        double[][] p = network.getPosEmbedding();
+        for (int i = 0; i < p.length; i++) {
+            for (int j = 0; j < p[i].length; j++)
+                p[i][j] = 2;
+        }
+
+        double[][] l = network.getDepEmbedding();
+        for (int i = 0; i < l.length; i++) {
+            for (int j = 0; j < l[i].length; j++)
+                l[i][j] = 1;
+        }
+
+        double[] hBias = network.layer(0).getB();
+        for (int i = 0; i < hBias.length; i++)
+            hBias[i] = 4;
+
+        double[][] hW = network.layer(0).getW();
+        for (int i = 0; i < hW.length; i++) {
+            for (int j = 0; j < hW[i].length; j++)
+                hW[i][j] = 1;
+        }
+
+        double[] sBias = network.layer(1).getB();
+        for (int i = 0; i < sBias.length; i++)
+            sBias[i] = 1;
+
+        double[][] sW = network.layer(1).getW();
+        for (int i = 0; i < sW.length; i++) {
+            for (int j = 0; j < sW[i].length; j++)
+                sW[i][j] = 1;
+        }
+        network.emptyPrecomputedMap();
+
+        double[] f1 = null;
+        for (NeuralTrainingInstance instance : instances) {
+            double[] f = network.layer(0).forward(instance.getFeatures());
+            for (int i = 0; i < f.length; i++) {
+                assert f[i] == network.getNumWordLayers() * 3 * network.getwDim() + network.getNumPosLayers() * 2 * network.getpDim() +
+                        network.getNumDepLayers() * 1 * network.getDepDim() + 4;
+            }
+        }
+
+    }
 
     private void writeText() throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter(txtFilePath));

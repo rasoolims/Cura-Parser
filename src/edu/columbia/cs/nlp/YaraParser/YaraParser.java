@@ -44,6 +44,7 @@ public class YaraParser {
             options.generalProperties.outputFile = "/tmp/model.out";
             options.generalProperties.labeled = true;
             options.networkProperties.hiddenLayer1Size = 200;
+            options.networkProperties.hiddenLayer2Size = 0;
             options.updaterProperties.learningRate = 0.001;
             options.networkProperties.batchSize = 1024;
             options.trainingOptions.trainingIter = 100;
@@ -175,7 +176,7 @@ public class YaraParser {
                 if (options.trainingOptions.averagingOption != AveragingOption.NO) {
                     // averaging
                     double ratio = Math.min(0.9999, (double) step / (9 + step));
-                    MLPNetwork.averageNetworks(mlpNetwork, avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
+                    mlpNetwork.averageNetworks(avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
                 }
 
                 if (step % options.trainingOptions.UASEvalPerStep == 0) {

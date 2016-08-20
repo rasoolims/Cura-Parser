@@ -109,7 +109,7 @@ public class ArcStandardFeatureExtractorTest {
         parser.rightArc(configuration.state, maps.dep2Int("adpobj"));   // 15->16
         parser.rightArc(configuration.state, maps.dep2Int("adpmod"));   // 11->15
 
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+        double[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert configuration.state.stackSize() == 3;
         int fIndex = 0;
         assert baseFeatures[fIndex++] == maps.word2Int("raising");
@@ -295,7 +295,7 @@ public class ArcStandardFeatureExtractorTest {
         parser.rightArc(configuration.state, maps.dep2Int("adpobj"));   // 15->16
         parser.rightArc(configuration.state, maps.dep2Int("adpmod"));   // 11->15
 
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+        double[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert configuration.state.stackSize() == 4;
         int fIndex = 0;
         assert baseFeatures[fIndex++] == maps.word2Int("raising");

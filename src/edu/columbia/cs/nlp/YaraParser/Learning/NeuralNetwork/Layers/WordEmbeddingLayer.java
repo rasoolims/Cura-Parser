@@ -29,6 +29,7 @@ public class WordEmbeddingLayer extends EmbeddingLayer {
     }
 
     public boolean isFrequent(int index, int wordId) {
+        if (precomputationMap == null) return false;
         return precomputationMap[index].containsKey(wordId);
     }
 
@@ -46,5 +47,17 @@ public class WordEmbeddingLayer extends EmbeddingLayer {
 
     public Set<Integer> preComputedIds(int index) {
         return precomputationMap[index].keySet();
+    }
+
+    public void emptyPrecomputedMap() {
+        this.precomputationMap = null;
+    }
+
+    public final HashMap<Integer, Integer>[] getPrecomputationMap() {
+        return precomputationMap;
+    }
+
+    public void setPrecomputationMap(HashMap<Integer, Integer>[] precomputationMap) {
+        this.precomputationMap = precomputationMap;
     }
 }

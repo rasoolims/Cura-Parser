@@ -83,8 +83,8 @@ public class BeamTrainer {
                 break;
             }
 
-            int[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, labelNullIndex, parser);
-            int[] label = new int[2 * (dependencyRelations.size() + 1)];
+            double[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, labelNullIndex, parser);
+            double[] label = new double[2 * (dependencyRelations.size() + 1)];
             if (!parser.canDo(Actions.LeftArc, currentConfig.state)) {
                 for (int i = 2; i < 2 + dependencyRelations.size(); i++)
                     label[i + dependencyRelations.size()] = -1;
@@ -130,7 +130,7 @@ public class BeamTrainer {
             boolean canRightArc = parser.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = parser.canDo(Actions.LeftArc, currentState);
 
-            int[] labels = new int[network.getSoftmaxLayerDim()];
+            double[] labels = new double[network.getNumOutputs()];
             if (!canShift) labels[0] = -1;
             if (!canReduce) labels[1] = -1;
             if (!canRightArc)
@@ -139,7 +139,7 @@ public class BeamTrainer {
             if (!canLeftArc)
                 for (int i = 0; i < dependencyRelations.size(); i++)
                     labels[dependencyRelations.size() + 2 + i] = -1;
-            int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
+            double[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
             double[] scores = network.output(features, labels);
 
             if (canShift) {

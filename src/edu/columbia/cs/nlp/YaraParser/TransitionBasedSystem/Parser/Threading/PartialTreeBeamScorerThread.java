@@ -59,7 +59,7 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         boolean canReduce = parser.canDo(Actions.Reduce, currentState);
         boolean canRightArc = parser.canDo(Actions.RightArc, currentState);
         boolean canLeftArc = parser.canDo(Actions.LeftArc, currentState);
-        int[] labels = new int[network.getSoftmaxLayerDim()];
+        double[] labels = new double[network.getNumOutputs()];
         if (!canShift) labels[0] = -1;
         if (!canReduce) labels[1] = -1;
         if (!canRightArc)
@@ -68,7 +68,7 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         if (!canLeftArc)
             for (int i = 0; i < dependencyRelations.size(); i++)
                 labels[dependencyRelations.size() + 2 + i] = -1;
-        int[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
+        double[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
         double[] scores = network.output(features, labels);
 
         if (canShift) {

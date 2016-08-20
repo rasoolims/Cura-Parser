@@ -6,6 +6,7 @@ import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
 import edu.columbia.cs.nlp.YaraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPNetwork;
 import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.MLPTrainer;
+import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.YaraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.YaraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
@@ -207,10 +208,12 @@ public class ParserTest {
 
     @Test
     public void TestPretrainedtWordEmbeddingUpdates() throws Exception {
+        for (UpdaterType updaterType : UpdaterType.values()) {
         for (ActivationType type : ActivationType.values()) {
             writeText();
             writeWordEmbedText();
             Options options = new Options();
+            options.updaterProperties.updaterType = updaterType;
             options.trainingOptions.wordEmbeddingFile = embedFilePath;
             options.trainingOptions.devPath = txtFilePath;
             options.networkProperties.activationType = type;
@@ -272,6 +275,7 @@ public class ParserTest {
                     if (acc == 1) assert evaluator.first == 100 && evaluator.second == 100;
                 }
             }
+        }
         }
     }
 

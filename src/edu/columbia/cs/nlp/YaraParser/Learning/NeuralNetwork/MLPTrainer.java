@@ -2,6 +2,9 @@ package edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork;
 
 import edu.columbia.cs.nlp.YaraParser.Accessories.Options;
 import edu.columbia.cs.nlp.YaraParser.Accessories.Utils;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.FirstHiddenLayer;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.Layer;
+import edu.columbia.cs.nlp.YaraParser.Learning.NeuralNetwork.Layers.WordEmbeddingLayer;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.*;
 import edu.columbia.cs.nlp.YaraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.YaraParser.Structures.Enums.EmbeddingTypes;
@@ -10,10 +13,7 @@ import edu.columbia.cs.nlp.YaraParser.Structures.Pair;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -31,7 +31,7 @@ public class MLPTrainer {
      * for multi-threading
      */
     ExecutorService executor;
-    CompletionService<Pair<Pair<Double, Double>, NetworkMatrices>> pool;
+    CompletionService<Pair<Pair<Double, Double>, MLPNetwork>> pool;
     int numThreads;
 
     /**
@@ -46,7 +46,8 @@ public class MLPTrainer {
     /**
      * Gradients
      */
-    private NetworkMatrices gradients;
+    // todo make this network
+    private ArrayList<Layer> gradients;
     private double regCoef;
     private double dropoutProb;
     private boolean regularizeAllLayers;
@@ -75,74 +76,70 @@ public class MLPTrainer {
 
     private void regularizeWithL2() throws Exception {
         double regCost = 0.0;
-        final double[][] hiddenLayer = net.matrices.getHiddenLayer();
-        final double[] hiddenLayerBias = net.matrices.getHiddenLayerBias();
 
-        for (int h = 0; h < hiddenLayer.length; h++) {
-            if (regularizeAllLayers) {
-                regCost += Math.pow(hiddenLayerBias[h], 2);
-                gradients.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, regCoef * 2 * hiddenLayerBias[h]);
-            }
-            for (int j = 0; j < hiddenLayer[h].length; j++) {
-                regCost += Math.pow(hiddenLayer[h][j], 2);
-                gradients.modify(EmbeddingTypes.HIDDENLAYER, h, j, regCoef * 2 * hiddenLayer[h][j]);
-            }
-        }
-
-        final double[][] secondHiddenLayer = net.matrices.getSecondHiddenLayer();
-        final double[] secondHiddenLayerBias = net.matrices.getSecondHiddenLayerBias();
-
-        if (secondHiddenLayer != null) {
-            for (int h = 0; h < secondHiddenLayer.length; h++) {
+        ArrayList<Layer> layers = net.getLayers();
+        for (int i = 0; i < layers.size() - 1; i++) {
+            Layer layer = layers.get(i);
+            Layer gradient = gradients.get(i);
+            for (int d1 = 0; d1 < layer.nOut(); d1++) {
                 if (regularizeAllLayers) {
-                    regCost += Math.pow(secondHiddenLayerBias[h], 2);
-                    gradients.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, h, -1, regCoef * 2 * secondHiddenLayerBias[h]);
+                    regCost += Math.pow(layer.b(d1), 2);
+                    gradient.modifyB(d1, regCoef * 2 * layer.b(d1));
                 }
-                for (int j = 0; j < secondHiddenLayer[h].length; j++) {
-                    regCost += Math.pow(secondHiddenLayer[h][j], 2);
-                    gradients.modify(EmbeddingTypes.SECONDHIDDENLAYER, h, j, regCoef * 2 * secondHiddenLayer[h][j]);
+                for (int d2 = 0; d2 < layer.nIn(); d2++) {
+                    regCost += Math.pow(layer.w(d1, d2), 2);
+                    gradient.modifyW(d1, d2, regCoef * 2 * layer.w(d1, d2));
                 }
             }
         }
-
 
         if (regularizeAllLayers) {
-            final double[][] wordEmbeddings = net.matrices.getWordEmbedding();
-            final double[][] posEmbeddings = net.matrices.getPosEmbedding();
-            final double[][] labelEmbeddings = net.matrices.getLabelEmbedding();
-            final double[][] softmaxLayer = net.matrices.getSoftmaxLayer();
-            final double[] softmaxLayerBias = net.matrices.getSoftmaxLayerBias();
+            // regularizing wrt embedding layers.
+            FirstHiddenLayer fLayer = (FirstHiddenLayer) layers.get(0);
+            FirstHiddenLayer fGradient = (FirstHiddenLayer) layers.get(0);
 
-            for (int i = 0; i < net.numWords; i++) {
-                for (int j = 0; j < net.wordEmbedDim; j++) {
-                    regCost += Math.pow(wordEmbeddings[i][j], 2);
-                    gradients.modify(EmbeddingTypes.WORD, i, j, regCoef * 2 * wordEmbeddings[i][j]);
+            Layer wLayer = fLayer.getWordEmbeddings();
+            Layer pLayer = fLayer.getPosEmbeddings();
+            Layer dLayer = fLayer.getDepEmbeddings();
+
+            Layer wGrad = fGradient.getWordEmbeddings();
+            Layer pGrad = fGradient.getPosEmbeddings();
+            Layer dGrad = fGradient.getDepEmbeddings();
+
+            for (int d1 = 0; d1 < wLayer.nOut(); d1++) {
+                for (int d2 = 0; d2 < wLayer.nIn(); d2++) {
+                    regCost += Math.pow(wLayer.w(d1, d2), 2);
+                    wGrad.modifyW(d1, d2, regCoef * 2 * wLayer.w(d1, d2));
                 }
             }
 
-            for (int i = 0; i < net.numPos; i++) {
-                for (int j = 0; j < net.posEmbedDim; j++) {
-                    regCost += Math.pow(posEmbeddings[i][j], 2);
-                    gradients.modify(EmbeddingTypes.POS, i, j, regCoef * 2 * posEmbeddings[i][j]);
+            for (int d1 = 0; d1 < pLayer.nOut(); d1++) {
+                for (int d2 = 0; d2 < pLayer.nIn(); d2++) {
+                    regCost += Math.pow(pLayer.w(d1, d2), 2);
+                    pGrad.modifyW(d1, d2, regCoef * 2 * pLayer.w(d1, d2));
                 }
             }
 
-            for (int i = 0; i < net.numDepLabels; i++) {
-                for (int j = 0; j < net.depEmbedDim; j++) {
-                    regCost += Math.pow(labelEmbeddings[i][j], 2);
-                    gradients.modify(EmbeddingTypes.DEPENDENCY, i, j, regCoef * 2 * labelEmbeddings[i][j]);
+            for (int d1 = 0; d1 < dLayer.nOut(); d1++) {
+                for (int d2 = 0; d2 < dLayer.nIn(); d2++) {
+                    regCost += Math.pow(dLayer.w(d1, d2), 2);
+                    dGrad.modifyW(d1, d2, regCoef * 2 * dLayer.w(d1, d2));
                 }
             }
 
-            for (int i = 0; i < softmaxLayer.length; i++) {
-                regCost += Math.pow(softmaxLayerBias[i], 2);
-                gradients.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, regCoef * 2 * softmaxLayerBias[i]);
-                for (int h = 0; h < softmaxLayer[i].length; h++) {
-                    regCost += Math.pow(softmaxLayer[i][h], 2);
-                    gradients.modify(EmbeddingTypes.SOFTMAX, i, h, regCoef * 2 * softmaxLayer[i][h]);
+            // regularizing wrt last layer.
+            Layer layer = layers.get(layers.size() - 1);
+            Layer gradient = gradients.get(layers.size() - 1);
+            for (int d1 = 0; d1 < layer.nOut(); d1++) {
+                regCost += Math.pow(layer.b(d1), 2);
+                gradient.modifyB(d1, regCoef * 2 * layer.b(d1));
+                for (int d2 = 0; d2 < layer.nIn(); d2++) {
+                    regCost += Math.pow(layer.w(d1, d2), 2);
+                    gradient.modifyW(d1, d2, regCoef * 2 * layer.w(d1, d2));
                 }
             }
         }
+
         cost += regCoef * regCost;
     }
 
@@ -153,7 +150,7 @@ public class MLPTrainer {
         cost(instances);
         regularizeWithL2();
         updater.update(gradients);
-        net.preCompute();
+        ((FirstHiddenLayer) net.getLayers().get(0)).preCompute();
 
         double acc = correct / samples;
         if (print) {
@@ -184,18 +181,21 @@ public class MLPTrainer {
     }
 
     private void mergeCosts(List<NeuralTrainingInstance> instances) throws Exception {
-        Pair<Pair<Double, Double>, NetworkMatrices> firstResult = pool.take().get();
-        gradients = firstResult.second;
+        Pair<Pair<Double, Double>, MLPNetwork> firstResult = pool.take().get();
+        gradients = firstResult.second.getLayers();
 
         cost += firstResult.first.first;
         correct += firstResult.first.second;
 
 
         for (int i = 1; i < Math.min(instances.size(), numThreads); i++) {
-            Pair<Pair<Double, Double>, NetworkMatrices> result = pool.take().get();
-            gradients.mergeMatricesInPlaceForNonSaved(result.second);
+            Pair<Pair<Double, Double>, MLPNetwork> result = pool.take().get();
+
+            for (int l = 0; l < gradients.size(); l++)
+                gradients.get(l).mergeInPlace(result.second.getLayers().get(l));
             cost += result.first.first;
             correct += result.first.second;
+
         }
         if (Double.isNaN(cost))
             throw new Exception("cost is not a number");
@@ -221,15 +221,18 @@ public class MLPTrainer {
         }
     }
 
-    private void backPropSavedGradients(NetworkMatrices g, double[][][] savedGradients, HashSet<Integer>[] wordsSeen) throws Exception {
+    private void backPropSavedGradients(MLPNetwork g, double[][][] savedGradients, HashSet<Integer>[] wordsSeen) throws Exception {
         int offset = 0;
-        double[][] hiddenLayer = net.matrices.getHiddenLayer();
-        double[][] wE = net.matrices.getWordEmbedding();
-        double[][] pE = net.matrices.getPosEmbedding();
-        double[][] lE = net.matrices.getLabelEmbedding();
-        for (int index = 0; index < net.getNumWordLayers(); index++) {
+        final FirstHiddenLayer firstHiddenLayer = (FirstHiddenLayer) net.layer(0);
+        final double[][] hiddenLayer = firstHiddenLayer.getW();
+        WordEmbeddingLayer wordEmbeddingLayer = firstHiddenLayer.getWordEmbeddings();
+        final double[][] wE = wordEmbeddingLayer.getW();
+        final double[][] pE = firstHiddenLayer.getPosEmbeddings().getW();
+        final double[][] lE = firstHiddenLayer.getDepEmbeddings().getW();
+
+        for (int index = 0; index < g.getNumWordLayers(); index++) {
             for (int tok : wordsSeen[index]) {
-                int id = net.maps.preComputeMap[index].get(tok);
+                int id = wordEmbeddingLayer.preComputeId(index, tok);
                 double[] embedding = wE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
                     double delta = savedGradients[index][id][h];
@@ -239,11 +242,11 @@ public class MLPTrainer {
                     }
                 }
             }
-            offset += net.wordEmbedDim;
+            offset += wordEmbeddingLayer.dim();
         }
 
-        for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers(); index++) {
-            for (int tok = 0; tok < net.numPos; tok++) {
+        for (int index = g.getNumWordLayers(); index < g.getNumWordLayers() + g.getNumPosLayers(); index++) {
+            for (int tok = 0; tok < firstHiddenLayer.getPosEmbeddings().vocabSize(); tok++) {
                 double[] embedding = pE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
                     double delta = savedGradients[index][tok][h];
@@ -253,12 +256,12 @@ public class MLPTrainer {
                     }
                 }
             }
-            offset += net.posEmbedDim;
+            offset += firstHiddenLayer.getPosEmbeddings().dim();
         }
 
-        for (int index = net.getNumWordLayers() + net.getNumPosLayers();
-             index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++) {
-            for (int tok = 0; tok < net.numDepLabels; tok++) {
+        for (int index = g.getNumWordLayers() + g.getNumPosLayers();
+             index < g.getNumWordLayers() + g.getNumPosLayers() + g.getNumDepLayers(); index++) {
+            for (int tok = 0; tok < firstHiddenLayer.getDepEmbeddings().vocabSize(); tok++) {
                 double[] embedding = lE[tok];
                 for (int h = 0; h < hiddenLayer.length; h++) {
                     double delta = savedGradients[index][tok][h];
@@ -268,141 +271,70 @@ public class MLPTrainer {
                     }
                 }
             }
-            offset += net.depEmbedDim;
+            offset += firstHiddenLayer.getDepEmbeddings().dim();
         }
     }
 
-    public Pair<Double, Double> calculateCost(List<NeuralTrainingInstance> instances, int batchSize, NetworkMatrices g, double[][][] savedGradients)
+    public Pair<Double, Double> calculateCost(List<NeuralTrainingInstance> instances, int batchSize, MLPNetwork g, double[][][] savedGradients)
             throws Exception {
         double cost = 0;
         double correct = 0;
-        HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(net.getNumWordLayers());
+        HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(g.getNumWordLayers());
 
         for (NeuralTrainingInstance instance : instances) {
-            int[] features = instance.getFeatures();
-            int[] label = instance.getLabel();
-            double[] hidden = new double[net.getHiddenLayerDim()];
-            final double[][] softmaxLayer = net.getMatrices().getSoftmaxLayer();
-            final double[] softmaxLayerBias = net.getMatrices().getSoftmaxLayerBias();
-            final double[][] hiddenLayer = net.getMatrices().getHiddenLayer();
-            final double[] hiddenLayerBias = net.getMatrices().getHiddenLayerBias();
-            final double[][] wordEmbeddings = net.getMatrices().getWordEmbedding();
-            final double[][] posEmbeddings = net.getMatrices().getPosEmbedding();
-            final double[][] labelEmbeddings = net.getMatrices().getLabelEmbedding();
-            final double[][] secondHiddenLayer = net.getMatrices().getSecondHiddenLayer();
-            final double[] secondHiddenLayerBias = net.getMatrices().getSecondHiddenLayerBias();
+            double[] features = instance.getFeatures();
+            double[] label = instance.getLabel();
+            int gold = instance.gold();
+            ArrayList<double[]> activations = new ArrayList<>();
+            ArrayList<double[]> zs = new ArrayList<>();
 
-            HashSet<Integer> hiddenNodesToUse = applyDropout(hidden);
-            HashSet<Integer> secondHiddenNodesToUse = secondHiddenLayer == null ? null : applyDropout(new double[secondHiddenLayer.length]);
-            int offset = 0;
-            for (int j = 0; j < features.length; j++) {
-                int tok = features[j];
-                final double[] embedding;
-                if (j < net.getNumWordLayers())
-                    embedding = wordEmbeddings[tok];
-                else if (j < net.getNumWordLayers() + net.getNumPosLayers())
-                    embedding = posEmbeddings[tok];
-                else
-                    embedding = labelEmbeddings[tok];
-
-                if (net.saved != null && (j >= net.getNumWordLayers() || net.maps.preComputeMap[j].containsKey(tok))) {
-                    int id = tok;
-                    if (j < net.getNumWordLayers())
-                        id = net.maps.preComputeMap[j].get(tok);
-                    double[] s = net.saved[j][id];
-                    for (int h : hiddenNodesToUse) {
-                        hidden[h] += s[h];
-                    }
-                } else {
-                    for (int h : hiddenNodesToUse) {
-                        for (int k = 0; k < embedding.length; k++) {
-                            hidden[h] += hiddenLayer[h][offset + k] * embedding[k];
-                        }
-                    }
-                }
-                offset += embedding.length;
+            HashSet<Integer> hiddenNodesToUse = applyDropout(net.layer(0).nOut());
+            HashSet<Integer> finalHiddenNodesToUse = hiddenNodesToUse;
+            zs.add(features);
+            activations.add(features);
+            int lIndex = 0;
+            zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), hiddenNodesToUse));
+            activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
+            if (g.getLayers().size() >= 3) {
+                HashSet<Integer> secondHiddenNodesToUse = applyDropout(net.layer(lIndex).nOut());
+                zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), secondHiddenNodesToUse, hiddenNodesToUse));
+                activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
+                finalHiddenNodesToUse = secondHiddenNodesToUse;
             }
+            zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), label, false));
+            activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
+            double[] probs = activations.get(activations.size() - 1);
 
-            double[] activationHidden = new double[hidden.length];
-            for (int h : hiddenNodesToUse) {
-                hidden[h] += hiddenLayerBias[h];
-                activationHidden[h] = net.activation.activate(hidden[h]);
-            }
+            int argmax = Utils.argmax(probs);
 
-            double[] secondHidden = secondHiddenLayer != null ? new double[secondHiddenLayer.length] : null;
-            double[] secondActivationHidden = secondHiddenLayer != null ? new double[secondHiddenLayer.length] : null;
-            if (secondHiddenLayer != null) {
-                for (int h1 : secondHiddenNodesToUse) {
-                    for (int h2 : hiddenNodesToUse) {
-                        secondHidden[h1] += secondHiddenLayer[h1][h2] * activationHidden[h2];
-                    }
-                }
-
-                for (int h1 : secondHiddenNodesToUse) {
-                    secondHidden[h1] += secondHiddenLayerBias[h1];
-                    secondActivationHidden[h1] = net.activation.activate(secondHidden[h1]);
-                }
-            }
-
-            double[] lastActivation = secondHiddenLayer != null ? secondActivationHidden : activationHidden;
-            HashSet<Integer> hiddenToUse = secondHiddenLayer != null ? secondHiddenNodesToUse : hiddenNodesToUse;
-
-            int argmax = -1;
-            int gold = -1;
-            double sum = 0;
-            double[] probs = new double[softmaxLayerBias.length];
-            for (int i = 0; i < probs.length; i++) {
-                if (label[i] >= 0) {
-                    if (label[i] == 1)
-                        gold = i;
-                    for (int h : hiddenToUse) {
-                        probs[i] += softmaxLayer[i][h] * lastActivation[h];
-                    }
-                    probs[i] += softmaxLayerBias[i];
-                    if (argmax < 0 || probs[i] > probs[argmax])
-                        argmax = i;
-                }
-            }
-
-            // We do this to decrease the chance of NAN creation.
-            double max = probs[argmax];
-            int numActiveLabels = 0;
-            for (int i = 0; i < probs.length; i++) {
-                if (label[i] >= 0) {
-                    // We do this to decrease the chance of NAN creation.
-                    probs[i] = Math.exp(probs[i] - max);
-                    sum += probs[i];
-                    numActiveLabels++;
-                }
-            }
-
-            for (int i = 0; i < probs.length; i++) {
-                if (label[i] >= 0) {
-                    if (sum != 0)
-                        probs[i] /= sum;
-                    else
-                        probs[i] = 1.0 / numActiveLabels;
-                }
-            }
-
-            cost -= Math.log(probs[gold]);
-            if (Double.isInfinite(cost))
+            double goldProb = probs[gold] == 0 ? 1e-120 : probs[gold];
+            cost += -Math.log(goldProb);
+            if (Double.isInfinite(cost)) {
                 throw new Exception("Infinite cost!");
-            if (argmax == gold)
-                correct += 1.0;
+            }
+            if (argmax == gold) correct++;
 
+            // Getting delta for the last layer.
             double[] delta = new double[probs.length];
             for (int i = 0; i < probs.length; i++) {
                 if (label[i] >= 0)
                     delta[i] = (-label[i] + probs[i]) / batchSize;
             }
-            if (secondHiddenLayer == null) {
-                gradientWithOneHiddenLayer(g, savedGradients, featuresSeen, features, label, hidden, softmaxLayer, hiddenLayer,
-                        wordEmbeddings, hiddenNodesToUse, activationHidden, delta);
-            } else {
-                gradientWithTwoHiddenLayers(g, savedGradients, featuresSeen, features, label, hidden, secondHidden, softmaxLayer,
-                        hiddenLayer, secondHiddenLayer, wordEmbeddings, hiddenNodesToUse, secondHiddenNodesToUse, activationHidden,
-                        secondActivationHidden, delta);
+
+            // Backproping for the last layer.
+            double[] lastHiddenActivation = activations.get(activations.size() - 2);
+            for (int i = 0; i < delta.length; i++) {
+                if (label[i] >= 0 && delta[i] != 0) {
+                    g.modify(net.numLayers() - 1, i, -1, delta[i]);
+                    for (int h : finalHiddenNodesToUse) {
+                        g.modify(net.numLayers() - 1, i, h, delta[i] * lastHiddenActivation[h]);
+                    }
+                }
+            }
+
+            // backwarding to all other layers.
+            for (int i = net.numLayers() - 2; i >= 0; i--) {
+                g.layer(i).backward(delta, i, zs.get(i + 1), zs.get(i), featuresSeen, savedGradients, net);
             }
         }
 
@@ -410,163 +342,37 @@ public class MLPTrainer {
         return new Pair<>(cost, correct);
     }
 
-    private void gradientWithOneHiddenLayer(NetworkMatrices g, double[][][] savedGradients, HashSet<Integer>[] featuresSeen, int[]
-            features, int[] label, double[] hidden, double[][] softmaxLayer, double[][] hiddenLayer, double[][] wordEmbeddings, HashSet<Integer>
-                                                    hiddenNodesToUse, double[] activationHidden, double[] delta) throws Exception {
-        int offset;
-        double[] activationGradW = new double[activationHidden.length];
-        for (int i = 0; i < delta.length; i++) {
-            if (label[i] >= 0) {
-                g.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, delta[i]);
-                for (int h : hiddenNodesToUse) {
-                    g.modify(EmbeddingTypes.SOFTMAX, i, h, delta[i] * activationHidden[h]);
-                    activationGradW[h] += delta[i] * softmaxLayer[i][h];
-                }
-            }
-        }
 
-        double[] hiddenGrad = new double[hidden.length];
-        for (int h : hiddenNodesToUse) {
-            hiddenGrad[h] = net.activation.gradient(hidden[h], activationGradW[h]);
-            g.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, hiddenGrad[h]);
-        }
-
-        offset = 0;
-        for (int index = 0; index < net.getNumWordLayers(); index++) {
-            if (net.maps.preComputeMap[index].containsKey(features[index])) {
-                featuresSeen[index].add(features[index]);
-                int id = net.maps.preComputeMap[index].get(features[index]);
-                for (int h : hiddenNodesToUse) {
-                    savedGradients[index][id][h] += hiddenGrad[h];
-                }
-            } else {
-                double[] embeddings = wordEmbeddings[features[index]];
-                for (int h : hiddenNodesToUse) {
-                    for (int k = 0; k < embeddings.length; k++) {
-                        g.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, hiddenGrad[h] * embeddings[k]);
-                        g.modify(EmbeddingTypes.WORD, features[index], k, hiddenGrad[h] * hiddenLayer[h][offset + k]);
-                    }
-                }
-            }
-            offset += net.wordEmbedDim;
-        }
-
-        for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++) {
-            for (int h : hiddenNodesToUse) {
-                savedGradients[index][features[index]][h] += hiddenGrad[h];
-            }
-        }
-    }
-
-    private void gradientWithTwoHiddenLayers(NetworkMatrices gradient, double[][][] savedGradients, HashSet<Integer>[] featuresSeen,
-                                             int[] features, int[] label, double[] hiddenInput, double[] hiddenInput2, double[][] softmaxLayer,
-                                             double[][] hiddenLayer, double[][] secondHidden, double[][] wordEmbeddings,
-                                             HashSet<Integer> hiddenNodesToUse, HashSet<Integer> secondHiddenNodesToUse,
-                                             double[] H1, double[] H2, double[] delta) throws Exception {
-        int offset;
-        double[] dL_dH2 = new double[H2.length];
-        for (int i = 0; i < delta.length; i++) {
-            if (label[i] >= 0) {
-                gradient.modify(EmbeddingTypes.SOFTMAXBIAS, i, -1, delta[i]);
-                for (int k : secondHiddenNodesToUse) {
-                    gradient.modify(EmbeddingTypes.SOFTMAX, i, k, delta[i] * H2[k]);
-                    dL_dH2[k] += delta[i] * softmaxLayer[i][k];
-                }
-            }
-        }
-
-        double[] df_dH2_input = new double[hiddenInput2.length];
-        for (int k : secondHiddenNodesToUse) {
-            df_dH2_input[k] = net.activation.gradient(hiddenInput2[k], dL_dH2[k]);
-            gradient.modify(EmbeddingTypes.SECONDHIDDENLAYERBIAS, k, -1, df_dH2_input[k]);
-        }
-
-        double[] dL_dH1 = new double[H1.length];
-        for (int k : secondHiddenNodesToUse) {
-            for (int g : hiddenNodesToUse) {
-                gradient.modify(EmbeddingTypes.SECONDHIDDENLAYER, k, g, df_dH2_input[k] * H1[g]);
-                dL_dH1[g] += df_dH2_input[k] * secondHidden[k][g];
-            }
-        }
-
-
-        double[] df_dH1_input = new double[hiddenInput.length];
-        for (int h : hiddenNodesToUse) {
-            df_dH1_input[h] = net.activation.gradient(hiddenInput[h], dL_dH1[h]);
-            gradient.modify(EmbeddingTypes.HIDDENLAYERBIAS, h, -1, df_dH1_input[h]);
-        }
-
-        offset = 0;
-        for (int index = 0; index < net.getNumWordLayers(); index++) {
-            if (net.maps.preComputeMap[index].containsKey(features[index])) {
-                featuresSeen[index].add(features[index]);
-                int id = net.maps.preComputeMap[index].get(features[index]);
-                for (int h : hiddenNodesToUse) {
-                    savedGradients[index][id][h] += df_dH1_input[h];
-                }
-            } else {
-                double[] embeddings = wordEmbeddings[features[index]];
-                for (int h : hiddenNodesToUse) {
-                    for (int k = 0; k < embeddings.length; k++) {
-                        gradient.modify(EmbeddingTypes.HIDDENLAYER, h, offset + k, df_dH1_input[h] * embeddings[k]);
-                        gradient.modify(EmbeddingTypes.WORD, features[index], k, df_dH1_input[h] * hiddenLayer[h][offset + k]);
-                    }
-                }
-            }
-            offset += net.wordEmbedDim;
-        }
-
-        for (int index = net.getNumWordLayers(); index < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); index++) {
-            for (int h : hiddenNodesToUse) {
-                savedGradients[index][features[index]][h] += df_dH1_input[h];
-            }
-        }
-    }
-
-
-    private HashSet<Integer> applyDropout(double[] hidden) {
+    private HashSet<Integer> applyDropout(int size) {
         HashSet<Integer> hiddenNodesToUse = new HashSet<>();
-        for (int h = 0; h < hidden.length; h++) {
+        for (int h = 0; h < size; h++) {
             if (dropoutProb <= 0 || random.nextDouble() >= dropoutProb)
                 hiddenNodesToUse.add(h);
         }
         return hiddenNodesToUse;
     }
 
-    public NetworkMatrices getGradients() {
+    public ArrayList<Layer> getGradients() {
         return gradients;
     }
 
-    public class CostThread implements Callable<Pair<Pair<Double, Double>, NetworkMatrices>> {
+    public class CostThread implements Callable<Pair<Pair<Double, Double>, MLPNetwork>> {
         List<NeuralTrainingInstance> instances;
         int batchSize;
-        NetworkMatrices g;
+        MLPNetwork g;
         double[][][] savedGradients;
 
         public CostThread(List<NeuralTrainingInstance> instances, int batchSize) {
             this.instances = instances;
             this.batchSize = batchSize;
-            g = new NetworkMatrices(net.numWords, net.wordEmbedDim, net.numPos, net.posEmbedDim, net.numDepLabels, net.depEmbedDim,
-                    net.hiddenLayerDim, net.hiddenLayerIntDim, net.secondHiddenLayerDim, net.softmaxLayerDim);
-            savedGradients = instantiateSavedGradients();
+            g = net.clone(true, false);
+            savedGradients = net.instantiateSavedGradients();
         }
 
         @Override
-        public Pair<Pair<Double, Double>, NetworkMatrices> call() throws Exception {
+        public Pair<Pair<Double, Double>, MLPNetwork> call() throws Exception {
             Pair<Double, Double> costValue = calculateCost(instances, batchSize, g, savedGradients);
             return new Pair<>(costValue, g);
-        }
-
-        private double[][][] instantiateSavedGradients() {
-            double[][][] savedGradients = new double[net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers()][][];
-            for (int i = 0; i < net.getNumWordLayers(); i++)
-                savedGradients[i] = new double[net.maps.preComputeMap[i].size()][net.hiddenLayerDim];
-            for (int i = net.getNumWordLayers(); i < net.getNumWordLayers() + net.getNumPosLayers(); i++)
-                savedGradients[i] = new double[net.numPos][net.hiddenLayerDim];
-            for (int i = net.getNumWordLayers() + net.getNumPosLayers();
-                 i < net.getNumWordLayers() + net.getNumPosLayers() + net.getNumDepLayers(); i++)
-                savedGradients[i] = new double[net.numDepLabels][net.hiddenLayerDim];
-            return savedGradients;
         }
     }
 }

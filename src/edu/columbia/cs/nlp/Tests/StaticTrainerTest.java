@@ -85,7 +85,7 @@ public class StaticTrainerTest {
         Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
 
         int index = 0;
-        int[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+        double[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
         assert instances.get(index).gold() == 0;
         for (int i = 1; i < instances.get(index).getLabel().length; i++)
             assert instances.get(index).getLabel()[i] == -1;

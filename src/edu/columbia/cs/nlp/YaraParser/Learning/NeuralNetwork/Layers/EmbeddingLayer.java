@@ -27,13 +27,18 @@ public class EmbeddingLayer extends Layer {
         return nIn();
     }
 
-    public double[] w(int index){
+    public int vocabSize() {
+        return nOut();
+    }
+
+    public double[] w(int index) {
         return w[index];
     }
 
     public void addPretrainedVectors(HashMap<Integer, double[]> embeddingsDictionary) {
+        if (embeddingsDictionary == null) return;
         int numOfPretrained = 0;
-        for (int i = 0; i < nOut(); i++) {
+        for (int i = 0; i < nIn(); i++) {
             double[] embeddings = embeddingsDictionary.get(i);
             if (embeddings != null) {
                 w[i] = embeddings;
