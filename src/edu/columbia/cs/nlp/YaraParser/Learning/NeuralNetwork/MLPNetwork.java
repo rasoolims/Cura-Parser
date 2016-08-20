@@ -117,6 +117,15 @@ public class MLPNetwork implements Serializable {
         for (int i = 0; i < layers.size(); i++) {
             Utils.avgMatrices(layers.get(i).getW(), avgLayers.get(i).getW(), r1, r2);
             Utils.avgVectors(layers.get(i).getB(), avgLayers.get(i).getB(), r1, r2);
+
+            if (i == 0) {
+                Utils.avgMatrices(((FirstHiddenLayer) layer(i)).getWordEmbeddings().getW(), ((FirstHiddenLayer) avgLayers.get(i))
+                        .getWordEmbeddings().getW(), r1, r2);
+                Utils.avgMatrices(((FirstHiddenLayer) layer(i)).getPosEmbeddings().getW(), ((FirstHiddenLayer) avgLayers.get(i))
+                        .getPosEmbeddings().getW(), r1, r2);
+                Utils.avgMatrices(((FirstHiddenLayer) layer(i)).getDepEmbeddings().getW(), ((FirstHiddenLayer) avgLayers.get(i))
+                        .getDepEmbeddings().getW(), r1, r2);
+            }
         }
     }
 
