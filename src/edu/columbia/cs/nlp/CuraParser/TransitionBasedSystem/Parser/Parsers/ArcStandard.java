@@ -134,7 +134,4 @@ public class ArcStandard extends ShiftReduceParser {
             Double> newOracles, MLPNetwork network, int labelNullIndex, ArrayList<Integer> dependencyRelations) throws Exception {
         throw new NotImplementedException();
     }
-
-
 }
-
