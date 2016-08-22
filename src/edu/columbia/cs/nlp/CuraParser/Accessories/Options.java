@@ -78,7 +78,7 @@ public class Options implements Serializable {
         output.append("\t \t -sgd [sgd-type (if using sgd): nesterov(default),momentum, vanilla] \n");
         output.append("\t \t -batch [batch-size] \n");
         output.append("\t \t -d [dropout-prob (default:0)] \n");
-        output.append("\t \t -bias [true/false (use output bias term in softmax layer: default false)] \n");
+        output.append("\t \t -bias [true/false (use output bias term in softmax layer: default true)] \n");
         output.append("\t \t -momentum [momentum (default:0.9)] \n");
         output.append("\t \t -reg [regularization with L2] \n");
         output.append("\t \t -min [min freq (default 1)] \n");
@@ -161,8 +161,8 @@ public class Options implements Serializable {
                 options.trainingOptions.devPath = args[i + 1];
             else if (args[i].equals("-e"))
                 options.trainingOptions.wordEmbeddingFile = args[i + 1];
-            else if (args[i].equals("-bias") && args[i + 1].equals("true"))
-                options.networkProperties.outputBiasTerm = true;
+            else if (args[i].equals("-bias") && args[i + 1].equals("false"))
+                options.networkProperties.outputBiasTerm = false;
             else if (args[i].equals("-reg_all") && args[i + 1].equals("false"))
                 options.networkProperties.regualarizeAllLayers = false;
             else if (args[i].equals("-a")) {
