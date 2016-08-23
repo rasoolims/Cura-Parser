@@ -74,6 +74,51 @@ public class Layer implements Serializable {
         return activation.activate(Utils.sum4Output(Utils.dot4Output(w, i, labels), b, labels), labels, takeLog);
     }
 
+    public double[][] forward(double[][] i, HashSet<Integer>[] wIndexToUse, HashSet<Integer>[] inputToUse) {
+        assert i.length == wIndexToUse.length && i.length == inputToUse.length;
+        double[][] result = new double[i.length][];
+        for (int r = 0; r < result.length; r++)
+            result[r] = forward(i[r], wIndexToUse[r], inputToUse[r]);
+        return result;
+    }
+
+    public double[][] forward(double[][] i, HashSet<Integer>[] wIndexToUse) {
+        assert i.length == wIndexToUse.length;
+        double[][] result = new double[i.length][];
+        for (int r = 0; r < result.length; r++)
+            result[r] = forward(i[r], wIndexToUse[r]);
+        return result;
+    }
+
+    public double[][] forward(double[][] i) {
+        double[][] result = new double[i.length][];
+        for (int r = 0; r < result.length; r++)
+            result[r] = forward(i[r]);
+        return result;
+    }
+
+    public double[][] activate(double[][] i) {
+        double[][] result = new double[i.length][];
+        for (int r = 0; r < result.length; r++)
+            result[r] = activation.activate(i[r]);
+        return result;
+    }
+
+    /**
+     * Use it in the last layer
+     *
+     * @param i      input from the previous layer
+     * @param labels <0 means not allowed, 1 means gold, other values>=0 is ok.
+     * @return
+     */
+    public double[][] forward(double[][] i, double[][] labels, boolean takeLog) {
+        assert i.length == labels.length;
+        double[][] result = new double[i.length][];
+        for (int r = 0; r < result.length; r++)
+            result[r] = forward(i[r], labels[r], takeLog);
+        return result;
+    }
+
     public double[] backward(final double[] delta, int layerIndex, double[] hInput, double[] prevH,
                              HashSet<Integer>[] seenFeatures, double[][][] savedGradients, MLPNetwork network) {
         assert layerIndex < network.numLayers() - 1;
@@ -88,6 +133,16 @@ public class Layer implements Serializable {
         Utils.sumi(w, Utils.dotTranspose(newDelta, prevH));
 
         return newDelta;
+    }
+
+    public double[][] backward(final double[][] delta, int layerIndex, double[][] hInput, double[][] prevH,
+                               HashSet<Integer>[] seenFeatures, double[][][] savedGradients, MLPNetwork network) {
+        assert layerIndex < network.numLayers() - 1;
+        assert delta.length == hInput.length && delta.length == prevH.length;
+        double[][] result = new double[delta.length][];
+        for (int r = 0; r < result.length; r++)
+            result[r] = backward(delta[r], layerIndex, hInput[r], prevH[r], seenFeatures, savedGradients, network);
+        return result;
     }
 
     public void modifyW(int i, int j, double change) {

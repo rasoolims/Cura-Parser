@@ -281,67 +281,75 @@ public class MLPTrainer {
         double correct = 0;
         HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(g.getNumWordLayers());
 
-        for (NeuralTrainingInstance instance : instances) {
-            double[] features = instance.getFeatures();
-            double[] label = instance.getLabel();
-            int gold = instance.gold();
-            ArrayList<double[]> activations = new ArrayList<>();
-            ArrayList<double[]> zs = new ArrayList<>();
+        double[][] features = new double[instances.size()][];
+        double[][] labels = new double[instances.size()][];
+        ArrayList<double[][]> activations = new ArrayList<>();
+        ArrayList<double[][]> zs = new ArrayList<>();
+        HashSet<Integer>[] hiddenNodesToUse = applyDropout(instances.size(), net.layer(0).nOut());
+        HashSet<Integer>[] finalHiddenNodesToUse = hiddenNodesToUse;
 
-            HashSet<Integer> hiddenNodesToUse = applyDropout(net.layer(0).nOut());
-            HashSet<Integer> finalHiddenNodesToUse = hiddenNodesToUse;
-            zs.add(features);
-            activations.add(features);
-            int lIndex = 0;
-            zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), hiddenNodesToUse));
+        for (int i = 0; i < instances.size(); i++) {
+            features[i] = instances.get(i).getFeatures();
+            labels[i] = instances.get(i).getLabel();
+        }
+
+        zs.add(features);
+        activations.add(features);
+        int lIndex = 0;
+        zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), hiddenNodesToUse));
+        activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
+        if (g.getLayers().size() >= 3) {
+            HashSet<Integer>[] secondHiddenNodesToUse = applyDropout(instances.size(), net.layer(lIndex).nOut());
+            zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), secondHiddenNodesToUse, hiddenNodesToUse));
             activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
-            if (g.getLayers().size() >= 3) {
-                HashSet<Integer> secondHiddenNodesToUse = applyDropout(net.layer(lIndex).nOut());
-                zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), secondHiddenNodesToUse, hiddenNodesToUse));
-                activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
-                finalHiddenNodesToUse = secondHiddenNodesToUse;
-            }
-            zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), label, false));
-            activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
-            double[] probs = activations.get(activations.size() - 1);
-
-            int argmax = Utils.argmax(probs);
-
-            double goldProb = probs[gold] == 0 ? 1e-120 : probs[gold];
+            finalHiddenNodesToUse = secondHiddenNodesToUse;
+        }
+        zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), labels, false));
+        activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
+        double[][] probs = activations.get(activations.size() - 1);
+        for (int i = 0; i < probs.length; i++) {
+            int argmax = Utils.argmax(probs[i]);
+            int gold = instances.get(i).gold();
+            double goldProb = probs[i][gold] == 0 ? 1e-120 : probs[i][gold];
             cost += -Math.log(goldProb);
-            if (Double.isInfinite(cost)) {
-                throw new Exception("Infinite cost!");
-            }
             if (argmax == gold) correct++;
+        }
 
-            // Getting delta for the last layer.
-            double[] delta = new double[probs.length];
-            for (int i = 0; i < probs.length; i++) {
-                if (label[i] >= 0)
-                    delta[i] = (-label[i] + probs[i]) / batchSize;
+        double[][] delta = new double[probs.length][probs[0].length];
+        for (int i = 0; i < probs.length; i++) {
+            for (int j = 0; j < probs[0].length; j++) {
+                if (labels[i][j] >= 0)
+                    delta[i][j] = (-labels[i][j] + probs[i][j]) / batchSize;
             }
+        }
 
-            // Backproping for the last layer.
-            double[] lastHiddenActivation = activations.get(activations.size() - 2);
-            for (int i = 0; i < delta.length; i++) {
-                if (label[i] >= 0 && delta[i] != 0) {
-                    g.modify(net.numLayers() - 1, i, -1, delta[i]);
-                    for (int h : finalHiddenNodesToUse) {
-                        g.modify(net.numLayers() - 1, i, h, delta[i] * lastHiddenActivation[h]);
+        // Backproping for the last layer.
+        double[][] lastHiddenActivation = activations.get(activations.size() - 2);
+        for (int i = 0; i < delta.length; i++) {
+            for (int j = 0; j < delta[i].length; j++) {
+                if (labels[i][j] >= 0 && delta[i][j] != 0) {
+                    g.modify(net.numLayers() - 1, j, -1, delta[i][j]);
+                    for (int h : finalHiddenNodesToUse[i]) {
+                        g.modify(net.numLayers() - 1, j, h, delta[i][j] * lastHiddenActivation[i][h]);
                     }
                 }
             }
-
-            // backwarding to all other layers.
-            for (int i = net.numLayers() - 2; i >= 0; i--) {
-                delta = g.layer(i).backward(delta, i, zs.get(i + 1), activations.get(i), featuresSeen, savedGradients, net);
-            }
+        }
+        // backwarding to all other layers.
+        for (int i = net.numLayers() - 2; i >= 0; i--) {
+            delta = g.layer(i).backward(delta, i, zs.get(i + 1), activations.get(i), featuresSeen, savedGradients, net);
         }
 
         backPropSavedGradients(g, savedGradients, featuresSeen);
         return new Pair<>(cost, correct);
     }
 
+    private HashSet<Integer>[] applyDropout(int numOfInstances, int size) {
+        HashSet<Integer>[] hiddenNodesToUse = new HashSet[numOfInstances];
+        for (int i = 0; i < hiddenNodesToUse.length; i++)
+            hiddenNodesToUse[i] = applyDropout(size);
+        return hiddenNodesToUse;
+    }
 
     private HashSet<Integer> applyDropout(int size) {
         HashSet<Integer> hiddenNodesToUse = new HashSet<>();
