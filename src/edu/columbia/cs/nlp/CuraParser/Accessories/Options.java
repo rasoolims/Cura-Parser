@@ -71,7 +71,7 @@ public class Options implements Serializable {
         output.append("\t \t -h1 [hidden-layer-size-1] \n");
         output.append("\t \t -h2 [hidden-layer-size-2] \n");
         output.append("\t \t -lr [learning-rate] \n");
-        output.append("\t \t -ds [decay-step] \n");
+        output.append("\t \t -ds [decay-step (default 4400)] \n");
         output.append("\t \t -parser [ae(arc-eager:default), as(arc-standard)] \n");
         output.append("\t \t -a [activation (relu,cubic) -- default:relu] \n");
         output.append("\t \t -u [updater-type: sgd(default),adam,adagrad] \n");
@@ -81,6 +81,7 @@ public class Options implements Serializable {
         output.append("\t \t -bias [true/false (use output bias term in softmax layer: default true)] \n");
         output.append("\t \t -momentum [momentum (default:0.9)] \n");
         output.append("\t \t -reg [regularization with L2] \n");
+        output.append("\t \t -momentum [momentum for sgd; default 0.9] \n");
         output.append("\t \t -min [min freq (default 1)] \n");
         output.append("\t \t -wdim [word dim (default 64)] \n");
         output.append("\t \t -posdim [pos dim (default 32)] \n");
@@ -228,8 +229,10 @@ public class Options implements Serializable {
                 options.trainingOptions.minFreq = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-lr"))
                 options.updaterProperties.learningRate = Double.parseDouble(args[i + 1]);
+            else if (args[i].equals("-momentum"))
+                options.updaterProperties.momentum = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-ds"))
-                options.trainingOptions.decayStep = Double.parseDouble(args[i + 1]);
+                options.trainingOptions.decayStep = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-d"))
                 options.networkProperties.dropoutProbForHiddenLayer = Double.parseDouble(args[i + 1]);
             else if (args[i].equals("-momentum"))

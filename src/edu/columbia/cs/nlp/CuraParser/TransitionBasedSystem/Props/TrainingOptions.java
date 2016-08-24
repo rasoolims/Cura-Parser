@@ -21,7 +21,7 @@ public class TrainingOptions implements Serializable {
     public boolean useDynamicOracle;
     public boolean useRandomOracleSelection;
     public int UASEvalPerStep;
-    public double decayStep;
+    public int decayStep;
     public AveragingOption averagingOption;
     public int partialTrainingStartingIteration;
     public int minFreq;
@@ -30,7 +30,7 @@ public class TrainingOptions implements Serializable {
     public boolean considerAllActions;
 
     public TrainingOptions() {
-        decayStep = 0.2;
+        decayStep = 4400;
         minFreq = 1;
         averagingOption = AveragingOption.ONLY;
         clusterFile = "";

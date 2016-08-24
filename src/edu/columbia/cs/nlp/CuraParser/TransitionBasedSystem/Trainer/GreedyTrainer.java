@@ -97,10 +97,8 @@ public class GreedyTrainer {
 
             double bestModelUAS = 0;
             Random random = new Random();
-            int decayStep = (int) (options.trainingOptions.decayStep * allInstances.size() / options.networkProperties.batchSize);
-            decayStep = decayStep == 0 ? 1 : decayStep;
             System.out.println("Data has " + allInstances.size() + " instances");
-            System.out.println("Decay after every " + decayStep + " batches");
+            System.out.println("Decay after every " + options.trainingOptions.decayStep + " batches");
             for (int step = 0; step < options.trainingOptions.trainingIter; step++) {
                 List<NeuralTrainingInstance> instances = Utils.getRandomSubset(allInstances, random, options.networkProperties.batchSize);
                 try {
@@ -111,7 +109,7 @@ public class GreedyTrainer {
                     System.exit(1);
                 }
                 if (options.updaterProperties.updaterType == UpdaterType.SGD) {
-                    if (step % decayStep == 0) {
+                    if ((step+1) % options.trainingOptions.decayStep == 0) {
                         neuralTrainer.setLearningRate(0.96 * neuralTrainer.getLearningRate());
                         System.out.println("The new learning rate: " + neuralTrainer.getLearningRate());
                     }
