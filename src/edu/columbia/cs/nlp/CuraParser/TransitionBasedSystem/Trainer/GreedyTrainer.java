@@ -39,8 +39,8 @@ public class GreedyTrainer {
     Options options;
     Random random;
     ShiftReduceParser parser;
-    private ArrayList<Integer> dependencyRelations;
-    private int labelNullIndex;
+    protected ArrayList<Integer> dependencyRelations;
+    protected int labelNullIndex;
 
     public GreedyTrainer(Options options, ArrayList<Integer> dependencyRelations, int labelNullIndex, HashSet<Integer> rareWords) throws Exception {
         this.options = options;
@@ -192,18 +192,19 @@ public class GreedyTrainer {
 
             double[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, labelNullIndex, parser);
             double[] label = new double[2 * (dependencyRelations.size() + 1)];
-            if (!parser.canDo(Actions.LeftArc, currentConfig.state)) {
+            if (!options.trainingOptions.considerAllActions && !parser.canDo(Actions.LeftArc, currentConfig.state)) {
                 for (int i = 2; i < 2 + dependencyRelations.size(); i++)
                     label[i + dependencyRelations.size()] = -1;
             }
-            if (!parser.canDo(Actions.RightArc, currentConfig.state)) {
+            if (!options.trainingOptions.considerAllActions && !parser.canDo(Actions.RightArc, currentConfig.state)) {
                 for (int i = 2; i < 2 + dependencyRelations.size(); i++)
                     label[i] = -1;
             }
-            if (!parser.canDo(Actions.Shift, currentConfig.state)) {
+            if (!options.trainingOptions.considerAllActions && !parser.canDo(Actions.Shift, currentConfig.state)) {
                 label[0] = -1;
             }
-            if (!parser.canDo(Actions.Reduce, currentConfig.state)) {
+            if ((!options.trainingOptions.considerAllActions && !parser.canDo(Actions.Reduce, currentConfig.state))
+                    || options.generalProperties.parserType == ParserType.ArcStandard) {
                 label[1] = -1;
             }
 

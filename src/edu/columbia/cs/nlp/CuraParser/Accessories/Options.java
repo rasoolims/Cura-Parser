@@ -90,6 +90,8 @@ public class Options implements Serializable {
         output.append("\t \t drop [put if want dropout] \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:20)\n");
+        output.append("\t \t beam_iter:[beam-training-iterations] (default:0)\n");
+        output.append("\t \t consider_all (put want to consider all, even infeasible actions)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
         output.append("\t \t lowercase (default: case-sensitive words, unless explicitly put 'lowercase')\n");
         output.append("\t \t basic (default: use extended feature set, unless explicitly put 'basic')\n");
@@ -242,6 +244,8 @@ public class Options implements Serializable {
                 options.separator = args[i + 1];
             else if (args[i].startsWith("beam:"))
                 options.generalProperties.beamWidth = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
+            else if (args[i].startsWith("beam_iter:"))
+                options.trainingOptions.beamTrainingIter = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].startsWith("nt:"))
                 options.generalProperties.numOfThreads = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].startsWith("pt:"))
@@ -256,6 +260,8 @@ public class Options implements Serializable {
                 options.trainingOptions.useMaxViol = false;
             else if (args[i].equals("static"))
                 options.trainingOptions.useDynamicOracle = false;
+            else if (args[i].equals("consider_all"))
+                options.trainingOptions.considerAllActions = true;
             else if (args[i].equals("random"))
                 options.trainingOptions.useRandomOracleSelection = true;
             else if (args[i].equals("root_first"))

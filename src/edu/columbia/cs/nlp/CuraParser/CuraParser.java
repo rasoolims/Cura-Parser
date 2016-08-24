@@ -49,6 +49,7 @@ public class CuraParser {
             options.trainingOptions.averagingOption = AveragingOption.BOTH;
             options.networkProperties.activationType = ActivationType.RELU;
             options.generalProperties.parserType = ParserType.ArcStandard;
+            options.trainingOptions.considerAllActions = true;
         }
 
         if (options.generalProperties.showHelp) {
