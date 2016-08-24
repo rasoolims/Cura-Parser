@@ -79,7 +79,7 @@ public class StaticTrainerTest {
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
-        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer(options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
         Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
@@ -182,7 +182,7 @@ public class StaticTrainerTest {
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
-        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer(options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
         int lIndex = 0;
@@ -243,7 +243,7 @@ public class StaticTrainerTest {
         dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
-        trainer = new GreedyTrainer( options, dependencyLabels,
+        trainer = new GreedyTrainer(options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
         assert instances.get(lIndex++).gold() == 0;

@@ -6,29 +6,20 @@
 
 package edu.columbia.cs.nlp.CuraParser;
 
-import edu.columbia.cs.nlp.CuraParser.Accessories.CoNLLReader;
 import edu.columbia.cs.nlp.CuraParser.Accessories.Evaluator;
 import edu.columbia.cs.nlp.CuraParser.Accessories.Options;
-import edu.columbia.cs.nlp.CuraParser.Accessories.Utils;
 import edu.columbia.cs.nlp.CuraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.MLPNetwork;
-import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.MLPTrainer;
 import edu.columbia.cs.nlp.CuraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.CuraParser.Learning.Updater.Enums.UpdaterType;
-import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
-import edu.columbia.cs.nlp.CuraParser.Structures.NeuralTrainingInstance;
-import edu.columbia.cs.nlp.CuraParser.Structures.Pair;
-import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Beam.BeamParser;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.ParserType;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.GreedyTrainer;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.io.FileInputStream;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 public class CuraParser {
     public static void main(String[] args) throws Exception {

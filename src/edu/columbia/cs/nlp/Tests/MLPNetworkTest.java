@@ -132,7 +132,7 @@ public class MLPNetworkTest {
         int wDim = 8;
         int pDim = 4;
         int lDim = 6;
-        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer(options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         maps.constructPreComputeMap(instances, 22, 10000);
@@ -184,7 +184,7 @@ public class MLPNetworkTest {
         int wDim = 8;
         int pDim = 4;
         int lDim = 6;
-        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer(options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         maps.constructPreComputeMap(instances, 22, 10000);
@@ -228,7 +228,7 @@ public class MLPNetworkTest {
         int wDim = 8;
         int pDim = 4;
         int lDim = 6;
-        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer(options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         maps.constructPreComputeMap(instances, 22, 10000);
@@ -273,7 +273,7 @@ public class MLPNetworkTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
+            GreedyTrainer trainer = new GreedyTrainer(options, dependencyLabels,
                     maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -317,7 +317,7 @@ public class MLPNetworkTest {
         int pDim = 4;
         int lDim = 4;
 
-        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer(options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         maps.constructPreComputeMap(instances, 22, 10000);
@@ -391,7 +391,7 @@ public class MLPNetworkTest {
         int pDim = 4;
         int lDim = 4;
 
-        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer(options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         maps.constructPreComputeMap(instances, 22, 10000);

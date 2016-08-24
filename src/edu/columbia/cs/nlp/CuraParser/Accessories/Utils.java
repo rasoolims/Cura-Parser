@@ -232,16 +232,16 @@ public class Utils {
         return o;
     }
 
-    public static  boolean allZero(double[] x){
-        if(x==null) return true;
-        for(double v:x)
-            if (v!=0.0) return false;
+    public static boolean allZero(double[] x) {
+        if (x == null) return true;
+        for (double v : x)
+            if (v != 0.0) return false;
         return true;
     }
 
-    public static  boolean allZero(double[][] x){
-        if(x==null) return true;
-        for(double[] v:x)
+    public static boolean allZero(double[][] x) {
+        if (x == null) return true;
+        for (double[] v : x)
             if (!allZero(v)) return false;
         return true;
     }

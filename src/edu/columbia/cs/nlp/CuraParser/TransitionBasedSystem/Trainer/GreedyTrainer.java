@@ -17,10 +17,8 @@ import edu.columbia.cs.nlp.CuraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.CuraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.CuraParser.Structures.Pair;
-import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.BeamElement;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.Configuration;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
-import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Features.FeatureExtractor;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Beam.BeamParser;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.Actions;
@@ -58,77 +56,6 @@ public class GreedyTrainer {
             throw new NotImplementedException();
     }
 
-    public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropWordProb)
-            throws Exception {
-        ArrayList<NeuralTrainingInstance> instances = new ArrayList<>();
-        for (int i = start; i < end; i++) {
-            addInstance(trainData.get(i), instances, dropWordProb);
-        }
-        return instances;
-    }
-
-    private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances, double dropWordProb) throws Exception {
-        Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.generalProperties.rootFirst);
-        Configuration firstOracle = initialConfiguration.clone();
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(options.generalProperties.beamWidth);
-        beam.add(initialConfiguration);
-
-        HashMap<Configuration, Double> oracles = new HashMap<>();
-
-        oracles.put(firstOracle, 0.0);
-
-        Configuration bestScoringOracle = null;
-
-        while (!parser.isTerminal(beam) && beam.size() > 0) {
-            /**
-             *  generating new oracles
-             *  it keeps the oracles which are in the terminal state
-             */
-            HashMap<Configuration, Double> newOracles = new HashMap<>();
-
-            Configuration currentConfig = null;
-            for (Configuration conf : oracles.keySet()) {
-                currentConfig = conf;
-                break;
-            }
-
-            double[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, labelNullIndex, parser);
-            double[] label = new double[2 * (dependencyRelations.size() + 1)];
-            if (!parser.canDo(Actions.LeftArc, currentConfig.state)) {
-                for (int i = 2; i < 2 + dependencyRelations.size(); i++)
-                    label[i + dependencyRelations.size()] = -1;
-            }
-            if (!parser.canDo(Actions.RightArc, currentConfig.state)) {
-                for (int i = 2; i < 2 + dependencyRelations.size(); i++)
-                    label[i] = -1;
-            }
-            if (!parser.canDo(Actions.Shift, currentConfig.state)) {
-                label[0] = -1;
-            }
-            if (!parser.canDo(Actions.Reduce, currentConfig.state)) {
-                label[1] = -1;
-            }
-
-            bestScoringOracle = parser.staticOracle(goldConfiguration, oracles, newOracles, dependencyRelations.size());
-            oracles = newOracles;
-            int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size() - 1);
-            if (action >= 2)
-                action -= 1;
-
-            int numWordLayers = parser instanceof ArcEager ? 22 : 20;
-            for (int i = 0; i < baseFeatures.length; i++) {
-                if (i < numWordLayers && rareWords.contains(baseFeatures[i]))
-                    if (random.nextDouble() <= dropWordProb && baseFeatures[i] != 1)
-                        baseFeatures[i] = IndexMaps.UnknownIndex;
-            }
-
-            label[action] = 1;
-            instances.add(new NeuralTrainingInstance(baseFeatures, label));
-            beam = new ArrayList<>(options.generalProperties.beamWidth);
-            beam.add(bestScoringOracle);
-        }
-    }
-
     public static void trainWithNN(Options options) throws Exception {
         if (options.trainingOptions.trainFile.equals("") || options.generalProperties.modelFile.equals("")) {
             Options.showHelp();
@@ -151,7 +78,7 @@ public class GreedyTrainer {
 
             System.out.println("size of training data (#sens): " + dataSet.size());
             System.out.println("Embedding dimension " + wDim);
-            GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
+            GreedyTrainer trainer = new GreedyTrainer(options, dependencyLabels,
                     maps.labelNullIndex, maps.rareWords);
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             int numWordLayers = options.generalProperties.parserType == ParserType.ArcEager ? 22 : 20;
@@ -227,5 +154,76 @@ public class GreedyTrainer {
             System.out.print("done!\n\n");
         }
         return bestModelUAS;
+    }
+
+    public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropWordProb)
+            throws Exception {
+        ArrayList<NeuralTrainingInstance> instances = new ArrayList<>();
+        for (int i = start; i < end; i++) {
+            addInstance(trainData.get(i), instances, dropWordProb);
+        }
+        return instances;
+    }
+
+    private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances, double dropWordProb) throws Exception {
+        Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.generalProperties.rootFirst);
+        Configuration firstOracle = initialConfiguration.clone();
+        ArrayList<Configuration> beam = new ArrayList<Configuration>(options.generalProperties.beamWidth);
+        beam.add(initialConfiguration);
+
+        HashMap<Configuration, Double> oracles = new HashMap<>();
+
+        oracles.put(firstOracle, 0.0);
+
+        Configuration bestScoringOracle = null;
+
+        while (!parser.isTerminal(beam) && beam.size() > 0) {
+            /**
+             *  generating new oracles
+             *  it keeps the oracles which are in the terminal state
+             */
+            HashMap<Configuration, Double> newOracles = new HashMap<>();
+
+            Configuration currentConfig = null;
+            for (Configuration conf : oracles.keySet()) {
+                currentConfig = conf;
+                break;
+            }
+
+            double[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, labelNullIndex, parser);
+            double[] label = new double[2 * (dependencyRelations.size() + 1)];
+            if (!parser.canDo(Actions.LeftArc, currentConfig.state)) {
+                for (int i = 2; i < 2 + dependencyRelations.size(); i++)
+                    label[i + dependencyRelations.size()] = -1;
+            }
+            if (!parser.canDo(Actions.RightArc, currentConfig.state)) {
+                for (int i = 2; i < 2 + dependencyRelations.size(); i++)
+                    label[i] = -1;
+            }
+            if (!parser.canDo(Actions.Shift, currentConfig.state)) {
+                label[0] = -1;
+            }
+            if (!parser.canDo(Actions.Reduce, currentConfig.state)) {
+                label[1] = -1;
+            }
+
+            bestScoringOracle = parser.staticOracle(goldConfiguration, oracles, newOracles, dependencyRelations.size());
+            oracles = newOracles;
+            int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size() - 1);
+            if (action >= 2)
+                action -= 1;
+
+            int numWordLayers = parser instanceof ArcEager ? 22 : 20;
+            for (int i = 0; i < baseFeatures.length; i++) {
+                if (i < numWordLayers && rareWords.contains(baseFeatures[i]))
+                    if (random.nextDouble() <= dropWordProb && baseFeatures[i] != 1)
+                        baseFeatures[i] = IndexMaps.UnknownIndex;
+            }
+
+            label[action] = 1;
+            instances.add(new NeuralTrainingInstance(baseFeatures, label));
+            beam = new ArrayList<>(options.generalProperties.beamWidth);
+            beam.add(bestScoringOracle);
+        }
     }
 }

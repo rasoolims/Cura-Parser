@@ -209,73 +209,74 @@ public class ParserTest {
     @Test
     public void TestPretrainedtWordEmbeddingUpdates() throws Exception {
         for (UpdaterType updaterType : UpdaterType.values()) {
-        for (ActivationType type : ActivationType.values()) {
-            writeText();
-            writeWordEmbedText();
-            Options options = new Options();
-            options.updaterProperties.updaterType = updaterType;
-            options.trainingOptions.wordEmbeddingFile = embedFilePath;
-            options.trainingOptions.devPath = txtFilePath;
-            options.networkProperties.activationType = type;
-            options.networkProperties.hiddenLayer1Size = 10;
-            options.generalProperties.inputFile = txtFilePath;
-            options.generalProperties.modelFile = txtFilePath + ".model";
-            IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
-                    options.generalProperties.lowercase, "", 1);
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
-            CoNLLReader reader = new CoNLLReader(options.generalProperties.inputFile);
-            ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
-                    options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
-            int wDim = 8;
-            int pDim = 4;
-            int lDim = 6;
-            GreedyTrainer trainer = new GreedyTrainer(
-                    options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
-            List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
-            maps.constructPreComputeMap(instances, 22, 10000);
-            MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
+            for (ActivationType type : ActivationType.values()) {
+                writeText();
+                writeWordEmbedText();
+                Options options = new Options();
+                options.updaterProperties.updaterType = updaterType;
+                options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.trainingOptions.devPath = txtFilePath;
+                options.networkProperties.activationType = type;
+                options.networkProperties.hiddenLayer1Size = 10;
+                options.generalProperties.inputFile = txtFilePath;
+                options.generalProperties.modelFile = txtFilePath + ".model";
+                IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
+                        options.generalProperties.lowercase, "", 1);
+                ArrayList<Integer> dependencyLabels = new ArrayList<>();
+                for (int lab = 0; lab < maps.relSize(); lab++)
+                    dependencyLabels.add(lab);
+                CoNLLReader reader = new CoNLLReader(options.generalProperties.inputFile);
+                ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled,
+                        options.generalProperties.rootFirst, options.generalProperties.lowercase, maps);
+                int wDim = 8;
+                int pDim = 4;
+                int lDim = 6;
+                GreedyTrainer trainer = new GreedyTrainer(
+                        options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
+                List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
+                maps.constructPreComputeMap(instances, 22, 10000);
+                MLPNetwork network = new MLPNetwork(maps, options, dependencyLabels, wDim, pDim, lDim, ParserType.ArcEager);
 
-            MLPTrainer classifier = new MLPTrainer(network, options);
-            network.preCompute();
+                MLPTrainer classifier = new MLPTrainer(network, options);
+                network.preCompute();
 
-            for (int i = 1; i <= 100; i++) {
-                double acc = classifier.fit(instances, i, true);
+                for (int i = 1; i <= 100; i++) {
+                    double acc = classifier.fit(instances, i, true);
 
-                if (i % 10 == 0) {
-                    BeamParser parser = new BeamParser(network, options.generalProperties.numOfThreads, ParserType.ArcEager);
-                    parser.parseConll(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp",
-                            options.generalProperties.rootFirst, options.generalProperties.beamWidth, options.generalProperties.lowercase,
-                            options.generalProperties.numOfThreads, false, "");
-                    Pair<Double, Double> evaluator = Evaluator.evaluate(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp",
-                            options.generalProperties.punctuations);
+                    if (i % 10 == 0) {
+                        BeamParser parser = new BeamParser(network, options.generalProperties.numOfThreads, ParserType.ArcEager);
+                        parser.parseConll(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp",
+                                options.generalProperties.rootFirst, options.generalProperties.beamWidth, options.generalProperties.lowercase,
+                                options.generalProperties.numOfThreads, false, "");
+                        Pair<Double, Double> evaluator = Evaluator.evaluate(options.trainingOptions.devPath, options.generalProperties.modelFile +
+                                ".tmp",
+                                options.generalProperties.punctuations);
 
-                    FileOutputStream fos = new FileOutputStream(options.generalProperties.modelFile);
-                    GZIPOutputStream gz = new GZIPOutputStream(fos);
-                    ObjectOutput writer = new ObjectOutputStream(gz);
-                    writer.writeObject(network);
-                    writer.writeObject(options);
-                    writer.close();
-                    System.out.print("done!\n\n");
+                        FileOutputStream fos = new FileOutputStream(options.generalProperties.modelFile);
+                        GZIPOutputStream gz = new GZIPOutputStream(fos);
+                        ObjectOutput writer = new ObjectOutputStream(gz);
+                        writer.writeObject(network);
+                        writer.writeObject(options);
+                        writer.close();
+                        System.out.print("done!\n\n");
 
-                    FileInputStream fis = new FileInputStream(options.generalProperties.modelFile);
-                    GZIPInputStream gz2 = new GZIPInputStream(fis);
-                    ObjectInput r = new ObjectInputStream(gz2);
-                    MLPNetwork mlpNetwork = (MLPNetwork) r.readObject();
-                    Options infoptions = (Options) r.readObject();
-                    BeamParser loadedParser = new BeamParser(mlpNetwork, options.generalProperties.numOfThreads, ParserType.ArcEager);
-                    loadedParser.parseConll(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp2",
-                            infoptions.generalProperties.rootFirst, options.generalProperties.beamWidth,
-                            infoptions.generalProperties.lowercase, options.generalProperties.numOfThreads, false, options.scorePath);
-                    Pair<Double, Double> evaluator2 = Evaluator.evaluate(options.trainingOptions.devPath,
-                            options.generalProperties.modelFile + ".tmp2", options.generalProperties.punctuations);
+                        FileInputStream fis = new FileInputStream(options.generalProperties.modelFile);
+                        GZIPInputStream gz2 = new GZIPInputStream(fis);
+                        ObjectInput r = new ObjectInputStream(gz2);
+                        MLPNetwork mlpNetwork = (MLPNetwork) r.readObject();
+                        Options infoptions = (Options) r.readObject();
+                        BeamParser loadedParser = new BeamParser(mlpNetwork, options.generalProperties.numOfThreads, ParserType.ArcEager);
+                        loadedParser.parseConll(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp2",
+                                infoptions.generalProperties.rootFirst, options.generalProperties.beamWidth,
+                                infoptions.generalProperties.lowercase, options.generalProperties.numOfThreads, false, options.scorePath);
+                        Pair<Double, Double> evaluator2 = Evaluator.evaluate(options.trainingOptions.devPath,
+                                options.generalProperties.modelFile + ".tmp2", options.generalProperties.punctuations);
 
-                    assert evaluator.equals(evaluator2);
-                    if (acc == 1) assert evaluator.first == 100 && evaluator.second == 100;
+                        assert evaluator.equals(evaluator2);
+                        if (acc == 1) assert evaluator.first == 100 && evaluator.second == 100;
+                    }
                 }
             }
-        }
         }
     }
 
