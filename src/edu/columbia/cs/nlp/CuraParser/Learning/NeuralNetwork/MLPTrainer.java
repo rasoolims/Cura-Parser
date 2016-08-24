@@ -162,13 +162,13 @@ public class MLPTrainer {
         return acc;
     }
 
-    public void cost(List<NeuralTrainingInstance> instances) throws Exception {
+    public void cost(List instances) throws Exception {
         submitThreads(instances);
         mergeCosts(instances);
         samples += instances.size();
     }
 
-    private void submitThreads(List<NeuralTrainingInstance> instances) {
+    private void submitThreads(List instances) {
         int chunkSize = instances.size() / numThreads;
         int s = 0;
         int e = Math.min(instances.size(), chunkSize);
@@ -274,7 +274,15 @@ public class MLPTrainer {
         }
     }
 
-    public Pair<Double, Double> calculateCost(List<NeuralTrainingInstance> instances, int batchSize, MLPNetwork g, double[][][] savedGradients)
+    /**
+     * @param instances      this is actually a List of NeuralTrainingInstance(s).
+     * @param batchSize
+     * @param g
+     * @param savedGradients
+     * @return
+     * @throws Exception
+     */
+    public Pair<Double, Double> calculateCost(List instances, int batchSize, MLPNetwork g, double[][][] savedGradients)
             throws Exception {
         double cost = 0;
         double correct = 0;
@@ -288,8 +296,8 @@ public class MLPTrainer {
         HashSet<Integer>[] finalHiddenNodesToUse = hiddenNodesToUse;
 
         for (int i = 0; i < instances.size(); i++) {
-            features[i] = instances.get(i).getFeatures();
-            labels[i] = instances.get(i).getLabel();
+            features[i] = ((NeuralTrainingInstance) instances.get(i)).getFeatures();
+            labels[i] = ((NeuralTrainingInstance) instances.get(i)).getLabel();
         }
 
         zs.add(features);
@@ -308,7 +316,7 @@ public class MLPTrainer {
         double[][] probs = activations.get(activations.size() - 1);
         for (int i = 0; i < probs.length; i++) {
             int argmax = Utils.argmax(probs[i]);
-            int gold = instances.get(i).gold();
+            int gold = ((NeuralTrainingInstance) instances.get(i)).gold();
             double goldProb = probs[i][gold] == 0 ? 1e-120 : probs[i][gold];
             cost += -Math.log(goldProb);
             if (argmax == gold) correct++;
@@ -364,13 +372,34 @@ public class MLPTrainer {
         return gradients;
     }
 
+    /**
+     * @param instances      It is actually a list of Pair<Configuration, ArrayList<Configuration>>.
+     * @param batchSize
+     * @param g
+     * @param savedGradients
+     * @return
+     * @throws Exception
+     */
+    public Pair<Double, Double> calculateBeamCost(List instances, int batchSize, MLPNetwork g,
+                                                  double[][][] savedGradients)
+            throws Exception {
+        double cost = 0;
+        double correct = 0;
+        HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(g.getNumWordLayers());
+
+        //todo
+
+        backPropSavedGradients(g, savedGradients, featuresSeen);
+        return new Pair<>(cost, correct);
+    }
+
     public class CostThread implements Callable<Pair<Pair<Double, Double>, MLPNetwork>> {
-        List<NeuralTrainingInstance> instances;
+        List<Object> instances;
         int batchSize;
         MLPNetwork g;
         double[][][] savedGradients;
 
-        public CostThread(List<NeuralTrainingInstance> instances, int batchSize) {
+        public CostThread(List<Object> instances, int batchSize) {
             this.instances = instances;
             this.batchSize = batchSize;
             g = net.clone(true, false);
@@ -379,7 +408,12 @@ public class MLPTrainer {
 
         @Override
         public Pair<Pair<Double, Double>, MLPNetwork> call() throws Exception {
-            Pair<Double, Double> costValue = calculateCost(instances, batchSize, g, savedGradients);
+            Pair<Double, Double> costValue = null;
+            if (instances.get(0) instanceof NeuralTrainingInstance)
+                costValue = calculateCost(instances, batchSize, g, savedGradients);
+            else
+                costValue = calculateBeamCost(instances, batchSize, g, savedGradients);
+
             return new Pair<>(costValue, g);
         }
     }
