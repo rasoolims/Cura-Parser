@@ -122,8 +122,11 @@ public class BeamTrainer extends GreedyTrainer {
 
                 if (beam.size() > 0) {
                     // do early update
-                    if (!oracleInBeam)
+                    if (!oracleInBeam) {
+                        // include this because we need it for the gradient matching.
+                        beam.add(oracle);
                         break;
+                    }
                 } else
                     break;
             }
