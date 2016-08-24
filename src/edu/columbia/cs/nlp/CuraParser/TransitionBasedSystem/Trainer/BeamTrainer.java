@@ -1,7 +1,9 @@
 package edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer;
 
+import edu.columbia.cs.nlp.CuraParser.Accessories.CoNLLReader;
 import edu.columbia.cs.nlp.CuraParser.Accessories.Options;
 import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.MLPNetwork;
+import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.CuraParser.Structures.Pair;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.BeamElement;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -16,6 +18,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -30,13 +35,26 @@ public class BeamTrainer extends GreedyTrainer {
 
     public BeamTrainer(Options options, ArrayList<Integer> dependencyRelations, int labelNullIndex, HashSet<Integer> rareWords) throws Exception {
         super(options, dependencyRelations, labelNullIndex, rareWords);
-        MLPNetwork greedyModel = getGreedyModel(options);
     }
 
-    public static void trainWithNN(Options options) throws Exception {
-        // todo
-    }
+    public void train(Options options) throws Exception {
+        MLPNetwork network = BeamTrainer.getGreedyModel(options);
+        CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+        ArrayList<GoldConfiguration> dataSet =
+                reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options.generalProperties.rootFirst,
+                        options.generalProperties.lowercase, network.maps);
+        System.out.println("CoNLL data reading done!");
 
+        ExecutorService executor = Executors.newFixedThreadPool(options.generalProperties.numOfThreads);
+        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(executor);
+
+        for(int iter =0; iter<options.trainingOptions.beamTrainingIter; iter++){
+            for(GoldConfiguration goldConfiguration:dataSet) {
+                Pair<Configuration, ArrayList<Configuration>> goldAndBeam = getGoldAndBeamElements(goldConfiguration, network, pool);
+
+            }
+        }
+    }
 
     private Pair<Configuration, ArrayList<Configuration>> getGoldAndBeamElements(GoldConfiguration goldConfiguration, MLPNetwork network,
                                                                                  CompletionService<ArrayList<BeamElement>> pool) throws Exception {
@@ -127,9 +145,7 @@ public class BeamTrainer extends GreedyTrainer {
 
         return new Pair<>(bestScoringOracle, beam);
     }
-
-
-    private MLPNetwork getGreedyModel(Options options) throws Exception {
+    private static  MLPNetwork getGreedyModel(Options options) throws Exception {
         GreedyTrainer.trainWithNN(options);
 
         FileInputStream fos = new FileInputStream(options.generalProperties.modelFile);
