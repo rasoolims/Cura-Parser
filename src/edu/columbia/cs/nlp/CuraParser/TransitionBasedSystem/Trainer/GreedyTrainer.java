@@ -99,7 +99,8 @@ public class GreedyTrainer {
             Random random = new Random();
             System.out.println("Data has " + allInstances.size() + " instances");
             System.out.println("Decay after every " + options.trainingOptions.decayStep + " batches");
-            for (int step = 0; step < options.trainingOptions.trainingIter; step++) {
+            int step;
+            for (step = 0; step < options.trainingOptions.trainingIter; step++) {
                 List<NeuralTrainingInstance> instances = Utils.getRandomSubset(allInstances, random, options.networkProperties.batchSize);
                 try {
                     neuralTrainer.fit(instances, step, step % (Math.max(1, options.trainingOptions.UASEvalPerStep / 10)) == 0 ? true : false);
@@ -131,14 +132,30 @@ public class GreedyTrainer {
                     }
                 }
             }
+
+            if (options.trainingOptions.averagingOption != AveragingOption.NO) {
+                // averaging
+                double ratio = Math.min(0.9999, (double) step / (9 + step));
+                mlpNetwork.averageNetworks(avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
+            }
+
+            if (step % options.trainingOptions.UASEvalPerStep == 0) {
+                if (options.trainingOptions.averagingOption != AveragingOption.ONLY) {
+                    bestModelUAS = evaluate(options, mlpNetwork, bestModelUAS);
+                }
+                if (options.trainingOptions.averagingOption != AveragingOption.NO) {
+                    avgMlpNetwork.preCompute();
+                    bestModelUAS = evaluate(options, avgMlpNetwork, bestModelUAS);
+                }
+            }
             neuralTrainer.shutDownLiveThreads();
         }
     }
 
-    private static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {
+    protected static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {
         BeamParser parser = new BeamParser(mlpNetwork, options.generalProperties.numOfThreads, options.generalProperties.parserType);
         parser.parseConll(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp", options.generalProperties.rootFirst,
-                options.generalProperties.beamWidth, options.generalProperties.lowercase,
+                1, options.generalProperties.lowercase,
                 options.generalProperties.numOfThreads,
                 false, "");
         Pair<Double, Double> eval = Evaluator.evaluate(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp",
@@ -169,7 +186,7 @@ public class GreedyTrainer {
     private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances, double dropWordProb) throws Exception {
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.generalProperties.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
-        ArrayList<Configuration> beam = new ArrayList<>(options.generalProperties.beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(1);
         beam.add(initialConfiguration);
 
         Configuration oracle = firstOracle;
@@ -207,7 +224,7 @@ public class GreedyTrainer {
 
             label[action] = 1;
             instances.add(new NeuralTrainingInstance(baseFeatures, label));
-            beam = new ArrayList<>(options.generalProperties.beamWidth);
+            beam = new ArrayList<>(1);
             beam.add(oracle);
         }
     }
