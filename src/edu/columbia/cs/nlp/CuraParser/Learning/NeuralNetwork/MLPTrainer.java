@@ -46,7 +46,6 @@ public class MLPTrainer {
     /**
      * Gradients
      */
-    // todo make this network
     private ArrayList<Layer> gradients;
     private double regCoef;
     private double dropoutProb;
