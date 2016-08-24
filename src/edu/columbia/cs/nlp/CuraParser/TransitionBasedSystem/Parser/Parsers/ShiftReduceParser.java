@@ -72,4 +72,20 @@ public abstract class ShiftReduceParser {
     public abstract Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double>
             oracles, HashMap<Configuration, Double> newOracles, MLPNetwork network, int labelNullIndex, ArrayList<Integer> dependencyRelations)
             throws Exception;
+
+    public void advance(Configuration configuration, int action, int depSize) throws Exception {
+        if (action == 0) {
+            shift(configuration.state);
+        } else if (action == 1) {
+            reduce(configuration.state);
+        }  else if (action == 2) {
+            unShift(configuration.state);
+        } else if (action >= (3 + depSize)) {
+            int dependency = action - (3 + depSize);
+            leftArc(configuration.state, dependency);
+        } else if (action >= 3) {
+            int dependency = action - 3;
+            rightArc(configuration.state, dependency);
+        }
+    }
 }
