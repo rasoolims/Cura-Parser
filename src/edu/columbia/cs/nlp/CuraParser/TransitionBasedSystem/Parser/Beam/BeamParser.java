@@ -145,7 +145,7 @@ public class BeamParser {
         beam.add(initialConfiguration);
 
         while (!parser.isTerminal(beam)) {
-            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+            TreeSet<BeamElement> beamPreserver = new TreeSet<>();
 
             if (numOfThreads == 1) {
                 parseWithOneThread(beam, beamPreserver, beamWidth);
@@ -280,7 +280,7 @@ public class BeamParser {
         long start = System.currentTimeMillis();
 
         ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
-        CompletionService<Pair<String, Integer>> pool = new ExecutorCompletionService<Pair<String, Integer>>(executor);
+        CompletionService<Pair<String, Integer>> pool = new ExecutorCompletionService<>(executor);
 
 
         String line;
@@ -356,8 +356,7 @@ public class BeamParser {
         while (true) {
             ArrayList<GoldConfiguration> data = reader.readData(15000, true, true, rootFirst, lowerCased, maps);
             size += data.size();
-            if (data.size() == 0)
-                break;
+            if (data.size() == 0) break;
 
             int index = 0;
             Configuration[] confs = new Configuration[data.size()];
@@ -444,8 +443,8 @@ public class BeamParser {
                 gs[6] = ps[0];
                 gs[7] = ps[1];
                 StringBuilder output = new StringBuilder();
-                for (int i = 0; i < gs.length; i++) {
-                    output.append(gs[i]).append("\t");
+                for (String g : gs) {
+                    output.append(g).append("\t");
                 }
                 pwriter.write(output.toString().trim() + "\n");
             } else {
