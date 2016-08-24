@@ -14,6 +14,7 @@ import java.io.Serializable;
 
 public class TrainingOptions implements Serializable {
     public int trainingIter;
+    public int beamTrainingIter;
     public String clusterFile;
     public String wordEmbeddingFile;
     public boolean useMaxViol;
@@ -30,13 +31,14 @@ public class TrainingOptions implements Serializable {
     public TrainingOptions() {
         decayStep = 0.2;
         minFreq = 1;
-        averagingOption = AveragingOption.BOTH;
+        averagingOption = AveragingOption.ONLY;
         clusterFile = "";
         wordEmbeddingFile = "";
         useMaxViol = true;
         useDynamicOracle = true;
         useRandomOracleSelection = false;
-        trainingIter = 20000;
+        trainingIter = 5000;
+        beamTrainingIter = 0;
         UASEvalPerStep = 100;
         partialTrainingStartingIteration = 3;
         devPath = "";
@@ -54,6 +56,7 @@ public class TrainingOptions implements Serializable {
         builder.append("updateModel: " + (useMaxViol ? "max violation" : "early") + "\n");
         builder.append("oracle: " + (useDynamicOracle ? "dynamic" : "static") + "\n");
         builder.append("training-iterations: " + trainingIter + "\n");
+        builder.append("beam-training iterations: " + beamTrainingIter + "\n");
         builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
         builder.append("decay step: " + decayStep + "\n");
         return builder.toString();

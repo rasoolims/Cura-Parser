@@ -14,6 +14,7 @@ import edu.columbia.cs.nlp.CuraParser.Learning.Updater.Enums.AveragingOption;
 import edu.columbia.cs.nlp.CuraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Beam.BeamParser;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.ParserType;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.BeamTrainer;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.GreedyTrainer;
 
 import java.io.FileInputStream;
@@ -55,7 +56,10 @@ public class CuraParser {
         } else {
             System.out.println(options);
             if (options.generalProperties.train) {
-                GreedyTrainer.trainWithNN(options);
+                if (options.trainingOptions.beamTrainingIter == 0)
+                    GreedyTrainer.trainWithNN(options);
+                else
+                    BeamTrainer.trainWithNN(options);
             } else if (options.generalProperties.parseTaggedFile || options.generalProperties.parseConllFile
                     || options.generalProperties.parsePartialConll) {
                 parse(options);
