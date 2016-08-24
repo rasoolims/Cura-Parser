@@ -21,7 +21,7 @@ import edu.columbia.cs.nlp.CuraParser.Structures.Pair;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Beam.BeamParser;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.ParserType;
-import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.BeamTrainer;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.GreedyTrainer;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -137,7 +137,7 @@ public class CuraParser {
 
             System.out.println("size of training data (#sens): " + dataSet.size());
             System.out.println("Embedding dimension " + wDim);
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+            GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
                     maps.labelNullIndex, maps.rareWords);
             ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             int numWordLayers = options.generalProperties.parserType == ParserType.ArcEager ? 22 : 20;

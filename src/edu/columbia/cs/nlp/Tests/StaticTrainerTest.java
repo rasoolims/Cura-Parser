@@ -12,7 +12,7 @@ import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Features.FeatureExtr
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.ParserType;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ArcEager;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ShiftReduceParser;
-import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.BeamTrainer;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.GreedyTrainer;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
@@ -79,7 +79,7 @@ public class StaticTrainerTest {
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
-        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
         Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
@@ -182,7 +182,7 @@ public class StaticTrainerTest {
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
-        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         ArrayList<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
         int lIndex = 0;
@@ -243,7 +243,7 @@ public class StaticTrainerTest {
         dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
-        trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+        trainer = new GreedyTrainer( options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
         assert instances.get(lIndex++).gold() == 0;

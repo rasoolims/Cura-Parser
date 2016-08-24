@@ -18,7 +18,7 @@ import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.ParserT
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ArcEager;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ArcStandard;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ShiftReduceParser;
-import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.BeamTrainer;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.GreedyTrainer;
 import org.junit.Test;
 
 import java.io.*;
@@ -231,7 +231,7 @@ public class ParserTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+            GreedyTrainer trainer = new GreedyTrainer(
                     options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
             maps.constructPreComputeMap(instances, 22, 10000);

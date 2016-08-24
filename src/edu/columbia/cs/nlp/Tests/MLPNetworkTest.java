@@ -11,7 +11,7 @@ import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.CuraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.GoldConfiguration;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.ParserType;
-import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.BeamTrainer;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.GreedyTrainer;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
@@ -132,7 +132,7 @@ public class MLPNetworkTest {
         int wDim = 8;
         int pDim = 4;
         int lDim = 6;
-        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         maps.constructPreComputeMap(instances, 22, 10000);
@@ -184,7 +184,7 @@ public class MLPNetworkTest {
         int wDim = 8;
         int pDim = 4;
         int lDim = 6;
-        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         maps.constructPreComputeMap(instances, 22, 10000);
@@ -228,7 +228,7 @@ public class MLPNetworkTest {
         int wDim = 8;
         int pDim = 4;
         int lDim = 6;
-        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         maps.constructPreComputeMap(instances, 22, 10000);
@@ -273,7 +273,7 @@ public class MLPNetworkTest {
             int wDim = 8;
             int pDim = 4;
             int lDim = 6;
-            BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+            GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
                     maps.labelNullIndex, maps.rareWords);
             List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
             maps.constructPreComputeMap(instances, 22, 10000);
@@ -317,7 +317,7 @@ public class MLPNetworkTest {
         int pDim = 4;
         int lDim = 4;
 
-        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         maps.constructPreComputeMap(instances, 22, 10000);
@@ -391,7 +391,7 @@ public class MLPNetworkTest {
         int pDim = 4;
         int lDim = 4;
 
-        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early", options, dependencyLabels,
+        GreedyTrainer trainer = new GreedyTrainer( options, dependencyLabels,
                 maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, 1, 0);
         maps.constructPreComputeMap(instances, 22, 10000);

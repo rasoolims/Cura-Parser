@@ -126,7 +126,7 @@ public class UpdaterTest {
         int wDim = 8;
         int pDim = 4;
         int lDim = 6;
-        BeamTrainer trainer = new BeamTrainer(options.trainingOptions.useMaxViol ? "max_violation" : "early",
+        BeamTrainer trainer = new BeamTrainer(
                 options, dependencyLabels, maps.labelNullIndex, maps.rareWords);
         List<NeuralTrainingInstance> instances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
         maps.constructPreComputeMap(instances, 22, 10000);

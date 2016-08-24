@@ -24,18 +24,15 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
 
-public class BeamTrainer {
+public class GreedyTrainer {
     final HashSet<Integer> rareWords;
     Options options;
     Random random;
     ShiftReduceParser parser;
-    private String updateMode;
     private ArrayList<Integer> dependencyRelations;
     private int labelNullIndex;
 
-    public BeamTrainer(String updateMode, Options options, ArrayList<Integer> dependencyRelations, int labelNullIndex, HashSet<Integer>
-            rareWords) throws Exception {
-        this.updateMode = updateMode;
+    public GreedyTrainer(Options options, ArrayList<Integer> dependencyRelations, int labelNullIndex, HashSet<Integer> rareWords) throws Exception {
         this.options = options;
         this.dependencyRelations = dependencyRelations;
         this.labelNullIndex = labelNullIndex;
@@ -117,68 +114,6 @@ public class BeamTrainer {
             instances.add(new NeuralTrainingInstance(baseFeatures, label));
             beam = new ArrayList<>(options.generalProperties.beamWidth);
             beam.add(bestScoringOracle);
-        }
-    }
-
-    private void beamSortOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, MLPNetwork network) throws Exception {
-        for (int b = 0; b < beam.size(); b++) {
-            Configuration configuration = beam.get(b);
-            State currentState = configuration.state;
-            double prevScore = configuration.score;
-            boolean canShift = parser.canDo(Actions.Shift, currentState);
-            boolean canReduce = parser.canDo(Actions.Reduce, currentState);
-            boolean canRightArc = parser.canDo(Actions.RightArc, currentState);
-            boolean canLeftArc = parser.canDo(Actions.LeftArc, currentState);
-
-            double[] labels = new double[network.getNumOutputs()];
-            if (!canShift) labels[0] = -1;
-            if (!canReduce) labels[1] = -1;
-            if (!canRightArc)
-                for (int i = 0; i < dependencyRelations.size(); i++)
-                    labels[2 + i] = -1;
-            if (!canLeftArc)
-                for (int i = 0; i < dependencyRelations.size(); i++)
-                    labels[dependencyRelations.size() + 2 + i] = -1;
-            double[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
-            double[] scores = network.output(features, labels);
-
-            if (canShift) {
-                double score = scores[0];
-                double addedScore = score + prevScore;
-                beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-
-                if (beamPreserver.size() > options.generalProperties.beamWidth)
-                    beamPreserver.pollFirst();
-            }
-            if (canReduce) {
-                double score = scores[1];
-                double addedScore = score + prevScore;
-                beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-
-                if (beamPreserver.size() > options.generalProperties.beamWidth)
-                    beamPreserver.pollFirst();
-            }
-
-            if (canRightArc) {
-                for (int dependency : dependencyRelations) {
-                    double score = scores[2 + dependency];
-                    double addedScore = score + prevScore;
-                    beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-
-                    if (beamPreserver.size() > options.generalProperties.beamWidth)
-                        beamPreserver.pollFirst();
-                }
-            }
-            if (canLeftArc) {
-                for (int dependency : dependencyRelations) {
-                    double score = scores[2 + dependencyRelations.size() + dependency];
-                    double addedScore = score + prevScore;
-                    beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-
-                    if (beamPreserver.size() > options.generalProperties.beamWidth)
-                        beamPreserver.pollFirst();
-                }
-            }
         }
     }
 }
