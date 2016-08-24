@@ -142,7 +142,7 @@ public class MLPTrainer {
         cost += regCoef * regCost;
     }
 
-    public double fit(List<NeuralTrainingInstance> instances, int iteration, boolean print) throws Exception {
+    public double fit(List instances, int iteration, boolean print) throws Exception {
         DecimalFormat format = new DecimalFormat("##.00");
         DecimalFormat format4 = new DecimalFormat("##.0000");
 
