@@ -31,7 +31,10 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.io.FileOutputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 import java.util.zip.GZIPOutputStream;
 
 public class GreedyTrainer {
@@ -168,49 +171,32 @@ public class GreedyTrainer {
     private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances, double dropWordProb) throws Exception {
         Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), options.generalProperties.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(options.generalProperties.beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<>(options.generalProperties.beamWidth);
         beam.add(initialConfiguration);
 
-        HashMap<Configuration, Double> oracles = new HashMap<>();
-
-        oracles.put(firstOracle, 0.0);
-
-        Configuration bestScoringOracle = null;
+        Configuration oracle = firstOracle;
 
         while (!parser.isTerminal(beam) && beam.size() > 0) {
-            /**
-             *  generating new oracles
-             *  it keeps the oracles which are in the terminal state
-             */
-            HashMap<Configuration, Double> newOracles = new HashMap<>();
-
-            Configuration currentConfig = null;
-            for (Configuration conf : oracles.keySet()) {
-                currentConfig = conf;
-                break;
-            }
-
-            double[] baseFeatures = FeatureExtractor.extractBaseFeatures(currentConfig, labelNullIndex, parser);
+            double[] baseFeatures = FeatureExtractor.extractBaseFeatures(oracle, labelNullIndex, parser);
             double[] label = new double[2 * (dependencyRelations.size() + 1)];
-            if (!options.trainingOptions.considerAllActions && !parser.canDo(Actions.LeftArc, currentConfig.state)) {
+            if (!options.trainingOptions.considerAllActions && !parser.canDo(Actions.LeftArc, oracle.state)) {
                 for (int i = 2; i < 2 + dependencyRelations.size(); i++)
                     label[i + dependencyRelations.size()] = -1;
             }
-            if (!options.trainingOptions.considerAllActions && !parser.canDo(Actions.RightArc, currentConfig.state)) {
+            if (!options.trainingOptions.considerAllActions && !parser.canDo(Actions.RightArc, oracle.state)) {
                 for (int i = 2; i < 2 + dependencyRelations.size(); i++)
                     label[i] = -1;
             }
-            if (!options.trainingOptions.considerAllActions && !parser.canDo(Actions.Shift, currentConfig.state)) {
+            if (!options.trainingOptions.considerAllActions && !parser.canDo(Actions.Shift, oracle.state)) {
                 label[0] = -1;
             }
-            if ((!options.trainingOptions.considerAllActions && !parser.canDo(Actions.Reduce, currentConfig.state))
+            if ((!options.trainingOptions.considerAllActions && !parser.canDo(Actions.Reduce, oracle.state))
                     || options.generalProperties.parserType == ParserType.ArcStandard) {
                 label[1] = -1;
             }
 
-            bestScoringOracle = parser.staticOracle(goldConfiguration, oracles, newOracles, dependencyRelations.size());
-            oracles = newOracles;
-            int action = bestScoringOracle.actionHistory.get(bestScoringOracle.actionHistory.size() - 1);
+            oracle = parser.staticOracle(goldConfiguration, oracle, dependencyRelations.size());
+            int action = oracle.actionHistory.get(oracle.actionHistory.size() - 1);
             if (action >= 2)
                 action -= 1;
 
@@ -224,7 +210,7 @@ public class GreedyTrainer {
             label[action] = 1;
             instances.add(new NeuralTrainingInstance(baseFeatures, label));
             beam = new ArrayList<>(options.generalProperties.beamWidth);
-            beam.add(bestScoringOracle);
+            beam.add(oracle);
         }
     }
 }

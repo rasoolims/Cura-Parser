@@ -67,67 +67,57 @@ public class ArcStandard extends ShiftReduceParser {
         return false;
     }
 
-    public Configuration staticOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double> oracles,
-                                      HashMap<Configuration, Double> newOracles, int depSize) throws Exception {
-        Configuration bestScoringOracle = null;
+    public Configuration staticOracle(GoldConfiguration goldConfiguration, Configuration configuration, int depSize) throws Exception {
         HashMap<Integer, Pair<Integer, Integer>> goldDependencies = goldConfiguration.getGoldDependencies();
         HashMap<Integer, HashSet<Integer>> reversedDependencies = goldConfiguration.getReversedDependencies();
+        State state = configuration.state;
+        if (!configuration.state.isTerminalState()) {
+            Configuration newConfig = configuration.clone();
 
-        for (Configuration configuration : oracles.keySet()) {
-            State state = configuration.state;
+            if (state.stackSize() < 2) {
+                shift(newConfig.state);
+                newConfig.addAction(0);
+                newConfig.addScore(0);
+            } else {
+                int first = state.pop();
+                int second = state.peek();
+                state.push(first);
 
-
-            if (!configuration.state.isTerminalState()) {
-                Configuration newConfig = configuration.clone();
-
-                if (state.stackSize() < 2) {
-                    shift(newConfig.state);
-                    newConfig.addAction(0);
+                if (goldDependencies.containsKey(second) && goldDependencies.get(second).first == first) { // always prefers left-arc
+                    int dependency = goldDependencies.get(second).second;
+                    leftArc(newConfig.state, dependency);
+                    newConfig.addAction(3 + depSize + dependency);
                     newConfig.addScore(0);
-                } else {
-                    int first = state.pop();
-                    int second = state.peek();
-                    state.push(first);
+                } else if (goldDependencies.containsKey(first) && goldDependencies.get(first).first == second) {
+                    boolean gotAllDeps = true;
 
-                    if (goldDependencies.containsKey(second) && goldDependencies.get(second).first == first) { // always prefers left-arc
-                        int dependency = goldDependencies.get(second).second;
-                        leftArc(newConfig.state, dependency);
-                        newConfig.addAction(3 + depSize + dependency);
-                        newConfig.addScore(0);
-                    } else if (goldDependencies.containsKey(first) && goldDependencies.get(first).first == second) {
-                        boolean gotAllDeps = true;
-
-                        if (reversedDependencies.containsKey(first))
-                            for (int dep : reversedDependencies.get(first)) {
-                                if (!state.hasHead(dep)) {
-                                    gotAllDeps = false;
-                                    break;
-                                }
+                    if (reversedDependencies.containsKey(first))
+                        for (int dep : reversedDependencies.get(first)) {
+                            if (!state.hasHead(dep)) {
+                                gotAllDeps = false;
+                                break;
                             }
-
-                        if (gotAllDeps) {
-                            int dependency = goldDependencies.get(first).second;
-                            rightArc(newConfig.state, dependency);
-                            newConfig.addAction(3 + dependency);
-                            newConfig.addScore(0);
-                        } else {
-                            shift(newConfig.state);
-                            newConfig.addAction(0);
-                            newConfig.addScore(0);
                         }
+
+                    if (gotAllDeps) {
+                        int dependency = goldDependencies.get(first).second;
+                        rightArc(newConfig.state, dependency);
+                        newConfig.addAction(3 + dependency);
+                        newConfig.addScore(0);
                     } else {
                         shift(newConfig.state);
                         newConfig.addAction(0);
                         newConfig.addScore(0);
                     }
+                } else {
+                    shift(newConfig.state);
+                    newConfig.addAction(0);
+                    newConfig.addScore(0);
                 }
-                bestScoringOracle = newConfig;
-                newOracles.put(newConfig, (double) 0);
-            } else {
-                newOracles.put(configuration, oracles.get(configuration));
             }
+            return newConfig;
         }
-        return bestScoringOracle;
+        return configuration;
     }
 
     public Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double> oracles, HashMap<Configuration,

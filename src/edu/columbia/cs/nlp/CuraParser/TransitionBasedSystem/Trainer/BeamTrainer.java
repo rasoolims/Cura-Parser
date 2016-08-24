@@ -3,7 +3,6 @@ package edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer;
 import edu.columbia.cs.nlp.CuraParser.Accessories.CoNLLReader;
 import edu.columbia.cs.nlp.CuraParser.Accessories.Options;
 import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.MLPNetwork;
-import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.CuraParser.Structures.Pair;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.BeamElement;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -14,7 +13,6 @@ import java.io.FileInputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletionService;
@@ -62,16 +60,12 @@ public class BeamTrainer extends GreedyTrainer {
         Configuration firstOracle = initialConfiguration.clone();
         ArrayList<Configuration> beam = new ArrayList<>(options.generalProperties.beamWidth);
         beam.add(initialConfiguration);
-        HashMap<Configuration, Double> oracles = new HashMap<>();
-        oracles.put(firstOracle, 0.0);
 
-        Configuration bestScoringOracle = null;
+        Configuration oracle = firstOracle;
         boolean oracleInBeam;
         while (!parser.isTerminal(beam) && beam.size() > 0) {
-            HashMap<Configuration, Double> newOracles = new HashMap<>();
             // todo think about making it dynamic.
-            bestScoringOracle = parser.staticOracle(goldConfiguration, oracles, newOracles, dependencyRelations.size());
-            oracles = newOracles;
+            oracle = parser.staticOracle(goldConfiguration, firstOracle, dependencyRelations.size());
 
             TreeSet<BeamElement> beamPreserver = new TreeSet<>();
             for (int b = 0; b < beam.size(); b++) {
@@ -121,20 +115,12 @@ public class BeamTrainer extends GreedyTrainer {
                     newConfig.setScore(sc);
                     repBeam.add(newConfig);
 
-                    if (oracles.containsKey(newConfig))
+                    if (newConfig.equals(oracle))
                         oracleInBeam = true;
                 }
                 beam = repBeam;
 
-                if (beam.size() > 0 && oracles.size() > 0) {
-                    Configuration bestConfig = beam.get(0);
-                    if (oracles.containsKey(bestConfig)) {
-                        oracles = new HashMap<>();
-                        oracles.put(bestConfig, 0.0);
-                    } else {
-                        oracles.put(bestScoringOracle, 0.0);
-                    }
-
+                if (beam.size() > 0) {
                     // do early update
                     if (!oracleInBeam)
                         break;
@@ -143,8 +129,9 @@ public class BeamTrainer extends GreedyTrainer {
             }
         }
 
-        return new Pair<>(bestScoringOracle, beam);
+        return new Pair<>(oracle, beam);
     }
+
     private static  MLPNetwork getGreedyModel(Options options) throws Exception {
         GreedyTrainer.trainWithNN(options);
 

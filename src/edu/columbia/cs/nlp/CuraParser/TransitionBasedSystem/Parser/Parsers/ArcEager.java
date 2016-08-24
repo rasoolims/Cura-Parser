@@ -58,72 +58,65 @@ public class ArcEager extends ShiftReduceParser {
         return false;
     }
 
-    public Configuration staticOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double> oracles,
-                                      HashMap<Configuration, Double> newOracles, int depSize) throws Exception {
-        Configuration bestScoringOracle = null;
+    public Configuration staticOracle(GoldConfiguration goldConfiguration, Configuration configuration, int depSize) throws Exception {
         int top = -1;
         int first = -1;
         HashMap<Integer, Pair<Integer, Integer>> goldDependencies = goldConfiguration.getGoldDependencies();
         HashMap<Integer, HashSet<Integer>> reversedDependencies = goldConfiguration.getReversedDependencies();
 
-        for (Configuration configuration : oracles.keySet()) {
-            State state = configuration.state;
-            if (!state.stackEmpty())
-                top = state.peek();
-            if (!state.bufferEmpty())
-                first = state.bufferHead();
+        State state = configuration.state;
+        if (!state.stackEmpty())
+            top = state.peek();
+        if (!state.bufferEmpty())
+            first = state.bufferHead();
 
-            if (!configuration.state.isTerminalState()) {
-                Configuration newConfig = configuration.clone();
+        if (!configuration.state.isTerminalState()) {
+            Configuration newConfig = configuration.clone();
 
-                if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
-                    int dependency = goldDependencies.get(first).second;
-                    double score = 0;
-                    rightArc(newConfig.state, dependency);
-                    newConfig.addAction(3 + dependency);
-                    newConfig.addScore(score);
-                } else if (top > 0 && goldDependencies.containsKey(top) && goldDependencies.get(top).first == first) {
-                    int dependency = goldDependencies.get(top).second;
-                    double score = 0;
-                    leftArc(newConfig.state, dependency);
-                    newConfig.addAction(3 + depSize + dependency);
-                    newConfig.addScore(score);
-                } else if (top >= 0 && state.hasHead(top)) {
-                    if (reversedDependencies.containsKey(top)) {
-                        if (reversedDependencies.get(top).size() == state.valence(top)) {
-                            reduce(newConfig.state);
-                            newConfig.addAction(1);
-                            newConfig.addScore(0);
-                        } else {
-                            double score = 0;
-                            shift(newConfig.state);
-                            newConfig.addAction(0);
-                            newConfig.addScore(score);
-                        }
-                    } else {
-                        double score = 0;
+            if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
+                int dependency = goldDependencies.get(first).second;
+                double score = 0;
+                rightArc(newConfig.state, dependency);
+                newConfig.addAction(3 + dependency);
+                newConfig.addScore(score);
+            } else if (top > 0 && goldDependencies.containsKey(top) && goldDependencies.get(top).first == first) {
+                int dependency = goldDependencies.get(top).second;
+                double score = 0;
+                leftArc(newConfig.state, dependency);
+                newConfig.addAction(3 + depSize + dependency);
+                newConfig.addScore(score);
+            } else if (top >= 0 && state.hasHead(top)) {
+                if (reversedDependencies.containsKey(top)) {
+                    if (reversedDependencies.get(top).size() == state.valence(top)) {
                         reduce(newConfig.state);
                         newConfig.addAction(1);
+                        newConfig.addScore(0);
+                    } else {
+                        double score = 0;
+                        shift(newConfig.state);
+                        newConfig.addAction(0);
                         newConfig.addScore(score);
                     }
-                } else if (state.bufferEmpty() && state.stackSize() == 1 && state.peek() == state.rootIndex) {
+                } else {
                     double score = 0;
                     reduce(newConfig.state);
                     newConfig.addAction(1);
                     newConfig.addScore(score);
-                } else {
-                    double score = 0;
-                    shift(newConfig.state);
-                    newConfig.addAction(0);
-                    newConfig.addScore(score);
                 }
-                bestScoringOracle = newConfig;
-                newOracles.put(newConfig, (double) 0);
+            } else if (state.bufferEmpty() && state.stackSize() == 1 && state.peek() == state.rootIndex) {
+                double score = 0;
+                reduce(newConfig.state);
+                newConfig.addAction(1);
+                newConfig.addScore(score);
             } else {
-                newOracles.put(configuration, oracles.get(configuration));
+                double score = 0;
+                shift(newConfig.state);
+                newConfig.addAction(0);
+                newConfig.addScore(score);
             }
+            return newConfig;
         }
-        return bestScoringOracle;
+        return configuration;
     }
 
     public Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double>

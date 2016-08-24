@@ -67,8 +67,7 @@ public abstract class ShiftReduceParser {
         return true;
     }
 
-    public abstract Configuration staticOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double> oracles,
-                                               HashMap<Configuration, Double> newOracles, int depSize) throws Exception;
+    public abstract Configuration staticOracle(GoldConfiguration goldConfiguration, Configuration configuration, int depSize) throws Exception;
 
     public abstract Configuration zeroCostDynamicOracle(GoldConfiguration goldConfiguration, HashMap<Configuration, Double>
             oracles, HashMap<Configuration, Double> newOracles, MLPNetwork network, int labelNullIndex, ArrayList<Integer> dependencyRelations)
