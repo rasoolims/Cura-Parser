@@ -19,6 +19,7 @@ public class NetworkProperties implements Serializable {
     public int depDim;
     public int wDim;
     public int batchSize;
+    public int beamBatchSize;
     public double dropoutProbForHiddenLayer;
     public ActivationType activationType;
     public double regularization;
@@ -33,6 +34,7 @@ public class NetworkProperties implements Serializable {
         regularization = 1e-8;
         regualarizeAllLayers = true;
         batchSize = 1000;
+        beamBatchSize = 8;
         dropoutProbForHiddenLayer = 0;
         activationType = ActivationType.RELU;
         posDim = 32;
@@ -49,6 +51,7 @@ public class NetworkProperties implements Serializable {
         builder.append("regularization: " + regularization + "\n");
         builder.append("regularize all layers: " + regualarizeAllLayers + "\n");
         builder.append("batch size: " + batchSize + "\n");
+        builder.append("beam batch size: " + beamBatchSize + "\n");
         builder.append("dropout probability: " + dropoutProbForHiddenLayer + "\n");
         builder.append("word dim: " + wDim + "\n");
         builder.append("pos dim: " + posDim + "\n");

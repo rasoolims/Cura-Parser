@@ -76,7 +76,8 @@ public class Options implements Serializable {
         output.append("\t \t -a [activation (relu,cubic) -- default:relu] \n");
         output.append("\t \t -u [updater-type: sgd(default),adam,adagrad] \n");
         output.append("\t \t -sgd [sgd-type (if using sgd): nesterov(default),momentum, vanilla] \n");
-        output.append("\t \t -batch [batch-size] \n");
+        output.append("\t \t -batch [batch-size; default 10000] \n");
+        output.append("\t \t -beam_batch [beam-batch-size -- num of sentences in a batch (default:8)] \n");
         output.append("\t \t -d [dropout-prob (default:0)] \n");
         output.append("\t \t -bias [true/false (use output bias term in softmax layer: default true)] \n");
         output.append("\t \t -momentum [momentum (default:0.9)] \n");
@@ -219,6 +220,8 @@ public class Options implements Serializable {
                 options.networkProperties.hiddenLayer2Size = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-batch"))
                 options.networkProperties.batchSize = Integer.parseInt(args[i + 1]);
+            else if (args[i].equals("-beam_batch"))
+                options.networkProperties.beamBatchSize = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-posdim"))
                 options.networkProperties.posDim = Integer.parseInt(args[i + 1]);
             else if (args[i].equals("-depdim"))
