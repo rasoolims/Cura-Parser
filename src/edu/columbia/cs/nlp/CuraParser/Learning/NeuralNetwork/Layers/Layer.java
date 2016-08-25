@@ -200,4 +200,11 @@ public class Layer implements Serializable {
         Utils.sumi(w, anotherLayer.getW());
         Utils.sumi(b, anotherLayer.getB());
     }
+
+    public void setLayer(Layer layer){
+        w = layer.w;
+        b = layer.b;
+        activation = layer.activation;
+        useBias = layer.useBias;
+    }
 }

@@ -291,4 +291,13 @@ public class FirstHiddenLayer extends Layer {
     public void setPrecomputationMap(HashMap<Integer, Integer>[] precomputationMap) {
         wordEmbeddings.setPrecomputationMap(precomputationMap);
     }
+
+    @Override
+    public void setLayer(Layer layer) {
+        super.setLayer(layer);
+        saved = ((FirstHiddenLayer) layer).saved;
+        wordEmbeddings.setLayer(((FirstHiddenLayer) layer).wordEmbeddings);
+        posEmbeddings.setLayer(((FirstHiddenLayer) layer).posEmbeddings);
+        depEmbeddings.setLayer(((FirstHiddenLayer) layer).depEmbeddings);
+    }
 }

@@ -60,4 +60,10 @@ public class WordEmbeddingLayer extends EmbeddingLayer {
     public void setPrecomputationMap(HashMap<Integer, Integer>[] precomputationMap) {
         this.precomputationMap = precomputationMap;
     }
+
+    @Override
+    public void setLayer(Layer layer) {
+        super.setLayer(layer);
+        precomputationMap = ((WordEmbeddingLayer)layer).getPrecomputationMap();
+    }
 }
