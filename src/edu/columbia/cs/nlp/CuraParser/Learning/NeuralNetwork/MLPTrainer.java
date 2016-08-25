@@ -464,10 +464,11 @@ public class MLPTrainer {
                         throw new Exception("Infinite cost!");
                 }
 
+                double beamProb = Math.exp(beamDenom[b]) / denom;
                 for (int a = 0; a < actions.size(); a++) {
                     int label = actions.get(a) >= 2 ? actions.get(a) - 1 : actions.get(a);
                     double[] delta = new double[net.getNumOutputs()];
-                    delta[label] = (-indicator + Math.exp(beamDenom[b]) / denom) / batchSize;
+                    delta[label] = (-indicator + beamProb) / batchSize;
 
                     // Modifying the bias term
                     g.modify(net.numLayers() - 1, label, -1, delta[label]);
