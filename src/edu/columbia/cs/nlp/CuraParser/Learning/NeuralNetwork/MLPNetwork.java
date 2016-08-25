@@ -20,7 +20,6 @@ import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers.Layer;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.FixInit;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.Initializer;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.NormalInit;
-import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.XavierInit;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.enums.WeightInit;
 import edu.columbia.cs.nlp.CuraParser.Structures.Enums.EmbeddingTypes;
 import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
@@ -98,6 +97,7 @@ public class MLPNetwork implements Serializable {
         this.options = options;
     }
 
+
     public MLPNetwork(Options options, ArrayList<Layer> layers, int numWordLayers, int numPosLayers, int numDepLayers, int numOutputs,
                       ArrayList<Integer> depLabels) {
         this.options = options;
@@ -109,6 +109,10 @@ public class MLPNetwork implements Serializable {
         this.numDepLabels = depLabels.size();
         this.depLabels = depLabels;
         this.maps = null;
+    }
+
+    public void resetPreComputeMap() {
+        ((FirstHiddenLayer) layer(0)).getWordEmbeddings().setPrecomputationMap(maps.preComputeMap);
     }
 
     public void averageNetworks(MLPNetwork averaged, final double r1, final double r2) {

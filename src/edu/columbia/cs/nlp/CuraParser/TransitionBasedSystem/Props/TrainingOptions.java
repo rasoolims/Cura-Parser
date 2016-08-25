@@ -29,10 +29,12 @@ public class TrainingOptions implements Serializable {
     public String trainFile;
     public boolean considerAllActions;
     public String preTrainedModelPath;
+    public boolean pretrainLayers;
 
     public TrainingOptions() {
         decayStep = 4400;
         minFreq = 1;
+        pretrainLayers = true;
         averagingOption = AveragingOption.ONLY;
         clusterFile = "";
         wordEmbeddingFile = "";
@@ -52,7 +54,7 @@ public class TrainingOptions implements Serializable {
     private TrainingOptions(int trainingIter, int beamTrainingIter, String clusterFile, String wordEmbeddingFile, boolean useMaxViol, boolean
             useDynamicOracle, boolean useRandomOracleSelection, int UASEvalPerStep, int decayStep, AveragingOption averagingOption, int
                                     partialTrainingStartingIteration, int minFreq, String devPath, String trainFile, boolean considerAllActions,
-                            String preTrainedModelPath) {
+                            String preTrainedModelPath, boolean pretrainLayers) {
         this.trainingIter = trainingIter;
         this.beamTrainingIter = beamTrainingIter;
         this.clusterFile = clusterFile;
@@ -69,6 +71,7 @@ public class TrainingOptions implements Serializable {
         this.trainFile = trainFile;
         this.considerAllActions = considerAllActions;
         this.preTrainedModelPath = preTrainedModelPath;
+        this.pretrainLayers = pretrainLayers;
     }
 
     @Override
@@ -94,7 +97,7 @@ public class TrainingOptions implements Serializable {
     public TrainingOptions clone() {
         return new TrainingOptions(trainingIter, beamTrainingIter, clusterFile, wordEmbeddingFile, useMaxViol, useDynamicOracle,
                 useRandomOracleSelection, UASEvalPerStep, decayStep, averagingOption, partialTrainingStartingIteration, minFreq, devPath, trainFile,
-                considerAllActions, preTrainedModelPath);
+                considerAllActions, preTrainedModelPath, pretrainLayers);
     }
 
 }
