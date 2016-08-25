@@ -62,7 +62,7 @@ public class BeamTrainer extends GreedyTrainer {
         MLPNetwork avgMlpNetwork = new MLPNetwork(network.maps, options, network.getDepLabels(), network.getwDim(), options.networkProperties.posDim,
                 options.networkProperties.depDim, options.generalProperties.parserType);
 
-        double bestModelUAS = 0;
+        double bestModelUAS = evaluate(options, network, Double.NEGATIVE_INFINITY);
 
         ExecutorService executor = Executors.newFixedThreadPool(options.generalProperties.numOfThreads);
         CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(executor);
