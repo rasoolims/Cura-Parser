@@ -155,7 +155,7 @@ public class GreedyTrainer {
     protected static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {
         BeamParser parser = new BeamParser(mlpNetwork, options.generalProperties.numOfThreads, options.generalProperties.parserType);
         parser.parseConll(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp", options.generalProperties.rootFirst,
-                1, options.generalProperties.lowercase,
+                options.generalProperties.beamWidth, options.generalProperties.lowercase,
                 options.generalProperties.numOfThreads,
                 false, "");
         Pair<Double, Double> eval = Evaluator.evaluate(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp",
