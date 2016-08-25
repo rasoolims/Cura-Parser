@@ -79,8 +79,6 @@ public class Configuration implements Comparable, Cloneable, Serializable {
     public boolean equals(Object o) {
         if (o instanceof Configuration) {
             Configuration configuration = (Configuration) o;
-            if (configuration.score != score)
-                return false;
             if (configuration.actionHistory.size() != actionHistory.size())
                 return false;
             for (int i = 0; i < actionHistory.size(); i++)
