@@ -47,11 +47,11 @@ public class BeamTrainer extends GreedyTrainer {
 
             BeamTrainer trainer = new BeamTrainer(options, network.getDepLabels(),
                     network.maps.labelNullIndex, network.maps.rareWords);
-            trainer.train(options, network);
+            trainer.trainGlobal(options, network);
         }
     }
 
-    public void train(Options options, MLPNetwork network) throws Exception {
+    public void trainGlobal(Options options, MLPNetwork network) throws Exception {
         CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
         ArrayList<GoldConfiguration> dataSet =
                 reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options.generalProperties.rootFirst,
