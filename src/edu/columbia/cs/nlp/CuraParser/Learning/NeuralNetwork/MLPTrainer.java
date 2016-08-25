@@ -8,8 +8,16 @@ import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers.WordEmbeddin
 import edu.columbia.cs.nlp.CuraParser.Learning.Updater.*;
 import edu.columbia.cs.nlp.CuraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.CuraParser.Structures.Enums.EmbeddingTypes;
+import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
 import edu.columbia.cs.nlp.CuraParser.Structures.NeuralTrainingInstance;
 import edu.columbia.cs.nlp.CuraParser.Structures.Pair;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.Configuration;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Features.FeatureExtractor;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.ParserType;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ArcEager;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ArcStandard;
+import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ShiftReduceParser;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -50,6 +58,7 @@ public class MLPTrainer {
     private double regCoef;
     private double dropoutProb;
     private boolean regularizeAllLayers;
+    ShiftReduceParser parser;
 
     public MLPTrainer(MLPNetwork net, Options options) throws Exception {
         this.net = net;
@@ -71,6 +80,13 @@ public class MLPTrainer {
         this.regularizeAllLayers = options.networkProperties.regualarizeAllLayers;
         executor = Executors.newFixedThreadPool(numThreads);
         pool = new ExecutorCompletionService<>(executor);
+
+        if (options.generalProperties.parserType == ParserType.ArcStandard)
+            parser = new ArcStandard();
+        else if (options.generalProperties.parserType == ParserType.ArcEager)
+            parser = new ArcEager();
+        else
+            throw new NotImplementedException();
     }
 
     private void regularizeWithL2() throws Exception {
@@ -185,7 +201,6 @@ public class MLPTrainer {
 
         cost += firstResult.first.first;
         correct += firstResult.first.second;
-
 
         for (int i = 1; i < Math.min(instances.size(), numThreads); i++) {
             Pair<Pair<Double, Double>, MLPNetwork> result = pool.take().get();
@@ -387,7 +402,89 @@ public class MLPTrainer {
         double correct = 0;
         HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(g.getNumWordLayers());
 
-        //todo
+        for (int i = 0; i < instances.size(); i++) {
+            Pair<Configuration, ArrayList<Configuration>> currInstance = (Pair<Configuration, ArrayList<Configuration>>) instances.get(i);
+            Configuration gold = currInstance.first;
+            ArrayList<Configuration> beam = currInstance.second;
+            boolean rootFirst = gold.sentence.getWords()[gold.sentence.size() - 1] == IndexMaps.RootIndex ? false : true;
+            Configuration initialConfig = new Configuration(gold.sentence, rootFirst);
+
+
+            // For each beam, each action get the inputs and activations.
+            double[][][][] inputs = new double[beam.size()][beam.get(0).actionHistory.size()][net.numLayers() + 1][];
+            double[][][][] activations = new double[beam.size()][beam.get(0).actionHistory.size()][net.numLayers() + 1][];
+            double denom = 0;
+            double[] beamDenom = new double[beam.size()];
+            double maxBDenom = Double.NEGATIVE_INFINITY;
+
+            int goldElement = -1;
+
+            for (int b = 0; b < beam.size(); b++) {
+                ArrayList<Integer> actions = beam.get(b).actionHistory;
+                Configuration curConfig = initialConfig.clone();
+                // Finding the gold element index.
+                if (goldElement == -1 && beam.get(b).equals(gold))
+                    goldElement = b;
+
+                for (int a = 0; a < actions.size(); a++) {
+                    int action = actions.get(a);
+                    double[] feats = FeatureExtractor.extractBaseFeatures(curConfig, net.maps.labelNullIndex, parser);
+                    inputs[b][a][0] = feats;
+                    activations[b][a][0] = feats;
+
+                    for (int l = 1; l < net.numLayers() + 1; l++) {
+                        inputs[b][a][l] = net.layer(l - 1).forward(activations[b][a][l - 1]);
+                        activations[b][a][l] = net.layer(l - 1).activate(inputs[b][a][l]);
+                    }
+
+                    beamDenom[b] += activations[b][a][net.numLayers()][action >= 2 ? action - 1 : action];
+                    parser.advance(curConfig, action, net.depLabels.size());
+                }
+                if (beamDenom[b] >= maxBDenom)
+                    maxBDenom = beamDenom[b];
+            }
+
+            for (int b = 0; b < beam.size(); b++) {
+                beamDenom[b] -= maxBDenom;
+                denom += Math.exp(beamDenom[b]);
+            }
+
+            if (goldElement == 0)
+                correct++;
+
+            assert goldElement != -1;
+            for (int b = 0; b < beam.size(); b++) {
+                ArrayList<Integer> actions = beam.get(b).actionHistory;
+
+                // Finding the gold element index.
+                int indicator = goldElement == b ? 1 : 0;
+                if (goldElement == b) {
+                    cost += Math.log(denom) - beamDenom[b];
+                    if (Double.isInfinite(cost))
+                        throw new Exception("Infinite cost!");
+                }
+
+                for (int a = 0; a < actions.size(); a++) {
+                    int label = actions.get(a) >= 2 ? actions.get(a) - 1 : actions.get(a);
+                    double[] delta = new double[net.getNumOutputs()];
+                    delta[label] = (-indicator + Math.exp(beamDenom[b]) / denom) / batchSize;
+
+                    // Modifying the bias term
+                    g.modify(net.numLayers() - 1, label, -1, delta[label]);
+
+                    double[] lastHiddenActivation = activations[b][a][net.numLayers() - 1];
+                    if (delta[label] != 0.0) {
+                        for (int h = 0; h < lastHiddenActivation.length; h++) {
+                            g.modify(net.numLayers() - 1, label, h, delta[label] * lastHiddenActivation[h]);
+                        }
+
+                        for (int l = net.numLayers() - 2; l >= 0; l--) {
+                            delta = g.layer(l).backward(delta, l, inputs[b][a][l + 1], activations[b][a][l], featuresSeen, savedGradients, net);
+                        }
+                    }
+                }
+            }
+        }
 
         backPropSavedGradients(g, savedGradients, featuresSeen);
         return new Pair<>(cost, correct);

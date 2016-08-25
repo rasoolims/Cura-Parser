@@ -3,6 +3,9 @@ package edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer;
 import edu.columbia.cs.nlp.CuraParser.Accessories.CoNLLReader;
 import edu.columbia.cs.nlp.CuraParser.Accessories.Options;
 import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.MLPNetwork;
+import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.MLPTrainer;
+import edu.columbia.cs.nlp.CuraParser.Learning.Updater.Enums.AveragingOption;
+import edu.columbia.cs.nlp.CuraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.CuraParser.Structures.Pair;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.BeamElement;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.Configuration;
@@ -13,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletionService;
@@ -35,22 +39,71 @@ public class BeamTrainer extends GreedyTrainer {
         super(options, dependencyRelations, labelNullIndex, rareWords);
     }
 
-    public void train(Options options) throws Exception {
-        MLPNetwork network = BeamTrainer.getGreedyModel(options);
+    public static void trainWithNN(Options options) throws Exception {
+        if (options.trainingOptions.trainFile.equals("") || options.generalProperties.modelFile.equals("")) {
+            Options.showHelp();
+        } else {
+            MLPNetwork network = getGreedyModel(options);
+
+            BeamTrainer trainer = new BeamTrainer(options, network.getDepLabels(),
+                    network.maps.labelNullIndex, network.maps.rareWords);
+            trainer.train(options, network);
+        }
+    }
+
+    public void train(Options options, MLPNetwork network) throws Exception {
         CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
         ArrayList<GoldConfiguration> dataSet =
                 reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options.generalProperties.rootFirst,
                         options.generalProperties.lowercase, network.maps);
         System.out.println("CoNLL data reading done!");
 
+        MLPTrainer neuralTrainer = new MLPTrainer(network, options);
+        MLPNetwork avgMlpNetwork = new MLPNetwork(network.maps, options, network.getDepLabels(), network.getwDim(), options.networkProperties.posDim,
+                options.networkProperties.depDim, options.generalProperties.parserType);
+
+        double bestModelUAS = 0;
+
         ExecutorService executor = Executors.newFixedThreadPool(options.generalProperties.numOfThreads);
         CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<>(executor);
 
-        for(int iter =0; iter<options.trainingOptions.beamTrainingIter; iter++){
-            for(GoldConfiguration goldConfiguration:dataSet) {
+        ArrayList<Pair<Configuration, ArrayList<Configuration>>> currentBatch = new ArrayList<>(options.networkProperties.beamBatchSize);
+        int step = 0;
+        for (int iter = 0; iter < options.trainingOptions.beamTrainingIter; iter++) {
+            Collections.shuffle(dataSet);
+            for (GoldConfiguration goldConfiguration : dataSet) {
                 Pair<Configuration, ArrayList<Configuration>> goldAndBeam = getGoldAndBeamElements(goldConfiguration, network, pool);
+                currentBatch.add(goldAndBeam);
 
+                if (currentBatch.size() >= options.networkProperties.beamBatchSize) {
+                    neuralTrainer.fit(currentBatch, step++, step % (Math.max(1, options.trainingOptions.UASEvalPerStep / 10)) == 0 ? true : false);
+                    currentBatch.clear();
+
+                    if (options.updaterProperties.updaterType == UpdaterType.SGD) {
+                        if ((step + 1) % options.trainingOptions.decayStep == 0) {
+                            neuralTrainer.setLearningRate(0.96 * neuralTrainer.getLearningRate());
+                            System.out.println("The new learning rate: " + neuralTrainer.getLearningRate());
+                        }
+                    }
+
+                    if (options.trainingOptions.averagingOption != AveragingOption.NO) {
+                        // averaging
+                        double ratio = Math.min(0.9999, (double) step / (9 + step));
+                        network.averageNetworks(avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
+                    }
+
+                    if (step % options.trainingOptions.UASEvalPerStep == 0) {
+                        if (options.trainingOptions.averagingOption != AveragingOption.ONLY) {
+                            bestModelUAS = evaluate(options, network, bestModelUAS);
+                        }
+                        if (options.trainingOptions.averagingOption != AveragingOption.NO) {
+                            avgMlpNetwork.preCompute();
+                            bestModelUAS = evaluate(options, avgMlpNetwork, bestModelUAS);
+                        }
+                    }
+                }
             }
+
         }
     }
 
@@ -65,7 +118,7 @@ public class BeamTrainer extends GreedyTrainer {
         boolean oracleInBeam;
         while (!parser.isTerminal(beam) && beam.size() > 0) {
             // todo think about making it dynamic.
-            oracle = parser.staticOracle(goldConfiguration, firstOracle, dependencyRelations.size());
+            oracle = parser.staticOracle(goldConfiguration, oracle, dependencyRelations.size());
 
             TreeSet<BeamElement> beamPreserver = new TreeSet<>();
             for (int b = 0; b < beam.size(); b++) {
@@ -145,4 +198,6 @@ public class BeamTrainer extends GreedyTrainer {
         reader.close();
         return mlpNetwork;
     }
+
+
 }

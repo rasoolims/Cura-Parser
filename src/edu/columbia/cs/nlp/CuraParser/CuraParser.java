@@ -39,8 +39,9 @@ public class CuraParser {
             options.networkProperties.hiddenLayer2Size = 0;
             options.updaterProperties.learningRate = 0.001;
             options.networkProperties.batchSize = 1024;
-            options.trainingOptions.trainingIter = 100;
-            options.generalProperties.beamWidth = 1;
+            options.trainingOptions.trainingIter = 30;
+            options.trainingOptions.beamTrainingIter = 30;
+            options.generalProperties.beamWidth = 8;
             options.trainingOptions.useDynamicOracle = false;
             options.generalProperties.numOfThreads = 2;
             options.trainingOptions.decayStep = 10;
@@ -49,7 +50,7 @@ public class CuraParser {
             options.trainingOptions.averagingOption = AveragingOption.BOTH;
             options.networkProperties.activationType = ActivationType.RELU;
             options.generalProperties.parserType = ParserType.ArcStandard;
-            options.trainingOptions.considerAllActions = true;
+            options.trainingOptions.considerAllActions = false;
         }
 
         if (options.generalProperties.showHelp) {
