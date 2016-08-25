@@ -44,6 +44,16 @@ public class Options implements Serializable {
         separator = "_";
     }
 
+    private Options(GeneralProperties generalProperties, TrainingOptions trainingOptions, String scorePath, String separator, NetworkProperties
+            networkProperties, UpdaterProperties updaterProperties) {
+        this.generalProperties = generalProperties;
+        this.trainingOptions = trainingOptions;
+        this.scorePath = scorePath;
+        this.separator = separator;
+        this.networkProperties = networkProperties;
+        this.updaterProperties = updaterProperties;
+    }
+
     public static void showHelp() {
         StringBuilder output = new StringBuilder();
         output.append("© Yara CuraParser.Parser \n");
@@ -316,5 +326,12 @@ public class Options implements Serializable {
             return builder.toString();
         }
         return "";
+    }
+
+    @Override
+    public Options clone() {
+        Options options = new Options(generalProperties.clone(), trainingOptions.clone(), scorePath, separator, networkProperties.clone(),
+                updaterProperties.clone());
+        return options;
     }
 }

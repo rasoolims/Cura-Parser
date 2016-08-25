@@ -53,6 +53,27 @@ public class GeneralProperties implements Serializable {
         initializePunctuations();
     }
 
+    private GeneralProperties(boolean showHelp, boolean evaluate, boolean train, boolean parseTaggedFile, boolean parseConllFile, boolean
+            parsePartialConll, String modelFile, int beamWidth, boolean rootFirst, boolean labeled, boolean lowercase, String inputFile, String
+                                      outputFile, int numOfThreads, HashSet<String> punctuations, ParserType parserType) {
+        this.showHelp = showHelp;
+        this.evaluate = evaluate;
+        this.train = train;
+        this.parseTaggedFile = parseTaggedFile;
+        this.parseConllFile = parseConllFile;
+        this.parsePartialConll = parsePartialConll;
+        this.modelFile = modelFile;
+        this.beamWidth = beamWidth;
+        this.rootFirst = rootFirst;
+        this.labeled = labeled;
+        this.lowercase = lowercase;
+        this.inputFile = inputFile;
+        this.outputFile = outputFile;
+        this.numOfThreads = numOfThreads;
+        this.punctuations = punctuations;
+        this.parserType = parserType;
+    }
+
     private void initializePunctuations() {
         punctuations = new HashSet<>();
         punctuations.add("#");
@@ -128,5 +149,16 @@ public class GeneralProperties implements Serializable {
             if (line.length() > 0)
                 punctuations.add(line.split(" ")[0].trim());
         }
+    }
+
+    /**
+     * Punctuation is not deep copy though.
+     *
+     * @return
+     */
+    @Override
+    public GeneralProperties clone() {
+        return new GeneralProperties(showHelp, evaluate, train, parseTaggedFile, parseConllFile, parsePartialConll, modelFile, beamWidth, rootFirst,
+                labeled, lowercase, inputFile, outputFile, numOfThreads, punctuations, parserType);
     }
 }

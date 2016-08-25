@@ -42,6 +42,22 @@ public class NetworkProperties implements Serializable {
         wDim = 64;
     }
 
+    private NetworkProperties(int hiddenLayer1Size, int hiddenLayer2Size, int posDim, int depDim, int wDim, int batchSize, int beamBatchSize, double
+            dropoutProbForHiddenLayer, ActivationType activationType, double regularization, boolean outputBiasTerm, boolean regualarizeAllLayers) {
+        this.hiddenLayer1Size = hiddenLayer1Size;
+        this.hiddenLayer2Size = hiddenLayer2Size;
+        this.posDim = posDim;
+        this.depDim = depDim;
+        this.wDim = wDim;
+        this.batchSize = batchSize;
+        this.beamBatchSize = beamBatchSize;
+        this.dropoutProbForHiddenLayer = dropoutProbForHiddenLayer;
+        this.activationType = activationType;
+        this.regularization = regularization;
+        this.outputBiasTerm = outputBiasTerm;
+        this.regualarizeAllLayers = regualarizeAllLayers;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -57,5 +73,11 @@ public class NetworkProperties implements Serializable {
         builder.append("pos dim: " + posDim + "\n");
         builder.append("dep dim: " + depDim + "\n");
         return builder.toString();
+    }
+
+    @Override
+    public NetworkProperties clone() {
+        return new NetworkProperties(hiddenLayer1Size, hiddenLayer2Size, posDim, depDim, wDim, batchSize, beamBatchSize, dropoutProbForHiddenLayer,
+                activationType, regularization, outputBiasTerm, regualarizeAllLayers);
     }
 }

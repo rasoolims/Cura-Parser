@@ -49,6 +49,28 @@ public class TrainingOptions implements Serializable {
         preTrainedModelPath = "";
     }
 
+    private TrainingOptions(int trainingIter, int beamTrainingIter, String clusterFile, String wordEmbeddingFile, boolean useMaxViol, boolean
+            useDynamicOracle, boolean useRandomOracleSelection, int UASEvalPerStep, int decayStep, AveragingOption averagingOption, int
+                                    partialTrainingStartingIteration, int minFreq, String devPath, String trainFile, boolean considerAllActions,
+                            String preTrainedModelPath) {
+        this.trainingIter = trainingIter;
+        this.beamTrainingIter = beamTrainingIter;
+        this.clusterFile = clusterFile;
+        this.wordEmbeddingFile = wordEmbeddingFile;
+        this.useMaxViol = useMaxViol;
+        this.useDynamicOracle = useDynamicOracle;
+        this.useRandomOracleSelection = useRandomOracleSelection;
+        this.UASEvalPerStep = UASEvalPerStep;
+        this.decayStep = decayStep;
+        this.averagingOption = averagingOption;
+        this.partialTrainingStartingIteration = partialTrainingStartingIteration;
+        this.minFreq = minFreq;
+        this.devPath = devPath;
+        this.trainFile = trainFile;
+        this.considerAllActions = considerAllActions;
+        this.preTrainedModelPath = preTrainedModelPath;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -68,5 +90,11 @@ public class TrainingOptions implements Serializable {
         return builder.toString();
     }
 
+    @Override
+    public TrainingOptions clone() {
+        return new TrainingOptions(trainingIter, beamTrainingIter, clusterFile, wordEmbeddingFile, useMaxViol, useDynamicOracle,
+                useRandomOracleSelection, UASEvalPerStep, decayStep, averagingOption, partialTrainingStartingIteration, minFreq, devPath, trainFile,
+                considerAllActions, preTrainedModelPath);
+    }
 
 }

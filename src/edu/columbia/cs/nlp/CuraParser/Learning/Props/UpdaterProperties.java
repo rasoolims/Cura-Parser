@@ -27,6 +27,13 @@ public class UpdaterProperties implements Serializable {
         momentum = 0.9;
     }
 
+    private UpdaterProperties(double momentum, SGDType sgdType, double learningRate, UpdaterType updaterType) {
+        this.momentum = momentum;
+        this.sgdType = sgdType;
+        this.learningRate = learningRate;
+        this.updaterType = updaterType;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -38,5 +45,10 @@ public class UpdaterProperties implements Serializable {
             builder.append("sgd type: " + sgdType + "\n");
         }
         return builder.toString();
+    }
+
+    @Override
+    public UpdaterProperties clone() {
+        return new UpdaterProperties(momentum, sgdType, learningRate, updaterType);
     }
 }
