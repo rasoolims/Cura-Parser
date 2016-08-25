@@ -71,14 +71,20 @@ public class GreedyTrainer {
     }
 
     private static void trainMultiLayerNetwork(Options options) throws Exception {
-        System.out.println("First training with one hidden layer!");
         Options oneLayerOption = options.clone();
         oneLayerOption.networkProperties.hiddenLayer2Size = 0;
         oneLayerOption.networkProperties.hiddenLayer2Size = 0;
         oneLayerOption.trainingOptions.trainingIter = Math.min(1000, options.trainingOptions.trainingIter);
-        train(oneLayerOption);
+        String modelFile = options.trainingOptions.preTrainedModelPath.equals("") ? options.generalProperties.modelFile : options.trainingOptions
+                .preTrainedModelPath;
 
-        FileInputStream fos = new FileInputStream(oneLayerOption.generalProperties.modelFile);
+        if (options.trainingOptions.preTrainedModelPath.equals("")) {
+            System.out.println("First training with one hidden layer!");
+            train(oneLayerOption);
+        }
+
+        System.out.println("Loading model with one hidden layer!");
+        FileInputStream fos = new FileInputStream(modelFile);
         GZIPInputStream gz = new GZIPInputStream(fos);
         ObjectInput reader = new ObjectInputStream(gz);
         MLPNetwork mlpNetwork = (MLPNetwork) reader.readObject();

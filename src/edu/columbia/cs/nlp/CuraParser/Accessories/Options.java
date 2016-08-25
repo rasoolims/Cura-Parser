@@ -105,6 +105,7 @@ public class Options implements Serializable {
         output.append("\t \t beam_iter:[beam-training-iterations] (default:0)\n");
         output.append("\t \t consider_all (put want to consider all, even infeasible actions)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
+        output.append("\t \t -layer_pretrain (true/false default:true)\n");
         output.append("\t \t lowercase (default: case-sensitive words, unless explicitly put 'lowercase')\n");
         output.append("\t \t basic (default: use extended feature set, unless explicitly put 'basic')\n");
         output.append("\t \t early (default: use max violation update, unless explicitly put `early' for early " +
@@ -177,6 +178,8 @@ public class Options implements Serializable {
                 options.trainingOptions.wordEmbeddingFile = args[i + 1];
             else if (args[i].equals("-bias") && args[i + 1].equals("false"))
                 options.networkProperties.outputBiasTerm = false;
+            else if (args[i].equals("-layer_pretrain") && args[i + 1].equals("false"))
+                options.trainingOptions.pretrainLayers = false;
             else if (args[i].equals("-reg_all") && args[i + 1].equals("false"))
                 options.networkProperties.regualarizeAllLayers = false;
             else if (args[i].equals("-a")) {
