@@ -28,6 +28,7 @@ public class TrainingOptions implements Serializable {
     public String devPath;
     public String trainFile;
     public boolean considerAllActions;
+    public String preTrainedModelPath;
 
     public TrainingOptions() {
         decayStep = 4400;
@@ -45,6 +46,7 @@ public class TrainingOptions implements Serializable {
         devPath = "";
         trainFile = "";
         considerAllActions = false;
+        preTrainedModelPath = "";
     }
 
     @Override
@@ -62,6 +64,7 @@ public class TrainingOptions implements Serializable {
         builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
         builder.append("decay step: " + decayStep + "\n");
         builder.append("consider all actions: " + considerAllActions + "\n");
+        builder.append("pre-trained model path: " + preTrainedModelPath + "\n");
         return builder.toString();
     }
 

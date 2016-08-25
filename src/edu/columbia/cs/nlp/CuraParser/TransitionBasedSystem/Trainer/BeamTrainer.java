@@ -189,9 +189,13 @@ public class BeamTrainer extends GreedyTrainer {
     }
 
     private static  MLPNetwork getGreedyModel(Options options) throws Exception {
-        GreedyTrainer.trainWithNN(options);
+        if (options.trainingOptions.preTrainedModelPath.equals("")) {
+            GreedyTrainer.trainWithNN(options);
+        }
 
-        FileInputStream fos = new FileInputStream(options.generalProperties.modelFile);
+        String m = options.trainingOptions.preTrainedModelPath.equals("") ? options.generalProperties.modelFile : options.trainingOptions
+                .preTrainedModelPath;
+        FileInputStream fos = new FileInputStream(m);
         GZIPInputStream gz = new GZIPInputStream(fos);
         ObjectInput reader = new ObjectInputStream(gz);
         MLPNetwork mlpNetwork = (MLPNetwork) reader.readObject();

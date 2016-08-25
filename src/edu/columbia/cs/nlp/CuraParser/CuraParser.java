@@ -32,7 +32,8 @@ public class CuraParser {
             options.trainingOptions.devPath = "/Users/msr/Desktop/data/train_smal.conll";
             options.trainingOptions.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
             options.trainingOptions.clusterFile = "/Users/msr/Downloads/trained_freqw+clusters_1k.cbow.en";
-            options.generalProperties.modelFile = "/tmp/model";
+            options.trainingOptions.preTrainedModelPath = "/tmp/model.greedy";
+            options.generalProperties.modelFile = "/tmp/model.greedy";
             options.generalProperties.outputFile = "/tmp/model.out";
             options.generalProperties.labeled = true;
             options.networkProperties.hiddenLayer1Size = 200;
