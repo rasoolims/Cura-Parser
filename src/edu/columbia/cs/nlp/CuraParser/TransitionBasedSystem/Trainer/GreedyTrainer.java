@@ -28,13 +28,12 @@ import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ArcSt
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ShiftReduceParser;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.io.FileOutputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class GreedyTrainer {
@@ -63,73 +62,79 @@ public class GreedyTrainer {
         if (options.trainingOptions.trainFile.equals("") || options.generalProperties.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled,
-                    options.generalProperties.lowercase, options.trainingOptions.clusterFile, options.trainingOptions.minFreq);
-            int wDim = options.networkProperties.wDim;
-            if (options.trainingOptions.wordEmbeddingFile.length() > 0)
-                wDim = maps.readEmbeddings(options.trainingOptions.wordEmbeddingFile);
+            if (options.trainingOptions.pretrainLayers && options.networkProperties.hiddenLayer2Size != 0) {
+                trainMultiLayerNetwork(options);
+            } else {
+                train(options);
+            }
+        }
+    }
 
-            CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
-            ArrayList<GoldConfiguration> dataSet =
-                    reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options.generalProperties.rootFirst,
-                            options.generalProperties.lowercase, maps);
-            System.out.println("CoNLL data reading done!");
+    private static void trainMultiLayerNetwork(Options options) throws Exception {
+        System.out.println("First training with one hidden layer!");
+        Options oneLayerOption = options.clone();
+        oneLayerOption.networkProperties.hiddenLayer2Size = 0;
+        oneLayerOption.networkProperties.hiddenLayer2Size = 0;
+        oneLayerOption.trainingOptions.trainingIter = Math.min(1000, options.trainingOptions.trainingIter);
+        train(oneLayerOption);
 
-            ArrayList<Integer> dependencyLabels = new ArrayList<>();
-            for (int lab = 0; lab < maps.relSize(); lab++)
-                dependencyLabels.add(lab);
+        FileInputStream fos = new FileInputStream(oneLayerOption.generalProperties.modelFile);
+        GZIPInputStream gz = new GZIPInputStream(fos);
+        ObjectInput reader = new ObjectInputStream(gz);
+        MLPNetwork mlpNetwork = (MLPNetwork) reader.readObject();
+        reader.close();
 
-            System.out.println("size of training data (#sens): " + dataSet.size());
-            System.out.println("Embedding dimension " + wDim);
-            GreedyTrainer trainer = new GreedyTrainer(options, dependencyLabels,
-                    maps.labelNullIndex, maps.rareWords);
-            ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
-            int numWordLayers = options.generalProperties.parserType == ParserType.ArcEager ? 22 : 20;
-            maps.constructPreComputeMap(allInstances, numWordLayers, 10000);
+        System.out.println("Now Training with two layers!");
+        MLPNetwork net = constructMlpNetwork(options);
+        // Putting the first layer into it!
+        net.layer(0).setLayer(mlpNetwork.layer(0));
+        trainNetwork(options, net);
+    }
 
-            MLPNetwork mlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, options.networkProperties.posDim,
-                    options.networkProperties.depDim, options.generalProperties.parserType);
-            MLPNetwork avgMlpNetwork = new MLPNetwork(maps, options, dependencyLabels, wDim, options.networkProperties.posDim,
-                    options.networkProperties.depDim, options.generalProperties.parserType);
-            maps.emptyEmbeddings();
+    private static void train(Options options) throws Exception {
+        MLPNetwork mlpNetwork = constructMlpNetwork(options);
+        trainNetwork(options, mlpNetwork);
+    }
 
-            MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options);
+    private static void trainNetwork(Options options, MLPNetwork mlpNetwork) throws Exception {
+        MLPNetwork avgMlpNetwork = new MLPNetwork(mlpNetwork.maps, options, mlpNetwork.getDepLabels(), mlpNetwork.getwDim(),
+                options.networkProperties.posDim, options.networkProperties.depDim, options.generalProperties.parserType);
 
-            double bestModelUAS = 0;
-            Random random = new Random();
-            System.out.println("Data has " + allInstances.size() + " instances");
-            System.out.println("Decay after every " + options.trainingOptions.decayStep + " batches");
-            int step;
-            for (step = 0; step < options.trainingOptions.trainingIter; step++) {
-                List<NeuralTrainingInstance> instances = Utils.getRandomSubset(allInstances, random, options.networkProperties.batchSize);
-                try {
-                    neuralTrainer.fit(instances, step, step % (Math.max(1, options.trainingOptions.UASEvalPerStep / 10)) == 0 ? true : false);
-                } catch (Exception ex) {
-                    System.err.println("Exception occurred: " + ex.getMessage());
-                    ex.printStackTrace();
-                    System.exit(1);
-                }
-                if (options.updaterProperties.updaterType == UpdaterType.SGD) {
-                    if ((step+1) % options.trainingOptions.decayStep == 0) {
-                        neuralTrainer.setLearningRate(0.96 * neuralTrainer.getLearningRate());
-                        System.out.println("The new learning rate: " + neuralTrainer.getLearningRate());
-                    }
-                }
+        GreedyTrainer trainer = new GreedyTrainer(options, mlpNetwork.getDepLabels(), mlpNetwork.maps.labelNullIndex, mlpNetwork.maps.rareWords);
+        CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+        ArrayList<GoldConfiguration> dataSet =
+                reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options.generalProperties.rootFirst,
+                        options.generalProperties.lowercase, mlpNetwork.maps);
+        System.out.println("CoNLL data reading done!");
+        System.out.println("size of training data (#sens): " + dataSet.size());
 
-                if (options.trainingOptions.averagingOption != AveragingOption.NO) {
-                    // averaging
-                    double ratio = Math.min(0.9999, (double) step / (9 + step));
-                    mlpNetwork.averageNetworks(avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
-                }
+        ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
+        int numWordLayers = options.generalProperties.parserType == ParserType.ArcEager ? 22 : 20;
+        mlpNetwork.maps.constructPreComputeMap(allInstances, numWordLayers, 10000);
+        mlpNetwork.resetPreComputeMap();
+        avgMlpNetwork.resetPreComputeMap();
+        mlpNetwork.maps.emptyEmbeddings();
 
-                if (step % options.trainingOptions.UASEvalPerStep == 0) {
-                    if (options.trainingOptions.averagingOption != AveragingOption.ONLY) {
-                        bestModelUAS = evaluate(options, mlpNetwork, bestModelUAS);
-                    }
-                    if (options.trainingOptions.averagingOption != AveragingOption.NO) {
-                        avgMlpNetwork.preCompute();
-                        bestModelUAS = evaluate(options, avgMlpNetwork, bestModelUAS);
-                    }
+        MLPTrainer neuralTrainer = new MLPTrainer(mlpNetwork, options);
+
+        double bestModelUAS = 0;
+        Random random = new Random();
+        System.out.println("Data has " + allInstances.size() + " instances");
+        System.out.println("Decay after every " + options.trainingOptions.decayStep + " batches");
+        int step;
+        for (step = 0; step < options.trainingOptions.trainingIter; step++) {
+            List<NeuralTrainingInstance> instances = Utils.getRandomSubset(allInstances, random, options.networkProperties.batchSize);
+            try {
+                neuralTrainer.fit(instances, step, step % (Math.max(1, options.trainingOptions.UASEvalPerStep / 10)) == 0 ? true : false);
+            } catch (Exception ex) {
+                System.err.println("Exception occurred: " + ex.getMessage());
+                ex.printStackTrace();
+                System.exit(1);
+            }
+            if (options.updaterProperties.updaterType == UpdaterType.SGD) {
+                if ((step + 1) % options.trainingOptions.decayStep == 0) {
+                    neuralTrainer.setLearningRate(0.96 * neuralTrainer.getLearningRate());
+                    System.out.println("The new learning rate: " + neuralTrainer.getLearningRate());
                 }
             }
 
@@ -148,8 +153,38 @@ public class GreedyTrainer {
                     bestModelUAS = evaluate(options, avgMlpNetwork, bestModelUAS);
                 }
             }
-            neuralTrainer.shutDownLiveThreads();
         }
+
+        if (options.trainingOptions.averagingOption != AveragingOption.NO) {
+            // averaging
+            double ratio = Math.min(0.9999, (double) step / (9 + step));
+            mlpNetwork.averageNetworks(avgMlpNetwork, 1 - ratio, step == 1 ? 0 : ratio);
+        }
+
+        if (options.trainingOptions.averagingOption != AveragingOption.ONLY) {
+            bestModelUAS = evaluate(options, mlpNetwork, bestModelUAS);
+        }
+        if (options.trainingOptions.averagingOption != AveragingOption.NO) {
+            avgMlpNetwork.preCompute();
+            bestModelUAS = evaluate(options, avgMlpNetwork, bestModelUAS);
+        }
+        neuralTrainer.shutDownLiveThreads();
+    }
+
+    private static MLPNetwork constructMlpNetwork(Options options) throws Exception {
+        IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled,
+                options.generalProperties.lowercase, options.trainingOptions.clusterFile, options.trainingOptions.minFreq);
+        int wDim = options.networkProperties.wDim;
+        if (options.trainingOptions.wordEmbeddingFile.length() > 0)
+            wDim = maps.readEmbeddings(options.trainingOptions.wordEmbeddingFile);
+
+        ArrayList<Integer> dependencyLabels = new ArrayList<>();
+        for (int lab = 0; lab < maps.relSize(); lab++)
+            dependencyLabels.add(lab);
+
+        System.out.println("Embedding dimension " + wDim);
+        return new MLPNetwork(maps, options, dependencyLabels, wDim, options.networkProperties.posDim,
+                options.networkProperties.depDim, options.generalProperties.parserType);
     }
 
     protected static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {

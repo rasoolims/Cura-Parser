@@ -32,26 +32,29 @@ public class CuraParser {
             options.trainingOptions.devPath = "/Users/msr/Desktop/data/train_smal.conll";
             options.trainingOptions.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
             options.trainingOptions.clusterFile = "/Users/msr/Downloads/trained_freqw+clusters_1k.cbow.en";
-            options.trainingOptions.preTrainedModelPath = "/tmp/model.greedy";
             options.generalProperties.modelFile = "/tmp/model.greedy";
+//            options.generalProperties.modelFile = "/tmp/model";
+//            options.trainingOptions.preTrainedModelPath = "/tmp/model.greedy";
+//            options.trainingOptions.beamTrainingIter = 300;
             options.generalProperties.outputFile = "/tmp/model.out";
             options.generalProperties.labeled = true;
             options.networkProperties.hiddenLayer1Size = 200;
-            options.networkProperties.hiddenLayer2Size = 0;
+            options.networkProperties.hiddenLayer2Size = 200;
             options.updaterProperties.learningRate = 0.001;
             options.networkProperties.batchSize = 1024;
-            options.trainingOptions.trainingIter = 30;
-            options.trainingOptions.beamTrainingIter = 30;
+            options.trainingOptions.trainingIter = 50;
             options.generalProperties.beamWidth = 8;
             options.trainingOptions.useDynamicOracle = false;
             options.generalProperties.numOfThreads = 2;
+            options.networkProperties.beamBatchSize = 8;
             options.trainingOptions.decayStep = 10;
-            options.trainingOptions.UASEvalPerStep = 10;
+            options.trainingOptions.UASEvalPerStep = 100;
             options.updaterProperties.updaterType = UpdaterType.ADAM;
             options.trainingOptions.averagingOption = AveragingOption.BOTH;
             options.networkProperties.activationType = ActivationType.RELU;
             options.generalProperties.parserType = ParserType.ArcStandard;
             options.trainingOptions.considerAllActions = false;
+            options.trainingOptions.pretrainLayers = false;
         }
 
         if (options.generalProperties.showHelp) {
