@@ -33,6 +33,30 @@ It is highly recommended to give the training a default embedding and word-2-clu
 			
 	```
 
+## Use the trained model
+
+### Parse a [CONLL](http://ilk.uvt.nl/conll/#dataformat) file
+
+```
+java -jar CuraParser.jar parse_conll -input [test-file] -out [output-file] -model [model-file] nt:[#_of_threads (optional -- default:8)] beam:[beam-width]
+```
+
+### Parse a tagged-file
+```
+java -jar CuraParser.jar parse_tagged -input [test-file] -out [output-file] -model [model-file] nt:[#_of_threads (optional -- default:8)] beam:[beam-width]
+```
+
+The test file should have each sentence in line and word_tag pairs are space-delimited
+
+* Optional:  -delim [delim] (default is \_)
+	 	 Example: He_PRP is_VBZ nice_AJ ._
+	 	
+### Evaluate the parser output
+
+```
+java -jar CuraParser.jar eval -input [test-conll-file] -out [output-conll-file]
+```
+
 ## How to tune it
 You can tune the parser in different ways:
 
@@ -76,5 +100,3 @@ You can tune the parser in different ways:
 	 	 nt:[#_of_threads] (default:8)
 	 	 pt:[#partail_training_starting_iteration] (default:3; shows the starting iteration for considering partial trees)
 	 	 root_first (default: put ROOT in the last position, unless explicitly put 'root_first')
-
-
