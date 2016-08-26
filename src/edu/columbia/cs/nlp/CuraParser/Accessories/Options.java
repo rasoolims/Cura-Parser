@@ -66,14 +66,14 @@ public class Options implements Serializable {
         output.append("Usage:\n");
 
         output.append("* Train a parser:\n");
-        output.append("\tjava -jar CuraParser.jar train -train-file [train-file] -dev [dev-file] -model [model-file] " +
-                "-punc [punc-file]\n");
+        output.append("\tjava -jar CuraParser.jar train -train-file [train-file] -dev [dev-file] -model [model-file]\n");
         output.append("\t** The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. " +
                 "mode_iter2\n");
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one" +
                 " line\n");
         output.append("\t** Other options\n");
-        output.append("\t \t -cluster [cluster-file]");
+        output.append("\t \t -punc [punc-file]\n");
+        output.append("\t \t -cluster [cluster-file]\n");
         output.append("\t \t -e [embedding-file] \n");
         output.append("\t \t -avg [both,no,only] (default: only)\n");
         output.append("\t \t -h1 [hidden-layer-size-1 (default 256)] \n");
