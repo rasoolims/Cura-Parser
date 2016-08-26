@@ -91,10 +91,12 @@ public class GreedyTrainer {
         reader.close();
 
         System.out.println("Now Training with two layers!");
-        MLPNetwork net = constructMlpNetwork(options);
+        Options twoLayerOptions = options.clone();
+        twoLayerOptions.generalProperties.beamWidth = 1;
+        MLPNetwork net = constructMlpNetwork(twoLayerOptions);
         // Putting the first layer into it!
         net.layer(0).setLayer(mlpNetwork.layer(0));
-        trainNetwork(options, net);
+        trainNetwork(twoLayerOptions, net);
     }
 
     private static void train(Options options) throws Exception {
