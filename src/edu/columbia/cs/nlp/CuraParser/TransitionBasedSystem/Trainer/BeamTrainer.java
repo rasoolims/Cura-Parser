@@ -190,9 +190,11 @@ public class BeamTrainer extends GreedyTrainer {
 
     private static  MLPNetwork getGreedyModel(Options options) throws Exception {
         if (options.trainingOptions.preTrainedModelPath.equals("")) {
+            System.out.println("Pre-training with Greedy model!");
             GreedyTrainer.trainWithNN(options);
         }
 
+        System.out.println("Loading the trained Greedy model!");
         String m = options.trainingOptions.preTrainedModelPath.equals("") ? options.generalProperties.modelFile : options.trainingOptions
                 .preTrainedModelPath;
         FileInputStream fos = new FileInputStream(m);
