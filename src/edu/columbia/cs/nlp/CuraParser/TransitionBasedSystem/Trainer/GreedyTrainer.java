@@ -196,6 +196,7 @@ public class GreedyTrainer {
     }
 
     protected static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {
+        System.out.println("Evaluating with "+options.generalProperties.beamWidth+" beams!");
         BeamParser parser = new BeamParser(mlpNetwork, options.generalProperties.numOfThreads, options.generalProperties.parserType);
         parser.parseConll(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp", options.generalProperties.rootFirst,
                 options.generalProperties.beamWidth, options.generalProperties.lowercase,
