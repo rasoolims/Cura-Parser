@@ -8,12 +8,8 @@ package edu.columbia.cs.nlp.CuraParser;
 
 import edu.columbia.cs.nlp.CuraParser.Accessories.Evaluator;
 import edu.columbia.cs.nlp.CuraParser.Accessories.Options;
-import edu.columbia.cs.nlp.CuraParser.Learning.Activation.Enums.ActivationType;
 import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.MLPNetwork;
-import edu.columbia.cs.nlp.CuraParser.Learning.Updater.Enums.AveragingOption;
-import edu.columbia.cs.nlp.CuraParser.Learning.Updater.Enums.UpdaterType;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Beam.BeamParser;
-import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Enums.ParserType;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.BeamTrainer;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Trainer.GreedyTrainer;
 
@@ -25,19 +21,6 @@ import java.util.zip.GZIPInputStream;
 public class CuraParser {
     public static void main(String[] args) throws Exception {
         Options options = Options.processArgs(args);
-
-        if (args.length < 2) {
-            options.generalProperties.train = true;
-            options.trainingOptions.trainFile = "/Users/msr/Desktop/data/dev_smal.conll";
-            options.trainingOptions.devPath = "/Users/msr/Desktop/data/train_smal.conll";
-            options.trainingOptions.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
-            options.trainingOptions.clusterFile = "/Users/msr/Downloads/trained_freqw+clusters_1k.cbow.en";
-            options.generalProperties.modelFile = "/tmp/model";
-            options.trainingOptions.trainingIter = 20;
-            options.trainingOptions.preTrainingIter = 20;
-            options.trainingOptions.beamTrainingIter = 2000;
-            options.trainingOptions.UASEvalPerStep = 100;
-        }
 
         if (options.generalProperties.showHelp) {
             Options.showHelp();
