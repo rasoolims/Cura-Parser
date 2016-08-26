@@ -87,6 +87,7 @@ public class TrainingOptions implements Serializable {
             builder.append("oracle selection: " + (!useRandomOracleSelection ? "latent max" : "random") + "\n");
         builder.append("updateModel: " + (useMaxViol ? "max violation" : "early") + "\n");
         builder.append("oracle: " + (useDynamicOracle ? "dynamic" : "static") + "\n");
+        builder.append("pre-training-iterations: " + preTrainingIter + "\n");
         builder.append("training-iterations: " + trainingIter + "\n");
         builder.append("beam-training iterations: " + beamTrainingIter + "\n");
         builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
