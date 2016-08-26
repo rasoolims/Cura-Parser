@@ -33,27 +33,10 @@ public class CuraParser {
             options.trainingOptions.wordEmbeddingFile = "/Users/msr/Desktop/data/word.embed";
             options.trainingOptions.clusterFile = "/Users/msr/Downloads/trained_freqw+clusters_1k.cbow.en";
             options.generalProperties.modelFile = "/tmp/model";
-            options.trainingOptions.beamTrainingIter = 300;
-            options.trainingOptions.preTrainingIter = 30;
-            options.generalProperties.outputFile = "/tmp/model.out";
-            options.generalProperties.labeled = true;
-            options.networkProperties.hiddenLayer1Size = 200;
-            options.networkProperties.hiddenLayer2Size = 200;
-            options.updaterProperties.learningRate = 0.001;
-            options.networkProperties.batchSize = 1024;
-            options.trainingOptions.trainingIter = 30;
-            options.generalProperties.beamWidth = 8;
-            options.trainingOptions.useDynamicOracle = false;
-            options.generalProperties.numOfThreads = 2;
-            options.networkProperties.beamBatchSize = 8;
-            options.trainingOptions.decayStep = 10;
+            options.trainingOptions.trainingIter = 20;
+            options.trainingOptions.preTrainingIter = 20;
+            options.trainingOptions.beamTrainingIter = 2000;
             options.trainingOptions.UASEvalPerStep = 100;
-            options.updaterProperties.updaterType = UpdaterType.ADAM;
-            options.trainingOptions.averagingOption = AveragingOption.BOTH;
-            options.networkProperties.activationType = ActivationType.RELU;
-            options.generalProperties.parserType = ParserType.ArcStandard;
-            options.trainingOptions.considerAllActions = false;
-            options.trainingOptions.pretrainLayers = true;
         }
 
         if (options.generalProperties.showHelp) {

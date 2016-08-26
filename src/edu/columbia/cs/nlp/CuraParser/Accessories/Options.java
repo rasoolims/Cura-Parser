@@ -99,7 +99,7 @@ public class Options implements Serializable {
         output.append("\t \t -reg_all [true/false regularize all layers (default=false)] \n");
         output.append("\t \t drop [put if want dropout] \n");
         output.append("\t \t beam:[beam-width] (default:8)\n");
-        output.append("\t \t pre_iter:[pre-training-iterations for first layer in multi-layer] (default:5000)\n");
+        output.append("\t \t pre_iter:[pre-training-iterations for first layer in multi-layer] (default:20000)\n");
         output.append("\t \t iter:[training-iterations] (default:30000)\n");
         output.append("\t \t beam_iter:[beam-training-iterations] (default:20000)\n");
         output.append("\t \t consider_all (put want to consider all, even infeasible actions)\n");

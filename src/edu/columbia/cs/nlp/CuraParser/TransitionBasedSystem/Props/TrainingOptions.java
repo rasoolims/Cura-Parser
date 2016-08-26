@@ -43,7 +43,7 @@ public class TrainingOptions implements Serializable {
         useDynamicOracle = true;
         useRandomOracleSelection = false;
         trainingIter = 20000;
-        preTrainingIter = 5000;
+        preTrainingIter = 20000;
         beamTrainingIter = 30000;
         UASEvalPerStep = 500;
         partialTrainingStartingIteration = 3;

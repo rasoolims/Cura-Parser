@@ -73,7 +73,7 @@ public class GreedyTrainer {
     private static void trainMultiLayerNetwork(Options options) throws Exception {
         Options oneLayerOption = options.clone();
         oneLayerOption.networkProperties.hiddenLayer2Size = 0;
-        oneLayerOption.networkProperties.hiddenLayer2Size = 0;
+        oneLayerOption.generalProperties.beamWidth = 1;
         oneLayerOption.trainingOptions.trainingIter = options.trainingOptions.preTrainingIter;
         String modelFile = options.trainingOptions.preTrainedModelPath.equals("") ? options.generalProperties.modelFile : options.trainingOptions
                 .preTrainedModelPath;

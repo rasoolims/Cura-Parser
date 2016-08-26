@@ -86,7 +86,7 @@ You can tune the parser in different ways:
 	 	 -reg_all [true/false regularize all layers (default=false)] 
 	 	 drop [put if want dropout] 
 	 	 beam:[beam-width] (default:8)
-	 	 pre_iter:[pre-training-iterations for first layer in multi-layer] (default:5000)
+	 	 pre_iter:[pre-training-iterations for first layer in multi-layer] (default:20000)
 	 	 iter:[training-iterations] (default:30000)
 	 	 beam_iter:[beam-training-iterations] (default:20000)
 	 	 consider_all (put want to consider all, even infeasible actions)
