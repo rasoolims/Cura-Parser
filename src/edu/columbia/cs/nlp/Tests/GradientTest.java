@@ -134,6 +134,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -205,6 +206,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -274,6 +276,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 1);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -324,6 +327,7 @@ public class GradientTest {
                 writeWordEmbedText();
                 Options options = new Options();
                 options.trainingOptions.wordEmbeddingFile = embedFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 options.networkProperties.activationType = type;
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
@@ -382,6 +386,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -451,6 +456,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -521,6 +527,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -590,6 +597,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -657,6 +665,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -726,6 +735,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -794,6 +804,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -866,6 +877,7 @@ public class GradientTest {
                 options.networkProperties.outputBiasTerm = true;
                 options.networkProperties.outputBiasTerm = true;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
                         .generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -933,6 +945,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled,
                         options.generalProperties.lowercase, "", 0);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();

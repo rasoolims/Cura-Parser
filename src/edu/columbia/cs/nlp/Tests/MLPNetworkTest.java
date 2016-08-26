@@ -217,6 +217,7 @@ public class MLPNetworkTest {
         Options options = new Options();
         options.networkProperties.hiddenLayer1Size = 10;
         options.generalProperties.inputFile = txtFilePath;
+        options.generalProperties.parserType = ParserType.ArcEager;
         IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
                 options.generalProperties.lowercase, "", 0);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -262,6 +263,7 @@ public class MLPNetworkTest {
             options.networkProperties.hiddenLayer1Size = 10;
             options.networkProperties.hiddenLayer2Size = h2size;
             options.generalProperties.inputFile = txtFilePath;
+            options.generalProperties.parserType = ParserType.ArcEager;
             IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
                     options.generalProperties.lowercase, "", 0);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -305,6 +307,7 @@ public class MLPNetworkTest {
         options.networkProperties.hiddenLayer1Size = 10;
         options.generalProperties.inputFile = txtFilePath;
         options.networkProperties.outputBiasTerm = true;
+        options.generalProperties.parserType = ParserType.ArcEager;
         IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
                 options.generalProperties.lowercase, "", 0);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
@@ -379,6 +382,7 @@ public class MLPNetworkTest {
         options.networkProperties.hiddenLayer1Size = 10;
         options.generalProperties.inputFile = txtFilePath;
         options.networkProperties.outputBiasTerm = true;
+        options.generalProperties.parserType = ParserType.ArcEager;
         IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
                 options.generalProperties.lowercase, "", 0);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();

@@ -220,6 +220,8 @@ public class ParserTest {
                 options.networkProperties.hiddenLayer1Size = 10;
                 options.generalProperties.inputFile = txtFilePath;
                 options.generalProperties.modelFile = txtFilePath + ".model";
+                options.generalProperties.parserType = ParserType.ArcEager;
+                options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
                         options.generalProperties.lowercase, "", 1);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
