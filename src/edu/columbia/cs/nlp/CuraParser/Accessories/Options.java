@@ -76,8 +76,8 @@ public class Options implements Serializable {
         output.append("\t \t -cluster [cluster-file]");
         output.append("\t \t -e [embedding-file] \n");
         output.append("\t \t -avg [both,no,only] (default: only)\n");
-        output.append("\t \t -h1 [hidden-layer-size-1] \n");
-        output.append("\t \t -h2 [hidden-layer-size-2] \n");
+        output.append("\t \t -h1 [hidden-layer-size-1 (default 256)] \n");
+        output.append("\t \t -h2 [hidden-layer-size-2 (default 256)] \n");
         output.append("\t \t -lr [learning-rate: default 0.0005 (good for ADAM)] \n");
         output.append("\t \t -ds [decay-step (default 4400)] \n");
         output.append("\t \t -parser [ae(arc-eager), as(arc-standard:default)] \n");
