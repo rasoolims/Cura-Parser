@@ -204,6 +204,4 @@ public class BeamTrainer extends GreedyTrainer {
         reader.close();
         return mlpNetwork;
     }
-
-
 }

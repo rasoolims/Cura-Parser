@@ -73,36 +73,35 @@ public class Options implements Serializable {
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one" +
                 " line\n");
         output.append("\t** Other options\n");
-        output.append("\t \t -cluster [cluster-file] Brown cluster file: at most 4096 clusters are supported by the " +
-                "parser (default: empty)\n\t\t\t the format should be the same as https://github" +
-                ".com/percyliang/brown-cluster/blob/master/output.txt \n");
+        output.append("\t \t -cluster [cluster-file]");
         output.append("\t \t -e [embedding-file] \n");
-        output.append("\t \t -avg [both,no,only] (default: both)\n");
+        output.append("\t \t -avg [both,no,only] (default: only)\n");
         output.append("\t \t -h1 [hidden-layer-size-1] \n");
         output.append("\t \t -h2 [hidden-layer-size-2] \n");
-        output.append("\t \t -lr [learning-rate] \n");
+        output.append("\t \t -lr [learning-rate: default 0.0005 (good for ADAM)] \n");
         output.append("\t \t -ds [decay-step (default 4400)] \n");
-        output.append("\t \t -parser [ae(arc-eager:default), as(arc-standard)] \n");
+        output.append("\t \t -parser [ae(arc-eager), as(arc-standard:default)] \n");
         output.append("\t \t -pretrained [pre-trained greedy model path (for beam learning)] \n");
         output.append("\t \t -a [activation (relu,cubic) -- default:relu] \n");
-        output.append("\t \t -u [updater-type: sgd(default),adam,adagrad] \n");
+        output.append("\t \t -u [updater-type: sgd,adam(default),adamax,adagrad] \n");
         output.append("\t \t -sgd [sgd-type (if using sgd): nesterov(default),momentum, vanilla] \n");
-        output.append("\t \t -batch [batch-size; default 10000] \n");
+        output.append("\t \t -batch [batch-size; default 1000] \n");
         output.append("\t \t -beam_batch [beam-batch-size -- num of sentences in a batch (default:8)] \n");
         output.append("\t \t -d [dropout-prob (default:0)] \n");
         output.append("\t \t -bias [true/false (use output bias term in softmax layer: default true)] \n");
         output.append("\t \t -reg [regularization with L2] \n");
         output.append("\t \t -momentum [momentum for sgd; default 0.9] \n");
-        output.append("\t \t -min [min freq (default 1)] \n");
+        output.append("\t \t -min [min freq for not regarding as unknown(default 4)] \n");
         output.append("\t \t -wdim [word dim (default 64)] \n");
         output.append("\t \t -posdim [pos dim (default 32)] \n");
         output.append("\t \t -depdim [dep dim (default 32)]  \n");
-        output.append("\t \t -eval [uas eval per step (default 100)] \n");
-        output.append("\t \t -reg_all [true/false regularize all layers (default=true)] \n");
+        output.append("\t \t -eval [uas eval per step (default 500)] \n");
+        output.append("\t \t -reg_all [true/false regularize all layers (default=false)] \n");
         output.append("\t \t drop [put if want dropout] \n");
-        output.append("\t \t beam:[beam-width] (default:64)\n");
-        output.append("\t \t iter:[training-iterations] (default:20)\n");
-        output.append("\t \t beam_iter:[beam-training-iterations] (default:0)\n");
+        output.append("\t \t beam:[beam-width] (default:8)\n");
+        output.append("\t \t pre_iter:[pre-training-iterations for first layer in multi-layer] (default:5000)\n");
+        output.append("\t \t iter:[training-iterations] (default:30000)\n");
+        output.append("\t \t beam_iter:[beam-training-iterations] (default:20000)\n");
         output.append("\t \t consider_all (put want to consider all, even infeasible actions)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
         output.append("\t \t -layer_pretrain (true/false default:true)\n");
@@ -180,8 +179,8 @@ public class Options implements Serializable {
                 options.networkProperties.outputBiasTerm = false;
             else if (args[i].equals("-layer_pretrain") && args[i + 1].equals("false"))
                 options.trainingOptions.pretrainLayers = false;
-            else if (args[i].equals("-reg_all") && args[i + 1].equals("false"))
-                options.networkProperties.regualarizeAllLayers = false;
+            else if (args[i].equals("-reg_all") && args[i + 1].equals("true"))
+                options.networkProperties.regualarizeAllLayers = true;
             else if (args[i].equals("-a")) {
                 if (args[i + 1].equals("relu"))
                     options.networkProperties.activationType = ActivationType.RELU;
@@ -265,6 +264,8 @@ public class Options implements Serializable {
                 options.generalProperties.beamWidth = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].startsWith("beam_iter:"))
                 options.trainingOptions.beamTrainingIter = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
+            else if (args[i].startsWith("pre_iter:"))
+                options.trainingOptions.preTrainingIter = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].startsWith("nt:"))
                 options.generalProperties.numOfThreads = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].startsWith("pt:"))

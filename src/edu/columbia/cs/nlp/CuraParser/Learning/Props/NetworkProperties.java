@@ -27,12 +27,11 @@ public class NetworkProperties implements Serializable {
     public boolean regualarizeAllLayers;
 
     public NetworkProperties() {
-        regualarizeAllLayers = true;
         hiddenLayer1Size = 200;
         hiddenLayer2Size = 0;
         outputBiasTerm = true;
         regularization = 1e-8;
-        regualarizeAllLayers = true;
+        regualarizeAllLayers = false;
         batchSize = 1000;
         beamBatchSize = 8;
         dropoutProbForHiddenLayer = 0;

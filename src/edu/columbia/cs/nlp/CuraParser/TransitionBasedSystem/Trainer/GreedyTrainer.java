@@ -74,7 +74,7 @@ public class GreedyTrainer {
         Options oneLayerOption = options.clone();
         oneLayerOption.networkProperties.hiddenLayer2Size = 0;
         oneLayerOption.networkProperties.hiddenLayer2Size = 0;
-        oneLayerOption.trainingOptions.trainingIter = Math.min(1000, options.trainingOptions.trainingIter);
+        oneLayerOption.trainingOptions.trainingIter = options.trainingOptions.preTrainingIter;
         String modelFile = options.trainingOptions.preTrainedModelPath.equals("") ? options.generalProperties.modelFile : options.trainingOptions
                 .preTrainedModelPath;
 
@@ -98,8 +98,10 @@ public class GreedyTrainer {
     }
 
     private static void train(Options options) throws Exception {
-        MLPNetwork mlpNetwork = constructMlpNetwork(options);
-        trainNetwork(options, mlpNetwork);
+        Options greedyOptions = options.clone();
+        greedyOptions.generalProperties.beamWidth = 1;
+        MLPNetwork mlpNetwork = constructMlpNetwork(greedyOptions);
+        trainNetwork(greedyOptions, mlpNetwork);
     }
 
     private static void trainNetwork(Options options, MLPNetwork mlpNetwork) throws Exception {

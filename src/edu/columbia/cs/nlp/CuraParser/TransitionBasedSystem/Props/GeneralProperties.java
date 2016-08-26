@@ -39,7 +39,7 @@ public class GeneralProperties implements Serializable {
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
-        beamWidth = 1;
+        beamWidth = 8;
         rootFirst = false;
         modelFile = "";
         outputFile = "";
@@ -49,7 +49,7 @@ public class GeneralProperties implements Serializable {
         evaluate = false;
         numOfThreads = 8;
         parsePartialConll = false;
-        parserType = ParserType.ArcEager;
+        parserType = ParserType.ArcStandard;
         initializePunctuations();
     }
 

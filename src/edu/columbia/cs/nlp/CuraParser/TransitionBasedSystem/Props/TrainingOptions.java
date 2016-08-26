@@ -14,6 +14,7 @@ import java.io.Serializable;
 
 public class TrainingOptions implements Serializable {
     public int trainingIter;
+    public int preTrainingIter;
     public int beamTrainingIter;
     public String clusterFile;
     public String wordEmbeddingFile;
@@ -33,7 +34,7 @@ public class TrainingOptions implements Serializable {
 
     public TrainingOptions() {
         decayStep = 4400;
-        minFreq = 1;
+        minFreq = 4;
         pretrainLayers = true;
         averagingOption = AveragingOption.ONLY;
         clusterFile = "";
@@ -41,9 +42,10 @@ public class TrainingOptions implements Serializable {
         useMaxViol = true;
         useDynamicOracle = true;
         useRandomOracleSelection = false;
-        trainingIter = 5000;
-        beamTrainingIter = 0;
-        UASEvalPerStep = 100;
+        trainingIter = 20000;
+        preTrainingIter = 5000;
+        beamTrainingIter = 30000;
+        UASEvalPerStep = 500;
         partialTrainingStartingIteration = 3;
         devPath = "";
         trainFile = "";
@@ -54,7 +56,7 @@ public class TrainingOptions implements Serializable {
     private TrainingOptions(int trainingIter, int beamTrainingIter, String clusterFile, String wordEmbeddingFile, boolean useMaxViol, boolean
             useDynamicOracle, boolean useRandomOracleSelection, int UASEvalPerStep, int decayStep, AveragingOption averagingOption, int
                                     partialTrainingStartingIteration, int minFreq, String devPath, String trainFile, boolean considerAllActions,
-                            String preTrainedModelPath, boolean pretrainLayers) {
+                            String preTrainedModelPath, boolean pretrainLayers, int preTrainingIter) {
         this.trainingIter = trainingIter;
         this.beamTrainingIter = beamTrainingIter;
         this.clusterFile = clusterFile;
@@ -72,6 +74,7 @@ public class TrainingOptions implements Serializable {
         this.considerAllActions = considerAllActions;
         this.preTrainedModelPath = preTrainedModelPath;
         this.pretrainLayers = pretrainLayers;
+        this.preTrainingIter = preTrainingIter;
     }
 
     @Override
@@ -97,7 +100,7 @@ public class TrainingOptions implements Serializable {
     public TrainingOptions clone() {
         return new TrainingOptions(trainingIter, beamTrainingIter, clusterFile, wordEmbeddingFile, useMaxViol, useDynamicOracle,
                 useRandomOracleSelection, UASEvalPerStep, decayStep, averagingOption, partialTrainingStartingIteration, minFreq, devPath, trainFile,
-                considerAllActions, preTrainedModelPath, pretrainLayers);
+                considerAllActions, preTrainedModelPath, pretrainLayers, preTrainingIter);
     }
 
 }
