@@ -2,7 +2,7 @@
 
 ##Columbia University -- Rasooli (Cura) parser
 
-This parser is developed by [Mohammad Sadegh Rasooli](www.cs.columbia.edu/~rasooli/) while doing his PhD at Columbia University in the city of New York. This parser is self-contained (no additional library) a shift-reduce parser with a deep feed-forward neural network (very similar to the SyntaxNet parser). By default it uses the following settings:
+This parser is developed by [Mohammad Sadegh Rasooli](www.cs.columbia.edu/~rasooli/) while doing his PhD at Columbia University in the city of New York. This parser is a self-contained (no additional library) shift-reduce parser with a deep feed-forward neural network (very similar to the SyntaxNet parser). By default it uses the following settings:
 
 * __Shift-reduce transition system__: [Arc-Standard transitions](http://www.aclweb.org/old_anthology/W/W04/W04-0308.pdf) with beam (n-best) training and decoding.
 * __Neural network__: a feed-forward network with two hidden layers (with [RELU activation](http://machinelearning.wustl.edu/mlpapers/paper_files/icml2010_NairH10.pdf)) and one softmax layer on top. The input layer converts word, part-of-speech and dependency features to their corresponding embedding layers.
