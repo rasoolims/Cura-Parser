@@ -134,7 +134,12 @@ public class MLPNetwork implements Serializable {
     }
 
     public double[] output(final double[] feats, final double[] labels) {
-        return output(feats, labels, true);
+        double[] o = feats;
+        for (int l = 0; l < layers.size() - 1; l++) {
+            o = layers.get(l).activate(layers.get(l).forward(o));
+        }
+        o = layers.get(layers.size() - 1).forward(o, labels);
+        return o;
     }
 
     public double[] output(final double[] feats, final double[] labels, boolean logOut) {

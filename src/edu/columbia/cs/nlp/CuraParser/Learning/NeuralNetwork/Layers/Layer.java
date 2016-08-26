@@ -74,6 +74,17 @@ public class Layer implements Serializable {
         return activation.activate(Utils.sum4Output(Utils.dot4Output(w, i, labels), b, labels), labels, takeLog);
     }
 
+    /**
+     * This is for structured prediction where we don't normalize locally.
+     * @param i
+     * @param labels
+     * @return
+     */
+    public double[] forward(double[] i, double[] labels) {
+        assert i.length == w[0].length;
+        return Utils.sum4Output(Utils.dot4Output(w, i, labels), b, labels);
+    }
+
     public double[][] forward(double[][] i, HashSet<Integer>[] wIndexToUse, HashSet<Integer>[] inputToUse) {
         assert i.length == wIndexToUse.length && i.length == inputToUse.length;
         double[][] result = new double[i.length][];
