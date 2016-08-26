@@ -19,7 +19,7 @@ import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers.FirstHiddenL
 import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers.Layer;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.FixInit;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.Initializer;
-import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.NormalInit;
+import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.XavierInit;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.enums.WeightInit;
 import edu.columbia.cs.nlp.CuraParser.Structures.Enums.EmbeddingTypes;
 import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
@@ -70,10 +70,10 @@ public class MLPNetwork implements Serializable {
         this.layers = new ArrayList<>();
         int nIn = numWordLayers * wDim + numPosLayers * pDim + numDepLayers * lDim;
 
-        WeightInit hiddenInit = WeightInit.NORMAL;
+        WeightInit hiddenInit = options.networkProperties.activationType == ActivationType.RELU ? WeightInit.RELU : WeightInit.UNIFORM;
         WeightInit hiddenBiasInit = options.networkProperties.activationType == ActivationType.RELU ? WeightInit.FIX : WeightInit.UNIFORM;
         Activation activation = options.networkProperties.activationType == ActivationType.RELU ? new Relu() : new Cubic();
-        Initializer hiddenInitializer = WeightInit.initializer(hiddenInit, random, 10000, options.networkProperties.hiddenLayer1Size, 0);
+        Initializer hiddenInitializer = WeightInit.initializer(hiddenInit, random, nIn, options.networkProperties.hiddenLayer1Size, 0);
         Initializer hiddenBiasInitializer = WeightInit.initializer(hiddenBiasInit, random, nIn, options.networkProperties.hiddenLayer1Size, 0.2);
 
         Layer inputLayer = new FirstHiddenLayer(activation, nIn, options.networkProperties.hiddenLayer1Size, hiddenInitializer, hiddenBiasInitializer,
@@ -89,7 +89,7 @@ public class MLPNetwork implements Serializable {
 
         int outputnIn = layers.get(layers.size() - 1).nOut();
         numOutputs = 2 * (depLabels.size() + 1);
-        layers.add(new Layer(new LogisticSoftMax(), outputnIn, numOutputs, new NormalInit(random, 10000), new FixInit(0),
+        layers.add(new Layer(new LogisticSoftMax(), outputnIn, numOutputs, new XavierInit(random, outputnIn, numOutputs), new FixInit(0),
                 options.networkProperties.outputBiasTerm));
 
         this.depLabels = depLabels;
