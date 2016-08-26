@@ -185,7 +185,7 @@ public class MLPTrainer {
     }
 
     private void submitThreads(List instances) {
-        int chunkSize = instances.size() / numThreads;
+        int chunkSize = Math.max(1, instances.size() / numThreads);
         int s = 0;
         int e = Math.min(instances.size(), chunkSize);
         for (int i = 0; i < Math.min(instances.size(), numThreads); i++) {
