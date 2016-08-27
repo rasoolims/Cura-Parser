@@ -305,6 +305,7 @@ public class MLPNetworkTest {
         writeText();
         Options options = new Options();
         options.networkProperties.hiddenLayer1Size = 10;
+        options.networkProperties.hiddenLayer2Size = 0;
         options.generalProperties.inputFile = txtFilePath;
         options.networkProperties.outputBiasTerm = true;
         options.generalProperties.parserType = ParserType.ArcEager;
@@ -368,7 +369,7 @@ public class MLPNetworkTest {
         network.preCompute();
 
         for (NeuralTrainingInstance instance : instances) {
-            double[] preComputedOutput = network.output(instance.getFeatures(), new double[network.getNumOutputs()]);
+            double[] preComputedOutput = network.output(instance.getFeatures(), new double[network.getNumOutputs()], true);
 
             for (int i = 0; i < preComputedOutput.length; i++)
                 assert preComputedOutput[i] == Math.log(1.0 / network.getNumOutputs());

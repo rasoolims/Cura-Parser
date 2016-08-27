@@ -73,6 +73,7 @@ public class StaticTrainerTest {
         IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
+        options.generalProperties.parserType = ParserType.ArcEager;
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
         Sentence sentence = dataSet.get(0).getSentence();
 

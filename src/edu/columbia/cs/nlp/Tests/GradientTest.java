@@ -177,8 +177,8 @@ public class GradientTest {
                         double diff = 0;
 
                         for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel(), true);
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel(), true);
 
                             int goldLabel = instance.gold();
                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
@@ -247,8 +247,8 @@ public class GradientTest {
                         double diff = 0;
 
                         for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel(), true);
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel(), true);
 
                             int goldLabel = instance.gold();
                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
@@ -427,8 +427,8 @@ public class GradientTest {
                         double diff = 0;
 
                         for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel(), true);
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel(), true);
 
                             int goldLabel = instance.gold();
                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
@@ -498,8 +498,8 @@ public class GradientTest {
                         double diff = 0;
 
                         for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel(), true);
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel(), true);
 
                             int goldLabel = instance.gold();
                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
@@ -568,8 +568,8 @@ public class GradientTest {
                         double diff = 0;
 
                         for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel(), true);
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel(), true);
 
                             int goldLabel = instance.gold();
                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
@@ -637,8 +637,8 @@ public class GradientTest {
                     double diff = 0;
 
                     for (NeuralTrainingInstance instance : instances) {
-                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel(), true);
+                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel(), true);
 
                         int goldLabel = instance.gold();
                         diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
@@ -706,8 +706,8 @@ public class GradientTest {
                         double diff = 0;
 
                         for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel(), true);
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel(), true);
 
                             int goldLabel = instance.gold();
                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
@@ -775,8 +775,8 @@ public class GradientTest {
                     double diff = 0;
 
                     for (NeuralTrainingInstance instance : instances) {
-                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel(), true);
+                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel(), true);
 
                         int goldLabel = instance.gold();
                         diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
@@ -846,8 +846,8 @@ public class GradientTest {
                         double diff = 0;
 
                         for (NeuralTrainingInstance instance : instances) {
-                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                            double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel(), true);
+                            double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel(), true);
 
                             int goldLabel = instance.gold();
                             diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
@@ -917,8 +917,8 @@ public class GradientTest {
                     double diff = 0;
 
                     for (NeuralTrainingInstance instance : instances) {
-                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel());
-                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel());
+                        double[] plusPurturb = plusNetwork.output(instance.getFeatures(), instance.getLabel(), true);
+                        double[] negPurturb = negNetwork.output(instance.getFeatures(), instance.getLabel(), true);
 
                         int goldLabel = instance.gold();
                         diff += -(plusPurturb[goldLabel] - negPurturb[goldLabel]);
