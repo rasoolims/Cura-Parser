@@ -209,6 +209,16 @@ public class Utils {
         return o;
     }
 
+    public static double[] prod(double[] x, double[][] y, int axis) {
+        assert x.length == y.length;
+
+        double[] o = new double[x.length];
+        for (int i = 0; i < o.length; i++) {
+            o[i] = x[i] * y[i][axis];
+        }
+        return o;
+    }
+
     public static double[] sum(double[] x, double[] y) {
         if (y == null) return Utils.clone(x);
         assert x.length == y.length;

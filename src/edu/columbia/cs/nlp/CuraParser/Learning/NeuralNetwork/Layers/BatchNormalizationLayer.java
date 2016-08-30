@@ -1,6 +1,8 @@
 package edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers;
 
+import edu.columbia.cs.nlp.CuraParser.Accessories.Utils;
 import edu.columbia.cs.nlp.CuraParser.Learning.Activation.Identity;
+import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.MLPNetwork;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.FixInit;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -17,15 +19,27 @@ import java.util.HashSet;
 public class BatchNormalizationLayer extends Layer {
     double eps;
 
+    // Current cache
+    double[] mu;
+    double[] variance;
+    double[] invStdDev;
+
+    // for Testing
+    double[] avgMean;
+    double[] avgVariance;
+    int iter = 0;
+
     public BatchNormalizationLayer(int nIn, double eps) {
         super(new Identity(), 1, nIn, new FixInit(1));
         this.eps = eps;
+        avgMean = new double[nIn];
+        avgVariance = new double[nIn];
     }
 
     @Override
     public double[][] forward(double[][] x) {
         // calculating mean
-        double[] mu = new double[x[0].length];
+        mu = new double[x[0].length];
         for (double[] i : x) {
             for (int j = 0; j < i.length; j++)
                 mu[j] += i[j];
@@ -34,7 +48,7 @@ public class BatchNormalizationLayer extends Layer {
             mu[j] /= x.length;
 
         // calculating variance
-        double[] variance = new double[x[0].length];
+        variance = new double[x[0].length];
         for (double[] i : x) {
             for (int j = 0; j < i.length; j++)
                 variance[j] += Math.pow(mu[j] - i[j], 2);
@@ -43,7 +57,7 @@ public class BatchNormalizationLayer extends Layer {
             variance[j] /= x.length;
 
         // calculating inverse std-dev
-        double[] invStdDev = new double[x[0].length];
+        invStdDev = new double[x[0].length];
         for (int j = 0; j < invStdDev.length; j++)
             invStdDev[j] = 1.0 / Math.sqrt(variance[j] + eps);
 
@@ -59,15 +73,18 @@ public class BatchNormalizationLayer extends Layer {
         double[][] y = new double[x.length][x[0].length];
         for (int i = 0; i < x.length; i++) {
             for (int j = 0; j < x[i].length; j++) {
-                y[i][j] = w(j, 0) * xHat[i][j] + b(j);
+                y[i][j] = gamma(j) * xHat[i][j] + b(j);
             }
         }
 
+        Utils.sumi(avgMean, mu);
+        Utils.sumi(avgVariance, variance);
+        iter++;
         return y;
     }
 
     @Override
-    public double[] forward(double[] i, double[] labels, boolean takeLog) {
+    public double[] forward(double[] x, double[] labels, boolean takeLog) {
         throw new NotImplementedException();
     }
 
@@ -89,6 +106,69 @@ public class BatchNormalizationLayer extends Layer {
     @Override
     public double[][] forward(double[][] i, double[][] labels, boolean takeLog) {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public double[] backward(double[] delta, int layerIndex, double[] hInput, double[] prevH, HashSet<Integer>[] seenFeatures, double[][][]
+            savedGradients, MLPNetwork network) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public double[][] backward(double[][] delta, int layerIndex, double[][] xHat, double[][] x, HashSet<Integer>[] seenFeatures,
+                               double[][][] savedGradients, MLPNetwork network) {
+
+        BatchNormalizationLayer layer = (BatchNormalizationLayer) network.layer(layerIndex);
+        final double[] variance = layer.variance;
+        final double[] invStdDev = layer.invStdDev;
+        final double[] mu = layer.mu;
+
+        // dL/db
+        for (int i = 0; i < delta.length; i++)
+            Utils.sumi(b, delta[i]);
+
+        // dL/dW
+        for (int i = 0; i < delta.length; i++)
+            Utils.sumi(w[0], Utils.prod(delta[i], xHat[i]));
+
+        // dL/dxHat
+        double[][] dxHat = new double[delta.length][delta[0].length];
+        for (int i = 0; i < delta.length; i++)
+            dxHat[i] = Utils.prod(delta[i], layer.gamma(), 0);
+
+        // dL/dVar
+        double[] dvar = new double[variance.length];
+        for (int i = 0; i < delta.length; i++) {
+            for (int j = 0; j < delta[i].length; j++) {
+                dvar[j] += dxHat[i][j] * (x[i][j] - mu[j]) * (-0.5) * Math.pow(variance[j] + eps, -1.5);
+            }
+        }
+
+        // dL/dmu
+        double[] dmu = new double[mu.length];
+        for (int i = 0; i < delta.length; i++) {
+            for (int j = 0; j < delta[i].length; j++) {
+                dmu[j] += dxHat[i][j] * (-1 * invStdDev[j]);
+            }
+        }
+
+        // dL/dx
+        double[][] newDelta = new double[delta.length][delta[0].length];
+        for (int i = 0; i < delta.length; i++) {
+            for (int j = 0; j < delta[i].length; j++) {
+                newDelta[i][j] += dxHat[i][j] * invStdDev[j] + dvar[j] * (2 * (x[i][j] - mu[j])) / delta.length + dmu[j] / delta.length;
+            }
+        }
+
+        return newDelta;
+    }
+
+    public double[][] gamma() {
+        return w;
+    }
+
+    public double gamma(int j) {
+        return w[j][0];
     }
 }
 
