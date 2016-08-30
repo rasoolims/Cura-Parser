@@ -2,6 +2,9 @@ package edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers;
 
 import edu.columbia.cs.nlp.CuraParser.Learning.Activation.Identity;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.FixInit;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import java.util.HashSet;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -61,6 +64,31 @@ public class BatchNormalizationLayer extends Layer {
         }
 
         return y;
+    }
+
+    @Override
+    public double[] forward(double[] i, double[] labels, boolean takeLog) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public double[] forward(double[] i, double[] labels) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public double[][] forward(double[][] i, HashSet<Integer>[] wIndexToUse, HashSet<Integer>[] inputToUse) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public double[][] forward(double[][] i, HashSet<Integer>[] wIndexToUse) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public double[][] forward(double[][] i, double[][] labels, boolean takeLog) {
+        throw new NotImplementedException();
     }
 }
 
