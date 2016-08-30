@@ -45,6 +45,11 @@ public class Utils {
         for (int i = 0; i < m1.length; i++) sumi(m1[i], m2[i]);
     }
 
+    public static void divi(double[] m1, double m2) {
+        if (m1 == null) return;
+        for (int i = 0; i < m1.length; i++) m1[i]/=m2;
+    }
+
     /**
      * Sum in place
      *
