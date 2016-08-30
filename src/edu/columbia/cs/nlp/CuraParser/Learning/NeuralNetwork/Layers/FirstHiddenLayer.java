@@ -32,7 +32,7 @@ public class FirstHiddenLayer extends Layer {
     int numDepLayers;
 
     // pre-computed items.
-    private double[][][] saved;
+    protected double[][][] saved;
 
     public FirstHiddenLayer(Activation activation, int nIn, int nOut, Initializer initializer, Initializer biasInit,
                             int numWordLayers, int numPosLayers, int numDepLayers,
@@ -139,6 +139,21 @@ public class FirstHiddenLayer extends Layer {
         Utils.sumi(hidden, b);
 
         return hidden;
+    }
+
+    @Override
+    public double[] forward(double[] i, double[] labels, boolean takeLog) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public double[] forward(double[] i, double[] labels) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public double[][] forward(double[][] i, double[][] labels, boolean takeLog) {
+        throw  new NotImplementedException();
     }
 
     @Override
