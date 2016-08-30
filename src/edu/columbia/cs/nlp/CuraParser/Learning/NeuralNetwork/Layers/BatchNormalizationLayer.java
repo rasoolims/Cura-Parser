@@ -36,6 +36,27 @@ public class BatchNormalizationLayer extends Layer {
         avgVariance = new double[nOut];
     }
 
+    /**
+     * This is used for decoding not training.
+     * @param x input
+     * @return
+     */
+    @Override
+    public double[] forward(double[] x) {
+        // Calculating xHat
+        double[] xHat = new double[x.length];
+        for (int i = 0; i < x.length; i++) {
+            xHat[i] = (x[i] - avgMean[i] / iter) / Math.sqrt((avgVariance[i] / iter) + eps);
+        }
+
+        // Calculating output
+        double[] y = new double[x.length];
+        for (int i = 0; i < x.length; i++) {
+            y[i] = gamma(i) * xHat[i] + b(i);
+        }
+        return y;
+    }
+
     @Override
     public double[][] forward(double[][] x) {
         // calculating mean
