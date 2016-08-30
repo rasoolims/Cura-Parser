@@ -125,10 +125,7 @@ public class FirstHiddenLayer extends Layer {
                 int id = tok;
                 if (j < numWordLayers)
                     id = wordEmbeddings.preComputeId(j, tok);
-                double[] s = saved[j][id];
-                for (int i = 0; i < hidden.length; i++) {
-                    hidden[i] += s[i];
-                }
+                Utils.sumi(hidden, saved[j][id]);
             } else {
                 for (int i = 0; i < hidden.length; i++) {
                     for (int k = 0; k < embedding.dim(); k++) {
