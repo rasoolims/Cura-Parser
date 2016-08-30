@@ -30,7 +30,8 @@ public class BatchNormalizationLayer extends Layer {
     int iter = 0;
 
     public BatchNormalizationLayer(int nIn, double eps) {
-        super(new Identity(), 1, nIn, new FixInit(1));
+        super(new Identity(), nIn, 1, new FixInit(1));
+        this.b = new double[nIn];
         this.eps = eps;
         avgMean = new double[nIn];
         avgVariance = new double[nIn];
@@ -134,7 +135,7 @@ public class BatchNormalizationLayer extends Layer {
         // dL/dxHat
         double[][] dxHat = new double[delta.length][delta[0].length];
         for (int i = 0; i < delta.length; i++)
-            dxHat[i] = Utils.prod(delta[i], layer.gamma(), 0);
+            dxHat[i] = Utils.prod(delta[i], layer.gamma());
 
         // dL/dVar
         double[] dvar = new double[variance.length];
@@ -163,12 +164,12 @@ public class BatchNormalizationLayer extends Layer {
         return newDelta;
     }
 
-    public double[][] gamma() {
-        return w;
+    public double[] gamma() {
+        return w[0];
     }
 
     public double gamma(int j) {
-        return w[j][0];
+        return w[0][j];
     }
 }
 
