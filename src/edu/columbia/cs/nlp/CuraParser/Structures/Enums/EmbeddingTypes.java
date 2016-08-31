@@ -17,5 +17,5 @@ public enum EmbeddingTypes {
     SECONDHIDDENLAYER,
     SECONDHIDDENLAYERBIAS,
     SOFTMAX,
-    SOFTMAXBIAS;
+    SOFTMAXBIAS
 }

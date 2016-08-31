@@ -48,7 +48,7 @@ public class BeamParser {
     CompletionService<ArrayList<BeamElement>> pool;
     ShiftReduceParser parser;
 
-    public BeamParser(MLPNetwork network, int numOfThreads, ParserType parserType) throws Exception {
+    public BeamParser(MLPNetwork network, int numOfThreads, ParserType parserType) {
         this.dependencyRelations = network.getDepLabels();
         this.network = network;
         this.numThreads = numOfThreads;
@@ -89,8 +89,7 @@ public class BeamParser {
                     && !canReduce
                     && !canRightArc
                     && !canLeftArc) {
-                double addedScore = prevScore;
-                beamPreserver.add(new BeamElement(addedScore, b, 4, -1));
+                beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
 
                 if (beamPreserver.size() > beamWidth)
                     beamPreserver.pollFirst();

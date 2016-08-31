@@ -311,17 +311,17 @@ public class Options implements Serializable {
         } else if (generalProperties.parseConllFile) {
             StringBuilder builder = new StringBuilder();
             builder.append(generalProperties.toString());
-            builder.append("score file: " + scorePath + "\n");
+            builder.append("score file: ").append(scorePath).append("\n");
             return builder.toString();
         } else if (generalProperties.parseTaggedFile) {
             StringBuilder builder = new StringBuilder();
             builder.append(generalProperties.toString());
-            builder.append("score file: " + scorePath + "\n");
+            builder.append("score file: ").append(scorePath).append("\n");
             return builder.toString();
         } else if (generalProperties.parsePartialConll) {
             StringBuilder builder = new StringBuilder();
             builder.append(generalProperties.toString());
-            builder.append("score file: " + scorePath + "\n");
+            builder.append("score file: ").append(scorePath).append("\n");
             return builder.toString();
         } else if (generalProperties.evaluate) {
             StringBuilder builder = new StringBuilder();
@@ -334,8 +334,7 @@ public class Options implements Serializable {
 
     @Override
     public Options clone() {
-        Options options = new Options(generalProperties.clone(), trainingOptions.clone(), scorePath, separator, networkProperties.clone(),
+        return new Options(generalProperties.clone(), trainingOptions.clone(), scorePath, separator, networkProperties.clone(),
                 updaterProperties.clone());
-        return options;
     }
 }

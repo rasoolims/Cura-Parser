@@ -76,7 +76,7 @@ public class BeamTrainer extends GreedyTrainer {
                 currentBatch.add(goldAndBeam);
 
                 if (currentBatch.size() >= options.networkProperties.beamBatchSize) {
-                    neuralTrainer.fit(currentBatch, step++, step % (Math.max(1, options.trainingOptions.UASEvalPerStep / 10)) == 0 ? true : false);
+                    neuralTrainer.fit(currentBatch, step++, step % (Math.max(1, options.trainingOptions.UASEvalPerStep / 10)) == 0);
                     currentBatch.clear();
 
                     if (options.updaterProperties.updaterType == UpdaterType.SGD) {

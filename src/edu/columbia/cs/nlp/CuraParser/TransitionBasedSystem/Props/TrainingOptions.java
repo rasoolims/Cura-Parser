@@ -80,20 +80,20 @@ public class TrainingOptions implements Serializable {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("train file: " + trainFile + "\n");
-        builder.append("dev file: " + devPath + "\n");
-        builder.append("cluster file: " + clusterFile + "\n");
+        builder.append("train file: ").append(trainFile).append("\n");
+        builder.append("dev file: ").append(devPath).append("\n");
+        builder.append("cluster file: ").append(clusterFile).append("\n");
         if (useDynamicOracle)
-            builder.append("oracle selection: " + (!useRandomOracleSelection ? "latent max" : "random") + "\n");
-        builder.append("updateModel: " + (useMaxViol ? "max violation" : "early") + "\n");
-        builder.append("oracle: " + (useDynamicOracle ? "dynamic" : "static") + "\n");
-        builder.append("pre-training-iterations: " + preTrainingIter + "\n");
-        builder.append("training-iterations: " + trainingIter + "\n");
-        builder.append("beam-training iterations: " + beamTrainingIter + "\n");
-        builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
-        builder.append("decay step: " + decayStep + "\n");
-        builder.append("consider all actions: " + considerAllActions + "\n");
-        builder.append("pre-trained model path: " + preTrainedModelPath + "\n");
+            builder.append("oracle selection: ").append(!useRandomOracleSelection ? "latent max" : "random").append("\n");
+        builder.append("updateModel: ").append(useMaxViol ? "max violation" : "early").append("\n");
+        builder.append("oracle: ").append(useDynamicOracle ? "dynamic" : "static").append("\n");
+        builder.append("pre-training-iterations: ").append(preTrainingIter).append("\n");
+        builder.append("training-iterations: ").append(trainingIter).append("\n");
+        builder.append("beam-training iterations: ").append(beamTrainingIter).append("\n");
+        builder.append("partial training starting iteration: ").append(partialTrainingStartingIteration).append("\n");
+        builder.append("decay step: ").append(decayStep).append("\n");
+        builder.append("consider all actions: ").append(considerAllActions).append("\n");
+        builder.append("pre-trained model path: ").append(preTrainedModelPath).append("\n");
         return builder.toString();
     }
 

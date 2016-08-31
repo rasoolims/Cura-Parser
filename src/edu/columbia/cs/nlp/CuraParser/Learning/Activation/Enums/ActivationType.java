@@ -12,5 +12,5 @@ public enum ActivationType {
     RELU,
     CUBIC,
     IDENTITY,
-    LogisticSoftMax;
+    LogisticSoftMax
 }

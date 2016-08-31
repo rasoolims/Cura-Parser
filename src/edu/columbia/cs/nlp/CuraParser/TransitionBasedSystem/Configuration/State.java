@@ -71,7 +71,7 @@ public class State implements Cloneable {
         return stack;
     }
 
-    public int pop() throws Exception {
+    public int pop() {
         return stack.pop();
     }
 

@@ -43,15 +43,11 @@ public class ArcStandard extends ShiftReduceParser {
 
     public boolean canDo(Actions action, State state) throws Exception {
         if (action == Actions.Shift) { //shift
-            if (state.bufferEmpty())
-                return false;
-            return true;
+            return !state.bufferEmpty();
         } else if (action == Actions.RightArc) { //right arc
             if (state.stackSize() < 2)
                 return false;
-            if (state.peek() == state.rootIndex)
-                return false;
-            return true;
+            return state.peek() != state.rootIndex;
         } else if (action == Actions.LeftArc) { //left arc
             if (state.stackSize() < 2)
                 return false;

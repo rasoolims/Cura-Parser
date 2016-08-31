@@ -18,7 +18,7 @@ import java.util.HashMap;
  */
 
 public abstract class ShiftReduceParser {
-    public void shift(State state) throws Exception {
+    public void shift(State state) {
         state.push(state.bufferHead());
         state.incrementBufferHead();
 

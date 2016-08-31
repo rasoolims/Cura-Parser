@@ -28,9 +28,7 @@ public class Utils {
     public static double[] clone(double[] object) {
         if (object == null) return null;
         double[] cloned = new double[object.length];
-        for (int i = 0; i < object.length; i++) {
-            cloned[i] = object[i];
-        }
+        System.arraycopy(object, 0, cloned, 0, object.length);
         return cloned;
     }
 

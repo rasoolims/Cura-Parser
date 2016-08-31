@@ -59,19 +59,18 @@ public class NetworkProperties implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("h1-size: " + hiddenLayer1Size + "\n");
-        builder.append("h2-size: " + hiddenLayer2Size + "\n");
-        builder.append("activation: " + activationType + "\n");
-        builder.append("regularization: " + regularization + "\n");
-        builder.append("regularize all layers: " + regualarizeAllLayers + "\n");
-        builder.append("batch size: " + batchSize + "\n");
-        builder.append("beam batch size: " + beamBatchSize + "\n");
-        builder.append("dropout probability: " + dropoutProbForHiddenLayer + "\n");
-        builder.append("word dim: " + wDim + "\n");
-        builder.append("pos dim: " + posDim + "\n");
-        builder.append("dep dim: " + depDim + "\n");
-        return builder.toString();
+        String builder = "h1-size: " + hiddenLayer1Size + "\n" +
+                "h2-size: " + hiddenLayer2Size + "\n" +
+                "activation: " + activationType + "\n" +
+                "regularization: " + regularization + "\n" +
+                "regularize all layers: " + regualarizeAllLayers + "\n" +
+                "batch size: " + batchSize + "\n" +
+                "beam batch size: " + beamBatchSize + "\n" +
+                "dropout probability: " + dropoutProbForHiddenLayer + "\n" +
+                "word dim: " + wDim + "\n" +
+                "pos dim: " + posDim + "\n" +
+                "dep dim: " + depDim + "\n";
+        return builder;
     }
 
     @Override

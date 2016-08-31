@@ -113,28 +113,28 @@ public class GeneralProperties implements Serializable {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         if (train) {
-            builder.append("beam width: " + beamWidth + "\n");
-            builder.append("rootFirst: " + rootFirst + "\n");
-            builder.append("labeled: " + labeled + "\n");
-            builder.append("lower-case: " + lowercase + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
-            builder.append("parser type: " + parserType + "\n");
+            builder.append("beam width: ").append(beamWidth).append("\n");
+            builder.append("rootFirst: ").append(rootFirst).append("\n");
+            builder.append("labeled: ").append(labeled).append("\n");
+            builder.append("lower-case: ").append(lowercase).append("\n");
+            builder.append("number of threads: ").append(numOfThreads).append("\n");
+            builder.append("parser type: ").append(parserType).append("\n");
         } else if (parseConllFile) {
             builder.append("parse conll" + "\n");
-            builder.append("input file: " + inputFile + "\n");
-            builder.append("output file: " + outputFile + "\n");
-            builder.append("model file: " + modelFile + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
+            builder.append("input file: ").append(inputFile).append("\n");
+            builder.append("output file: ").append(outputFile).append("\n");
+            builder.append("model file: ").append(modelFile).append("\n");
+            builder.append("number of threads: ").append(numOfThreads).append("\n");
         } else if (parseConllFile) {
             builder.append("parse partial conll" + "\n");
-            builder.append("input file: " + inputFile + "\n");
-            builder.append("output file: " + outputFile + "\n");
-            builder.append("model file: " + modelFile + "\n");
-            builder.append("labeled: " + labeled + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
+            builder.append("input file: ").append(inputFile).append("\n");
+            builder.append("output file: ").append(outputFile).append("\n");
+            builder.append("model file: ").append(modelFile).append("\n");
+            builder.append("labeled: ").append(labeled).append("\n");
+            builder.append("number of threads: ").append(numOfThreads).append("\n");
         } else if (evaluate) {
-            builder.append("input file: " + inputFile + "\n");
-            builder.append("parsed file: " + outputFile + "\n");
+            builder.append("input file: ").append(inputFile).append("\n");
+            builder.append("parsed file: ").append(outputFile).append("\n");
         }
         return builder.toString();
     }

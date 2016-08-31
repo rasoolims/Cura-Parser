@@ -556,14 +556,13 @@ public class GradientTest {
                 double eps = 0.000001;
                 for (int i = 0; i < network.layer(0).nOut(); i++) {
                     for (int slot = 0; slot < network.layer(0).nIn(); slot++) {
-                        int tok = i;
-                        double gradForTok = gradients.layer(0).getW()[tok][slot] / instances.size();
+                        double gradForTok = gradients.layer(0).getW()[i][slot] / instances.size();
 
                         MLPNetwork plusNetwork = network.clone();
-                        purturb(plusNetwork, EmbeddingTypes.HIDDENLAYER, tok, slot, eps);
+                        purturb(plusNetwork, EmbeddingTypes.HIDDENLAYER, i, slot, eps);
                         plusNetwork.preCompute();
                         MLPNetwork negNetwork = network.clone();
-                        purturb(negNetwork, EmbeddingTypes.HIDDENLAYER, tok, slot, -eps);
+                        purturb(negNetwork, EmbeddingTypes.HIDDENLAYER, i, slot, -eps);
                         negNetwork.preCompute();
                         double diff = 0;
 
@@ -694,14 +693,13 @@ public class GradientTest {
                 double eps = 0.000001;
                 for (int i = 0; i < network.layer(1).nOut(); i++) {
                     for (int slot = 0; slot < network.layer(1).nIn(); slot++) {
-                        int tok = i;
-                        double gradForTok = gradients.layer(1).getW()[tok][slot] / instances.size();
+                        double gradForTok = gradients.layer(1).getW()[i][slot] / instances.size();
 
                         MLPNetwork plusNetwork = network.clone();
-                        purturb(plusNetwork, EmbeddingTypes.SECONDHIDDENLAYER, tok, slot, eps);
+                        purturb(plusNetwork, EmbeddingTypes.SECONDHIDDENLAYER, i, slot, eps);
                         plusNetwork.preCompute();
                         MLPNetwork negNetwork = network.clone();
-                        purturb(negNetwork, EmbeddingTypes.SECONDHIDDENLAYER, tok, slot, -eps);
+                        purturb(negNetwork, EmbeddingTypes.SECONDHIDDENLAYER, i, slot, -eps);
                         negNetwork.preCompute();
                         double diff = 0;
 
@@ -763,14 +761,13 @@ public class GradientTest {
 
                 double eps = 0.000001;
                 for (int i = 0; i < network.layer(1).nOut(); i++) {
-                    int tok = i;
-                    double gradForTok = gradients.layer(1).getB()[tok] / instances.size();
+                    double gradForTok = gradients.layer(1).getB()[i] / instances.size();
 
                     MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork, EmbeddingTypes.SECONDHIDDENLAYERBIAS, tok, -1, eps);
+                    purturb(plusNetwork, EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, eps);
                     plusNetwork.preCompute();
                     MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork, EmbeddingTypes.SECONDHIDDENLAYERBIAS, tok, -1, -eps);
+                    purturb(negNetwork, EmbeddingTypes.SECONDHIDDENLAYERBIAS, i, -1, -eps);
                     negNetwork.preCompute();
                     double diff = 0;
 
@@ -833,15 +830,14 @@ public class GradientTest {
                 double eps = 0.000001;
                 for (int i = 0; i < network.getNumOutputs(); i++) {
                     for (int slot = 0; slot < network.layer(network.numLayers() - 1).nIn(); slot++) {
-                        int tok = i;
-                        double gradForTok = gradients.layer(gradients.numLayers() - 1).getW()[tok][slot] / instances.size();
+                        double gradForTok = gradients.layer(gradients.numLayers() - 1).getW()[i][slot] / instances.size();
 
                         MLPNetwork plusNetwork = network.clone();
-                        purturb(plusNetwork, EmbeddingTypes.SOFTMAX, tok, slot, eps);
+                        purturb(plusNetwork, EmbeddingTypes.SOFTMAX, i, slot, eps);
 
                         plusNetwork.preCompute();
                         MLPNetwork negNetwork = network.clone();
-                        purturb(negNetwork, EmbeddingTypes.SOFTMAX, tok, slot, -eps);
+                        purturb(negNetwork, EmbeddingTypes.SOFTMAX, i, slot, -eps);
                         plusNetwork.preCompute();
                         double diff = 0;
 
@@ -905,14 +901,13 @@ public class GradientTest {
 
                 double eps = 0.000001;
                 for (int i = 0; i < network.getNumOutputs(); i++) {
-                    int tok = i;
-                    double gradForTok = gradients.layer(gradients.numLayers() - 1).getB()[tok] / instances.size();
+                    double gradForTok = gradients.layer(gradients.numLayers() - 1).getB()[i] / instances.size();
 
                     MLPNetwork plusNetwork = network.clone();
-                    purturb(plusNetwork, EmbeddingTypes.SOFTMAXBIAS, tok, -1, eps);
+                    purturb(plusNetwork, EmbeddingTypes.SOFTMAXBIAS, i, -1, eps);
                     plusNetwork.preCompute();
                     MLPNetwork negNetwork = network.clone();
-                    purturb(negNetwork, EmbeddingTypes.SOFTMAXBIAS, tok, -1, -eps);
+                    purturb(negNetwork, EmbeddingTypes.SOFTMAXBIAS, i, -1, -eps);
                     negNetwork.preCompute();
                     double diff = 0;
 
@@ -977,11 +972,10 @@ public class GradientTest {
                 double eps = 1e-15;
 
                 ArrayList<Layer> allMatrices1 = gradients.getLayers();
-                ArrayList<Layer> allMatrices2 = gradientsMultiThread;
 
                 for (int i = 0; i < allMatrices1.size(); i++) {
                     double[][] m1 = allMatrices1.get(i).getW();
-                    double[][] m2 = allMatrices2.get(i).getW();
+                    double[][] m2 = gradientsMultiThread.get(i).getW();
                     if (m1 == null) continue;
 
                     for (int j = 0; j < m1.length; j++)
@@ -994,7 +988,7 @@ public class GradientTest {
 
                 for (int i = 0; i < allMatrices1.size(); i++) {
                     double[] v1 = allMatrices1.get(i).getB();
-                    double[] v2 = allMatrices2.get(i).getB();
+                    double[] v2 = gradientsMultiThread.get(i).getB();
                     if (v1 == null) continue;
 
                     for (int j = 0; j < v1.length; j++) {

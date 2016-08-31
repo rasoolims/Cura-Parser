@@ -44,7 +44,7 @@ public class GreedyTrainer {
     protected ArrayList<Integer> dependencyRelations;
     protected int labelNullIndex;
 
-    public GreedyTrainer(Options options, ArrayList<Integer> dependencyRelations, int labelNullIndex, HashSet<Integer> rareWords) throws Exception {
+    public GreedyTrainer(Options options, ArrayList<Integer> dependencyRelations, int labelNullIndex, HashSet<Integer> rareWords) {
         this.options = options;
         this.dependencyRelations = dependencyRelations;
         this.labelNullIndex = labelNullIndex;
@@ -135,7 +135,7 @@ public class GreedyTrainer {
         for (step = 0; step < options.trainingOptions.trainingIter; step++) {
             List<NeuralTrainingInstance> instances = Utils.getRandomSubset(allInstances, random, options.networkProperties.batchSize);
             try {
-                neuralTrainer.fit(instances, step, step % (Math.max(1, options.trainingOptions.UASEvalPerStep / 10)) == 0 ? true : false);
+                neuralTrainer.fit(instances, step, step % (Math.max(1, options.trainingOptions.UASEvalPerStep / 10)) == 0);
             } catch (Exception ex) {
                 System.err.println("Exception occurred: " + ex.getMessage());
                 ex.printStackTrace();

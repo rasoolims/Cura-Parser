@@ -47,8 +47,7 @@ public class MLPNetwork implements Serializable {
     ArrayList<Integer> depLabels;
     private ArrayList<Layer> layers;
 
-    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int wDim, int pDim, int lDim, ParserType parserType)
-            throws Exception {
+    public MLPNetwork(IndexMaps maps, Options options, ArrayList<Integer> depLabels, int wDim, int pDim, int lDim, ParserType parserType) {
         Random random = new Random();
         this.maps = maps;
 

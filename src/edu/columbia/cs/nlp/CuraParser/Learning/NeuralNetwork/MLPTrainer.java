@@ -89,7 +89,7 @@ public class MLPTrainer {
             throw new NotImplementedException();
     }
 
-    private void regularizeWithL2() throws Exception {
+    private void regularizeWithL2() {
         double regCost = 0.0;
 
         ArrayList<Layer> layers = net.getLayers();
@@ -235,7 +235,7 @@ public class MLPTrainer {
         }
     }
 
-    private void backPropSavedGradients(MLPNetwork g, double[][][] savedGradients, HashSet<Integer>[] wordsSeen) throws Exception {
+    private void backPropSavedGradients(MLPNetwork g, double[][][] savedGradients, HashSet<Integer>[] wordsSeen) {
         int offset = 0;
         final FirstHiddenLayer firstHiddenLayer = (FirstHiddenLayer) net.layer(0);
         final double[][] hiddenLayer = firstHiddenLayer.getW();
@@ -406,7 +406,7 @@ public class MLPTrainer {
             Pair<Configuration, ArrayList<Configuration>> currInstance = (Pair<Configuration, ArrayList<Configuration>>) instances.get(i);
             Configuration gold = currInstance.first;
             ArrayList<Configuration> beam = currInstance.second;
-            boolean rootFirst = gold.sentence.getWords()[gold.sentence.size() - 1] == IndexMaps.RootIndex ? false : true;
+            boolean rootFirst = gold.sentence.getWords()[gold.sentence.size() - 1] != IndexMaps.RootIndex;
             Configuration initialConfig = new Configuration(gold.sentence, rootFirst);
 
 

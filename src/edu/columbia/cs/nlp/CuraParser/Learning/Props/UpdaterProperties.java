@@ -37,12 +37,12 @@ public class UpdaterProperties implements Serializable {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("updater: " + updaterType + "\n");
-        builder.append("learning rate: " + learningRate + "\n");
+        builder.append("updater: ").append(updaterType).append("\n");
+        builder.append("learning rate: ").append(learningRate).append("\n");
 
         if (updaterType == UpdaterType.SGD) {
-            builder.append("momentum: " + momentum + "\n");
-            builder.append("sgd type: " + sgdType + "\n");
+            builder.append("momentum: ").append(momentum).append("\n");
+            builder.append("sgd type: ").append(sgdType).append("\n");
         }
         return builder.toString();
     }
