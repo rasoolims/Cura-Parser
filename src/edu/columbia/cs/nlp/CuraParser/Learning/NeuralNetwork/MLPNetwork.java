@@ -10,11 +10,8 @@ package edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork;
 
 import edu.columbia.cs.nlp.CuraParser.Accessories.Options;
 import edu.columbia.cs.nlp.CuraParser.Accessories.Utils;
-import edu.columbia.cs.nlp.CuraParser.Learning.Activation.Activation;
-import edu.columbia.cs.nlp.CuraParser.Learning.Activation.Cubic;
+import edu.columbia.cs.nlp.CuraParser.Learning.Activation.*;
 import edu.columbia.cs.nlp.CuraParser.Learning.Activation.Enums.ActivationType;
-import edu.columbia.cs.nlp.CuraParser.Learning.Activation.LogisticSoftMax;
-import edu.columbia.cs.nlp.CuraParser.Learning.Activation.Relu;
 import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers.FirstHiddenLayer;
 import edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers.Layer;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.FixInit;
@@ -69,9 +66,9 @@ public class MLPNetwork implements Serializable {
         this.layers = new ArrayList<>();
         int nIn = numWordLayers * wDim + numPosLayers * pDim + numDepLayers * lDim;
 
-        WeightInit hiddenInit = options.networkProperties.activationType == ActivationType.RELU ? WeightInit.RELU : WeightInit.UNIFORM;
-        WeightInit hiddenBiasInit = options.networkProperties.activationType == ActivationType.RELU ? WeightInit.FIX : WeightInit.UNIFORM;
-        Activation activation = options.networkProperties.activationType == ActivationType.RELU ? new Relu() : new Cubic();
+        WeightInit hiddenInit = isRelu(options) ? WeightInit.RELU : WeightInit.UNIFORM;
+        WeightInit hiddenBiasInit = isRelu(options) ? WeightInit.FIX : WeightInit.UNIFORM;
+        Activation activation = getActivation(options);
         Initializer hiddenInitializer = WeightInit.initializer(hiddenInit, random, nIn, options.networkProperties.hiddenLayer1Size, 0);
         Initializer hiddenBiasInitializer = WeightInit.initializer(hiddenBiasInit, random, nIn, options.networkProperties.hiddenLayer1Size, 0.2);
 
@@ -94,6 +91,19 @@ public class MLPNetwork implements Serializable {
         this.depLabels = depLabels;
         this.numDepLabels = depLabels.size();
         this.options = options;
+    }
+
+    private Activation getActivation(Options options) {
+        if (options.networkProperties.activationType == ActivationType.RELU) return new Relu();
+        if (options.networkProperties.activationType == ActivationType.LeakyRELU) return new LeakyRelu(options.networkProperties.reluLeakAlpha);
+        if (options.networkProperties.activationType == ActivationType.CUBIC) return new Cubic();
+        if (options.networkProperties.activationType == ActivationType.LogisticSoftMax) return new LogisticSoftMax();
+        return new Identity();
+    }
+
+    private boolean isRelu(Options options) {
+        return options.networkProperties.activationType == ActivationType.RELU || options.networkProperties.activationType == ActivationType
+                .LeakyRELU;
     }
 
 

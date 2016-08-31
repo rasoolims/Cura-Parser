@@ -82,7 +82,7 @@ public class Options implements Serializable {
         output.append("\t \t -ds [decay-step (default 4400)] \n");
         output.append("\t \t -parser [ae(arc-eager), as(arc-standard:default)] \n");
         output.append("\t \t -pretrained [pre-trained greedy model path (for beam learning)] \n");
-        output.append("\t \t -a [activation (relu,cubic) -- default:relu] \n");
+        output.append("\t \t -a [activation (relu,cubic,lrelu) -- default:relu] \n");
         output.append("\t \t -u [updater-type: sgd,adam(default),adamax,adagrad] \n");
         output.append("\t \t -sgd [sgd-type (if using sgd): nesterov(default),momentum, vanilla] \n");
         output.append("\t \t -batch [batch-size; default 1000] \n");
@@ -184,6 +184,8 @@ public class Options implements Serializable {
             else if (args[i].equals("-a")) {
                 if (args[i + 1].equals("relu"))
                     options.networkProperties.activationType = ActivationType.RELU;
+                else if (args[i + 1].equals("lrelu"))
+                    options.networkProperties.activationType = ActivationType.LeakyRELU;
                 else if (args[i + 1].equals("cubic"))
                     options.networkProperties.activationType = ActivationType.CUBIC;
                 else

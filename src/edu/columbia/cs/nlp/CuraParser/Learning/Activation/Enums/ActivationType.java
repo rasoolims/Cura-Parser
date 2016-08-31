@@ -10,6 +10,7 @@ package edu.columbia.cs.nlp.CuraParser.Learning.Activation.Enums;
 
 public enum ActivationType {
     RELU,
+    LeakyRELU,
     CUBIC,
     IDENTITY,
     LogisticSoftMax
