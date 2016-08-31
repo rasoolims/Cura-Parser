@@ -184,7 +184,7 @@ public class Options implements Serializable {
             else if (args[i].equals("-a")) {
                 if (args[i + 1].equals("relu"))
                     options.networkProperties.activationType = ActivationType.RELU;
-                if (args[i + 1].equals("rrelu"))
+                else if (args[i + 1].equals("rrelu"))
                     options.networkProperties.activationType = ActivationType.RandomRelu;
                 else if (args[i + 1].equals("lrelu"))
                     options.networkProperties.activationType = ActivationType.LeakyRELU;
