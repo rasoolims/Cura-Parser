@@ -209,7 +209,6 @@ public class MLPTrainer {
                 gradients.get(l).mergeInPlace(result.second.getLayers().get(l));
             cost += result.first.first;
             correct += result.first.second;
-
         }
         if (Double.isNaN(cost))
             throw new Exception("cost is not a number");
