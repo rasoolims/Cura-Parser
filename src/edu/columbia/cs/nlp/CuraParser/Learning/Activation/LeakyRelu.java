@@ -16,14 +16,14 @@ public class LeakyRelu extends Relu {
     }
 
     @Override
-    public double activate(double value) {
+    public double activate(double value, boolean test) {
         if (value >= 0)
             return value;
         return value / alpha;
     }
 
     @Override
-    public double gradient(double value, double gradient) {
+    public double gradient(double value, double gradient, double activation, boolean test) {
         return (value <= 0 ? gradient / alpha : gradient);
     }
 }

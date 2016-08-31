@@ -58,8 +58,8 @@ public class Layer implements Serializable {
         return Utils.sum(Utils.dot(w, i), b);
     }
 
-    public double[] activate(double[] i) {
-        return activation.activate(i);
+    public double[] activate(double[] i, boolean test) {
+        return activation.activate(i, test);
     }
 
     /**
@@ -69,9 +69,9 @@ public class Layer implements Serializable {
      * @param labels <0 means not allowed, 1 means gold, other values>=0 is ok.
      * @return
      */
-    public double[] forward(double[] i, double[] labels, boolean takeLog) {
+    public double[] forward(double[] i, double[] labels, boolean takeLog, boolean test) {
         assert i.length == w[0].length;
-        return activation.activate(Utils.sum4Output(Utils.dot4Output(w, i, labels), b, labels), labels, takeLog);
+        return activation.activate(Utils.sum4Output(Utils.dot4Output(w, i, labels), b, labels), labels, takeLog, test);
     }
 
     /**
@@ -108,10 +108,10 @@ public class Layer implements Serializable {
         return result;
     }
 
-    public double[][] activate(double[][] i) {
+    public double[][] activate(double[][] i, boolean test) {
         double[][] result = new double[i.length][];
         for (int r = 0; r < result.length; r++)
-            result[r] = activation.activate(i[r]);
+            result[r] = activation.activate(i[r], test);
         return result;
     }
 
@@ -122,15 +122,15 @@ public class Layer implements Serializable {
      * @param labels <0 means not allowed, 1 means gold, other values>=0 is ok.
      * @return
      */
-    public double[][] forward(double[][] i, double[][] labels, boolean takeLog) {
+    public double[][] forward(double[][] i, double[][] labels, boolean takeLog, boolean test) {
         assert i.length == labels.length;
         double[][] result = new double[i.length][];
         for (int r = 0; r < result.length; r++)
-            result[r] = forward(i[r], labels[r], takeLog);
+            result[r] = forward(i[r], labels[r], takeLog, test);
         return result;
     }
 
-    public double[] backward(final double[] delta, int layerIndex, double[] hInput, double[] prevH,
+    public double[] backward(final double[] delta, int layerIndex, double[] hInput, double[] prevH, double[] activations,
                              HashSet<Integer>[] seenFeatures, double[][][] savedGradients, MLPNetwork network) {
         assert layerIndex < network.numLayers() - 1;
         final double[][] nextW = network.layer(layerIndex + 1).getW();
@@ -139,20 +139,20 @@ public class Layer implements Serializable {
         assert hInput.length == w.length;
         assert prevH.length == w[0].length;
 
-        double[] newDelta = activation.gradient(hInput, Utils.dotTranspose(nextW, delta));
+        double[] newDelta = activation.gradient(hInput, Utils.dotTranspose(nextW, delta), activations, false);
         Utils.sumi(b, newDelta);
         Utils.sumi(w, Utils.dotTranspose(newDelta, prevH));
 
         return newDelta;
     }
 
-    public double[][] backward(final double[][] delta, int layerIndex, double[][] hInput, double[][] prevH,
+    public double[][] backward(final double[][] delta, int layerIndex, double[][] hInput, double[][] prevH, double[][] activations,
                                HashSet<Integer>[] seenFeatures, double[][][] savedGradients, MLPNetwork network) {
         assert layerIndex < network.numLayers() - 1;
         assert delta.length == hInput.length && delta.length == prevH.length;
         double[][] result = new double[delta.length][];
         for (int r = 0; r < result.length; r++)
-            result[r] = backward(delta[r], layerIndex, hInput[r], prevH[r], seenFeatures, savedGradients, network);
+            result[r] = backward(delta[r], layerIndex, hInput[r], prevH[r], activations[r], seenFeatures, savedGradients, network);
         return result;
     }
 

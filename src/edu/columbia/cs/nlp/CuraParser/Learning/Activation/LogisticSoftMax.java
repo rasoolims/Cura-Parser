@@ -10,17 +10,17 @@ package edu.columbia.cs.nlp.CuraParser.Learning.Activation;
 
 public class LogisticSoftMax extends Activation {
     @Override
-    public double activate(double value) {
+    public double activate(double value, boolean test) {
         return value;
     }
 
     @Override
-    public double gradient(double value, double gradient) {
+    public double gradient(double value, double gradient, double activation, boolean test) {
         return gradient;
     }
 
     @Override
-    public double[] activate(double[] values, double[] labels, boolean takeLog) {
+    public double[] activate(double[] values, double[] labels, boolean takeLog, boolean test) {
         int argmax = 0;
         for (int i = 0; i < values.length; i++) {
             if (labels[i] >= 0)

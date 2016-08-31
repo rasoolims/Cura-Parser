@@ -177,8 +177,8 @@ public class FirstHiddenLayer extends Layer {
     }
 
     @Override
-    public double[] backward(final double[] delta, int layerIndex, double[] hInput, double[] prevH, HashSet<Integer>[] featuresSeen,
-                             double[][][] savedGradients, MLPNetwork network) {
+    public double[] backward(final double[] delta, int layerIndex, double[] hInput, double[] prevH, double[] activations, HashSet<Integer>[]
+            featuresSeen, double[][][] savedGradients, MLPNetwork network) {
         assert layerIndex == 0;
         final double[][] nextW = network.layer(layerIndex + 1).getW();
         final double[][] curW = network.layer(layerIndex).getW();
@@ -186,7 +186,7 @@ public class FirstHiddenLayer extends Layer {
         int offset = 0;
         double[][] wordEmbeddings = this.wordEmbeddings.getW();
 
-        double[] newDelta = activation.gradient(hInput, Utils.dotTranspose(nextW, delta));
+        double[] newDelta = activation.gradient(hInput, Utils.dotTranspose(nextW, delta), activations, false);
         assert newDelta.length == w.length;
         Utils.sumi(b, newDelta);
 

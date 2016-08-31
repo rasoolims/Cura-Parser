@@ -10,12 +10,12 @@ package edu.columbia.cs.nlp.CuraParser.Learning.Activation;
 
 public class Relu extends Activation {
     @Override
-    public double activate(double value) {
+    public double activate(double value, boolean test) {
         return Math.max(0, value);
     }
 
     @Override
-    public double gradient(double value, double gradient) {
+    public double gradient(double value, double gradient, double activation, boolean test) {
         return (value <= 0 ? 0 : gradient);
     }
 }

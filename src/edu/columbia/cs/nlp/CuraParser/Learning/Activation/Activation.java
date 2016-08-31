@@ -14,11 +14,11 @@ public abstract class Activation implements Serializable {
     public Activation() {
     }
 
-    public abstract double activate(double value);
+    public abstract double activate(double value, boolean test);
 
-    public double[] activate(double[] values) {
+    public double[] activate(double[] values, boolean test) {
         double[] a = new double[values.length];
-        for (int i = 0; i < a.length; i++) a[i] = activate(values[i]);
+        for (int i = 0; i < a.length; i++) a[i] = activate(values[i], test);
         return a;
     }
 
@@ -30,15 +30,15 @@ public abstract class Activation implements Serializable {
      * @param takeLog if to take log of the output.
      * @return
      */
-    public double[] activate(double[] values, double[] labels, boolean takeLog) {
-        return activate(values);
+    public double[] activate(double[] values, double[] labels, boolean takeLog, boolean test) {
+        return activate(values, test);
     }
 
-    public abstract double gradient(double value, double gradient);
+    public abstract double gradient(double value, double gradient, double activation, boolean test);
 
-    public double[] gradient(double[] values, double[] gradients) {
+    public double[] gradient(double[] values, double[] gradients, double[] activations, boolean test) {
         double[] g = new double[values.length];
-        for (int i = 0; i < g.length; i++) g[i] = gradient(values[i], gradients[i]);
+        for (int i = 0; i < g.length; i++) g[i] = gradient(values[i], gradients[i], activations[i], test);
         return g;
     }
 }

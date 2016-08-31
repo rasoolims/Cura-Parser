@@ -128,6 +128,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{0, 5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 Options options = new Options();
                 options.networkProperties.activationType = type;
@@ -198,6 +200,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{0, 5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();
@@ -255,7 +259,8 @@ public class GradientTest {
                         }
                         diff /= (2 * eps * instances.size());
 
-                        System.out.println(gradForTok + "\t" + diff);
+                        if (Math.abs(gradForTok - diff) > 0.0000001)
+                            System.out.println(type + "\t" + gradForTok + "\t" + diff);
                         assert Math.abs(gradForTok - diff) <= 0.0000001;
                     }
                 }
@@ -378,6 +383,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{0, 5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();
@@ -448,6 +455,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{0, 5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();
@@ -519,6 +528,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{0, 5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();
@@ -588,6 +599,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{0, 5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();
@@ -656,6 +669,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();
@@ -725,6 +740,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();
@@ -793,6 +810,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{0, 5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();
@@ -863,6 +882,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{0, 5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();
@@ -920,7 +941,8 @@ public class GradientTest {
                     }
                     diff /= (2 * eps * instances.size());
 
-                    System.out.println(gradForTok + "\t" + diff);
+                    if (Math.abs(gradForTok - diff) > 0.0000001)
+                        System.out.println(type + "\t" + gradForTok + "\t" + diff);
                     assert Math.abs(gradForTok - diff) <= 0.0000001;
                 }
             }
@@ -932,6 +954,8 @@ public class GradientTest {
         int[] h2Sizes = new int[]{0, 5, 10, 15};
         for (int h2Size : h2Sizes) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();

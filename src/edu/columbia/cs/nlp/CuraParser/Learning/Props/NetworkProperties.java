@@ -26,9 +26,13 @@ public class NetworkProperties implements Serializable {
     public boolean outputBiasTerm;
     public boolean regualarizeAllLayers;
     public double reluLeakAlpha;
+    public double rReluL;
+    public double rReluU;
 
     public NetworkProperties() {
         reluLeakAlpha = 5.5;
+        rReluL = 3;
+        rReluU = 8;
         hiddenLayer1Size = 256;
         hiddenLayer2Size = 256;
         outputBiasTerm = true;
@@ -45,7 +49,7 @@ public class NetworkProperties implements Serializable {
 
     private NetworkProperties(int hiddenLayer1Size, int hiddenLayer2Size, int posDim, int depDim, int wDim, int batchSize, int beamBatchSize, double
             dropoutProbForHiddenLayer, ActivationType activationType, double regularization, boolean outputBiasTerm, boolean regualarizeAllLayers,
-                              double reluLeakAlpha) {
+                              double reluLeakAlpha, double rReluL, double rReluU) {
         this.hiddenLayer1Size = hiddenLayer1Size;
         this.hiddenLayer2Size = hiddenLayer2Size;
         this.posDim = posDim;
@@ -59,6 +63,8 @@ public class NetworkProperties implements Serializable {
         this.outputBiasTerm = outputBiasTerm;
         this.regualarizeAllLayers = regualarizeAllLayers;
         this.reluLeakAlpha = reluLeakAlpha;
+        this.rReluL = rReluL;
+        this.rReluU = rReluU;
     }
 
     @Override
@@ -74,13 +80,14 @@ public class NetworkProperties implements Serializable {
                 "word dim: " + wDim + "\n" +
                 "pos dim: " + posDim + "\n" +
                 "dep dim: " + depDim + "\n" +
-                "relu leak alpha: " + reluLeakAlpha + "\n";
+                "relu leak alpha: " + reluLeakAlpha + "\n" +
+                "r-relu l,u: " + rReluL + " " + rReluU + "\n";
         return builder;
     }
 
     @Override
     public NetworkProperties clone() {
         return new NetworkProperties(hiddenLayer1Size, hiddenLayer2Size, posDim, depDim, wDim, batchSize, beamBatchSize, dropoutProbForHiddenLayer,
-                activationType, regularization, outputBiasTerm, regualarizeAllLayers, reluLeakAlpha);
+                activationType, regularization, outputBiasTerm, regualarizeAllLayers, reluLeakAlpha, rReluL, rReluU);
     }
 }

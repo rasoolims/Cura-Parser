@@ -319,15 +319,15 @@ public class MLPTrainer {
         activations.add(features);
         int lIndex = 0;
         zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), hiddenNodesToUse));
-        activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
+        activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1), false));
         if (g.getLayers().size() >= 3) {
             HashSet<Integer>[] secondHiddenNodesToUse = applyDropout(instances.size(), net.layer(lIndex).nOut());
             zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), secondHiddenNodesToUse, hiddenNodesToUse));
-            activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
+            activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1), false));
             finalHiddenNodesToUse = secondHiddenNodesToUse;
         }
-        zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), labels, false));
-        activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1)));
+        zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), labels, false, false));
+        activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1), false));
         double[][] probs = activations.get(activations.size() - 1);
         for (int i = 0; i < probs.length; i++) {
             int argmax = Utils.argmax(probs[i]);
@@ -360,7 +360,7 @@ public class MLPTrainer {
 
         // backwarding to all other layers.
         for (int i = net.numLayers() - 2; i >= 0; i--) {
-            delta = g.layer(i).backward(delta, i, zs.get(i + 1), activations.get(i), featuresSeen, savedGradients, net);
+            delta = g.layer(i).backward(delta, i, zs.get(i + 1), activations.get(i), activations.get(i + 1), featuresSeen, savedGradients, net);
         }
 
         backPropSavedGradients(g, savedGradients, featuresSeen);
@@ -434,7 +434,7 @@ public class MLPTrainer {
 
                     for (int l = 1; l < net.numLayers() + 1; l++) {
                         inputs[b][a][l] = net.layer(l - 1).forward(activations[b][a][l - 1]);
-                        activations[b][a][l] = net.layer(l - 1).activate(inputs[b][a][l]);
+                        activations[b][a][l] = net.layer(l - 1).activate(inputs[b][a][l], false);
                     }
 
                     beamDenom[b] += activations[b][a][net.numLayers()][action >= 2 ? action - 1 : action];
@@ -481,7 +481,8 @@ public class MLPTrainer {
                         }
 
                         for (int l = net.numLayers() - 2; l >= 0; l--) {
-                            delta = g.layer(l).backward(delta, l, inputs[b][a][l + 1], activations[b][a][l], featuresSeen, savedGradients, net);
+                            delta = g.layer(l).backward(delta, l, inputs[b][a][l + 1], activations[b][a][l], activations[b][a][l + 1], featuresSeen,
+                                    savedGradients, net);
                         }
                     }
                 }

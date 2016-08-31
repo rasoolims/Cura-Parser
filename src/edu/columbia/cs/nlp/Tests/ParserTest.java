@@ -210,6 +210,8 @@ public class ParserTest {
     public void TestPretrainedtWordEmbeddingUpdates() throws Exception {
         for (UpdaterType updaterType : UpdaterType.values()) {
             for (ActivationType type : ActivationType.values()) {
+                if (type == ActivationType.RandomRelu)
+                    continue; // because of randomness we cannot make sure what really had happened.
                 writeText();
                 writeWordEmbedText();
                 Options options = new Options();

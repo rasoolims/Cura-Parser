@@ -10,12 +10,12 @@ package edu.columbia.cs.nlp.CuraParser.Learning.Activation;
 
 public class Cubic extends Activation {
     @Override
-    public double activate(double value) {
+    public double activate(double value, boolean test) {
         return Math.pow(value, 3);
     }
 
     @Override
-    public double gradient(double value, double gradient) {
+    public double gradient(double value, double gradient, double activation, boolean test) {
         return 3 * gradient * Math.pow(value, 2);
     }
 }

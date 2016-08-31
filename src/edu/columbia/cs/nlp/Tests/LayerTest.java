@@ -42,7 +42,7 @@ public class LayerTest {
                     output[i] = Math.max(0, output[i] + layer.getB()[i]);
                 }
 
-                double[] o = layer.activate(layer.forward(input));
+                double[] o = layer.activate(layer.forward(input), false);
                 for (int i = 0; i < output.length; i++) {
                     System.out.println(output[i] + "\t" + o[i]);
                     assert output[i] - o[i] <= 1e-16;
@@ -74,7 +74,7 @@ public class LayerTest {
 
         double[] input = new double[]{2, 4};
 
-        double[] o = layer.activate(layer.forward(input));
+        double[] o = layer.activate(layer.forward(input), false);
         double[] expectedOutput = new double[]{0, 16.2, 0};
         for (int i = 0; i < expectedOutput.length; i++) {
             System.out.println(expectedOutput[i] + "\t" + o[i]);

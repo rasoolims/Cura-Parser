@@ -68,7 +68,7 @@ public class MLPNetwork implements Serializable {
 
         WeightInit hiddenInit = isRelu(options) ? WeightInit.RELU : WeightInit.UNIFORM;
         WeightInit hiddenBiasInit = isRelu(options) ? WeightInit.FIX : WeightInit.UNIFORM;
-        Activation activation = getActivation(options);
+        Activation activation = getActivation(options, random);
         Initializer hiddenInitializer = WeightInit.initializer(hiddenInit, random, nIn, options.networkProperties.hiddenLayer1Size, 0);
         Initializer hiddenBiasInitializer = WeightInit.initializer(hiddenBiasInit, random, nIn, options.networkProperties.hiddenLayer1Size, 0.2);
 
@@ -93,9 +93,11 @@ public class MLPNetwork implements Serializable {
         this.options = options;
     }
 
-    private Activation getActivation(Options options) {
+    private Activation getActivation(Options options, Random random) {
         if (options.networkProperties.activationType == ActivationType.RELU) return new Relu();
         if (options.networkProperties.activationType == ActivationType.LeakyRELU) return new LeakyRelu(options.networkProperties.reluLeakAlpha);
+        if (options.networkProperties.activationType == ActivationType.RandomRelu)
+            return new RandomizedRelu(options.networkProperties.rReluL, options.networkProperties.rReluU, random);
         if (options.networkProperties.activationType == ActivationType.CUBIC) return new Cubic();
         if (options.networkProperties.activationType == ActivationType.LogisticSoftMax) return new LogisticSoftMax();
         return new Identity();
@@ -105,7 +107,6 @@ public class MLPNetwork implements Serializable {
         return options.networkProperties.activationType == ActivationType.RELU || options.networkProperties.activationType == ActivationType
                 .LeakyRELU;
     }
-
 
     public MLPNetwork(Options options, ArrayList<Layer> layers, int numWordLayers, int numPosLayers, int numDepLayers, int numOutputs,
                       ArrayList<Integer> depLabels) {
@@ -145,7 +146,7 @@ public class MLPNetwork implements Serializable {
     public double[] output(final double[] feats, final double[] labels) {
         double[] o = feats;
         for (int l = 0; l < layers.size() - 1; l++) {
-            o = layers.get(l).activate(layers.get(l).forward(o));
+            o = layers.get(l).activate(layers.get(l).forward(o), true);
         }
         o = layers.get(layers.size() - 1).forward(o, labels);
         return o;
@@ -154,9 +155,9 @@ public class MLPNetwork implements Serializable {
     public double[] output(final double[] feats, final double[] labels, boolean logOut) {
         double[] o = feats;
         for (int l = 0; l < layers.size() - 1; l++) {
-            o = layers.get(l).activate(layers.get(l).forward(o));
+            o = layers.get(l).activate(layers.get(l).forward(o), true);
         }
-        o = layers.get(layers.size() - 1).forward(o, labels, logOut);
+        o = layers.get(layers.size() - 1).forward(o, labels, logOut, true);
         return o;
     }
 
