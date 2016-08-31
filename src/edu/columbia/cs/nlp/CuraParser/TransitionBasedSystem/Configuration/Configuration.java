@@ -13,11 +13,8 @@ import java.util.ArrayList;
 
 public class Configuration implements Comparable, Cloneable, Serializable {
     public Sentence sentence;
-
     public State state;
-
     public ArrayList<Integer> actionHistory;
-
     public double score;
 
     public Configuration(Sentence sentence, boolean rootFirst) {
@@ -41,8 +38,8 @@ public class Configuration implements Comparable, Cloneable, Serializable {
      * @return
      */
     public double getScore(boolean normalized) {
-        // if (normalized && actionHistory.size() > 0)
-        //     return score / actionHistory.size();
+         if (normalized && actionHistory.size() > 0)
+             return score / actionHistory.size();
         return score;
     }
 
@@ -92,16 +89,12 @@ public class Configuration implements Comparable, Cloneable, Serializable {
     @Override
     public Configuration clone() {
         Configuration configuration = new Configuration(sentence);
-
         ArrayList<Integer> history = new ArrayList<>(actionHistory.size());
         for (int i = 0; i < actionHistory.size(); i++)
             history.add(actionHistory.get(i));
-
         configuration.actionHistory = history;
-
         configuration.score = score;
         configuration.state = state.clone();
-
         return configuration;
     }
 

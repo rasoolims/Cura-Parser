@@ -238,7 +238,7 @@ public class GreedyTrainer {
         Configuration oracle = firstOracle;
 
         while (!parser.isTerminal(beam) && beam.size() > 0) {
-            double[] baseFeatures = FeatureExtractor.extractBaseFeatures(oracle, labelNullIndex, parser);
+            double[] baseFeatures = FeatureExtractor.extractFeatures(oracle, labelNullIndex, parser);
             double[] label = new double[2 * (dependencyRelations.size() + 1)];
             if (!options.trainingOptions.considerAllActions && !parser.canDo(Actions.LeftArc, oracle.state)) {
                 for (int i = 2; i < 2 + dependencyRelations.size(); i++)

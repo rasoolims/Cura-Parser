@@ -109,7 +109,7 @@ public class ArcStandardFeatureExtractorTest {
         parser.rightArc(configuration.state, maps.dep2Int("adpobj"));   // 15->16
         parser.rightArc(configuration.state, maps.dep2Int("adpmod"));   // 11->15
 
-        double[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+        double[] baseFeatures = FeatureExtractor.extractFeatures(configuration, maps.labelNullIndex, parser);
         assert configuration.state.stackSize() == 3;
         int fIndex = 0;
         assert baseFeatures[fIndex++] == maps.word2Int("raising");
@@ -170,7 +170,7 @@ public class ArcStandardFeatureExtractorTest {
         parser.rightArc(configuration.state, maps.dep2Int("xcomp"));   // 10->11
 
         fIndex = 0;
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+        baseFeatures = FeatureExtractor.extractFeatures(configuration, maps.labelNullIndex, parser);
         assert configuration.state.stackSize() == 2;
         assert baseFeatures[fIndex++] == maps.word2Int("includes");
         assert baseFeatures[fIndex++] == maps.word2Int("plan");
@@ -295,7 +295,7 @@ public class ArcStandardFeatureExtractorTest {
         parser.rightArc(configuration.state, maps.dep2Int("adpobj"));   // 15->16
         parser.rightArc(configuration.state, maps.dep2Int("adpmod"));   // 11->15
 
-        double[] baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+        double[] baseFeatures = FeatureExtractor.extractFeatures(configuration, maps.labelNullIndex, parser);
         assert configuration.state.stackSize() == 4;
         int fIndex = 0;
         assert baseFeatures[fIndex++] == maps.word2Int("raising");
@@ -356,7 +356,7 @@ public class ArcStandardFeatureExtractorTest {
         parser.rightArc(configuration.state, maps.dep2Int("xcomp"));   // 10->11
 
         fIndex = 0;
-        baseFeatures = FeatureExtractor.extractBaseFeatures(configuration, maps.labelNullIndex, parser);
+        baseFeatures = FeatureExtractor.extractFeatures(configuration, maps.labelNullIndex, parser);
         assert configuration.state.stackSize() == 3;
         assert baseFeatures[fIndex++] == maps.word2Int("includes");
         assert baseFeatures[fIndex++] == maps.word2Int("plan");

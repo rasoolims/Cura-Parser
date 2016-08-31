@@ -423,7 +423,7 @@ public class MLPTrainer {
 
                 for (int a = 0; a < actions.size(); a++) {
                     int action = actions.get(a);
-                    double[] feats = FeatureExtractor.extractBaseFeatures(curConfig, net.maps.labelNullIndex, parser);
+                    double[] feats = FeatureExtractor.extractFeatures(curConfig, net.maps.labelNullIndex, parser);
                     inputs[b][a][0] = feats;
                     activations[b][a][0] = feats;
 

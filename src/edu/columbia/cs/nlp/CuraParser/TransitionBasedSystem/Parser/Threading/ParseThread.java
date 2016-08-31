@@ -83,7 +83,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     if (!canLeftArc)
                         for (int i = 0; i < dependencyRelations.size(); i++)
                             labels[dependencyRelations.size() + 2 + i] = -1;
-                    double[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
+                    double[] features = FeatureExtractor.extractFeatures(configuration, labelNullIndex, parser);
                     double[] scores = network.output(features, labels);
                     if (!canShift
                             && !canReduce
@@ -183,7 +183,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 if (!canLeftArc)
                     for (int i = 0; i < dependencyRelations.size(); i++)
                         labels[dependencyRelations.size() + 2 + i] = -1;
-                double[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
+                double[] features = FeatureExtractor.extractFeatures(configuration, labelNullIndex, parser);
                 double[] scores = network.output(features, labels);
                 double bestScore = Double.NEGATIVE_INFINITY;
                 int bestAction = -1;
@@ -349,7 +349,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             if (!canLeftArc)
                 for (int i = 0; i < dependencyRelations.size(); i++)
                     labels[dependencyRelations.size() + 2 + i] = -1;
-            double[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
+            double[] features = FeatureExtractor.extractFeatures(configuration, labelNullIndex, parser);
             double[] scores = network.output(features, labels);
             if (!canShift
                     && !canReduce
@@ -428,7 +428,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 if (!canLeftArc)
                     for (int i = 0; i < dependencyRelations.size(); i++)
                         labels[dependencyRelations.size() + 2 + i] = -1;
-                double[] features = FeatureExtractor.extractBaseFeatures(configuration, labelNullIndex, parser);
+                double[] features = FeatureExtractor.extractFeatures(configuration, labelNullIndex, parser);
                 double[] scores = network.output(features, labels);
                 if (!canShift
                         && !canReduce
