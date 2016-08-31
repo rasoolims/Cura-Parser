@@ -32,7 +32,7 @@ public class FirstHiddenLayer extends Layer {
     int numDepLayers;
 
     // pre-computed items.
-    protected double[][][] saved;
+    private double[][][] saved;
 
     public FirstHiddenLayer(Activation activation, int nIn, int nOut, Initializer initializer, Initializer biasInit,
                             int numWordLayers, int numPosLayers, int numDepLayers,
@@ -125,7 +125,10 @@ public class FirstHiddenLayer extends Layer {
                 int id = tok;
                 if (j < numWordLayers)
                     id = wordEmbeddings.preComputeId(j, tok);
-                Utils.sumi(hidden, saved[j][id]);
+                double[] s = saved[j][id];
+                for (int i = 0; i < hidden.length; i++) {
+                    hidden[i] += s[i];
+                }
             } else {
                 for (int i = 0; i < hidden.length; i++) {
                     for (int k = 0; k < embedding.dim(); k++) {
@@ -139,21 +142,6 @@ public class FirstHiddenLayer extends Layer {
         Utils.sumi(hidden, b);
 
         return hidden;
-    }
-
-    @Override
-    public double[] forward(double[] i, double[] labels, boolean takeLog) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public double[] forward(double[] i, double[] labels) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public double[][] forward(double[][] i, double[][] labels, boolean takeLog) {
-        throw  new NotImplementedException();
     }
 
     @Override
