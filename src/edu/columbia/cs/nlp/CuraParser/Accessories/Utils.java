@@ -1,9 +1,7 @@
 package edu.columbia.cs.nlp.CuraParser.Accessories;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -267,5 +265,9 @@ public class Utils {
             }
         }
         return o;
+    }
+
+    public static String getCurrentTimeStamp() {
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
     }
 }

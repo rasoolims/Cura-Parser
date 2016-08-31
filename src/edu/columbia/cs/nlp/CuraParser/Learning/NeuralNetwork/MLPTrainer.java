@@ -169,7 +169,7 @@ public class MLPTrainer {
 
         double acc = correct / samples;
         if (print) {
-            System.out.println(getCurrentTimeStamp() + " ---  iteration " + iteration + " --- size " +
+            System.out.println(Utils.getCurrentTimeStamp() + " ---  iteration " + iteration + " --- size " +
                     samples + " --- Correct " + format.format(100. * acc) + " --- cost: " + format4.format(cost / samples));
             cost = 0;
             samples = 0;
@@ -220,10 +220,6 @@ public class MLPTrainer {
 
     public void setLearningRate(double learningRate) {
         updater.setLearningRate(learningRate);
-    }
-
-    private String getCurrentTimeStamp() {
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
     }
 
     public void shutDownLiveThreads() {
@@ -344,7 +340,7 @@ public class MLPTrainer {
             }
         }
 
-        // Backproping for the last layer.
+        // Back-propagating for the last layer.
         double[][] lastHiddenActivation = activations.get(activations.size() - 2);
         for (int i = 0; i < delta.length; i++) {
             for (int j = 0; j < delta[i].length; j++) {
@@ -389,14 +385,12 @@ public class MLPTrainer {
     /**
      * @param instances      It is actually a list of Pair<Configuration, ArrayList<Configuration>>.
      * @param batchSize
-     * @param g
-     * @param savedGradients
+     * @param g    Gradients that are calculated.
+     * @param savedGradients   For pre-computation.
      * @return
      * @throws Exception
      */
-    public Pair<Double, Double> calculateBeamCost(List instances, int batchSize, MLPNetwork g,
-                                                  double[][][] savedGradients)
-            throws Exception {
+    public Pair<Double, Double> calculateBeamCost(List instances, int batchSize, MLPNetwork g, double[][][] savedGradients) throws Exception {
         double cost = 0;
         double correct = 0;
         HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(g.getNumWordLayers());
