@@ -162,7 +162,7 @@ public class GradientTest {
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
 
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double eps = 0.000001;
                 for (int i = 0; i < network.getNumWordLayers(); i++) {
@@ -234,7 +234,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double eps = 0.000001;
                 for (int i = 0; i < network.getNumWordLayers(); i++) {
@@ -305,7 +305,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double[] oovEmbedding = Utils.clone(network.getWordEmbedding()[0]);
                 double[] nullEmbedding = Utils.clone(network.getWordEmbedding()[1]);
@@ -360,7 +360,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double[] oovEmbedding = Utils.clone(network.getWordEmbedding()[0]);
                 double[] nullEmbedding = Utils.clone(network.getWordEmbedding()[1]);
@@ -417,7 +417,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double eps = 0.000001;
                 for (int i = network.getNumWordLayers(); i < network.getNumWordLayers() + network.getNumPosLayers(); i++) {
@@ -489,7 +489,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double eps = 0.000001;
                 for (int i = network.getNumWordLayers() + network.getNumPosLayers();
@@ -562,7 +562,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double eps = 0.000001;
                 for (int i = 0; i < network.layer(0).nOut(); i++) {
@@ -633,7 +633,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double eps = 0.000001;
                 for (int i = 0; i < network.layer(0).nOut(); i++) {
@@ -703,7 +703,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double eps = 0.000001;
                 for (int i = 0; i < network.layer(1).nOut(); i++) {
@@ -774,7 +774,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double eps = 0.000001;
                 for (int i = 0; i < network.layer(1).nOut(); i++) {
@@ -844,7 +844,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double eps = 0.000001;
                 for (int i = 0; i < network.getNumOutputs(); i++) {
@@ -918,7 +918,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, 1, gradients, savedGradients);
+                classifier.cost(instances, 1, gradients, savedGradients);
 
                 double eps = 0.000001;
                 for (int i = 0; i < network.getNumOutputs(); i++) {
@@ -988,7 +988,7 @@ public class GradientTest {
                 MLPTrainer classifier = new MLPTrainer(network, options);
                 network.preCompute();
                 MLPNetwork gradients = network.clone(true, false);
-                classifier.calculateCost(instances, instances.size(), gradients, savedGradients);
+                classifier.cost(instances, instances.size(), gradients, savedGradients);
                 MLPTrainer classifierMultiThread = new MLPTrainer(network, options);
                 classifierMultiThread.cost(instances);
 

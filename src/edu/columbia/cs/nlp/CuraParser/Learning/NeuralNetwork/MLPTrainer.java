@@ -20,8 +20,10 @@ import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.Shift
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.*;
 
 /**
@@ -169,7 +171,7 @@ public class MLPTrainer {
 
         double acc = correct / samples;
         if (print) {
-            System.out.println(Utils.getCurrentTimeStamp() + " ---  iteration " + iteration + " --- size " +
+            System.out.println(Utils.timeStamp() + " ---  iteration " + iteration + " --- size " +
                     samples + " --- Correct " + format.format(100. * acc) + " --- cost: " + format4.format(cost / samples));
             cost = 0;
             samples = 0;
@@ -292,7 +294,7 @@ public class MLPTrainer {
      * @return
      * @throws Exception
      */
-    public Pair<Double, Double> calculateCost(List instances, int batchSize, MLPNetwork g, double[][][] savedGradients)
+    public Pair<Double, Double> cost(List instances, int batchSize, MLPNetwork g, double[][][] savedGradients)
             throws Exception {
         double cost = 0;
         double correct = 0;
@@ -302,7 +304,7 @@ public class MLPTrainer {
         double[][] labels = new double[instances.size()][];
         ArrayList<double[][]> activations = new ArrayList<>();
         ArrayList<double[][]> zs = new ArrayList<>();
-        HashSet<Integer>[] hiddenNodesToUse = applyDropout(instances.size(), net.layer(0).nOut());
+        HashSet<Integer>[] hiddenNodesToUse = dropout(instances.size(), net.layer(0).nOut());
         HashSet<Integer>[] finalHiddenNodesToUse = hiddenNodesToUse;
 
         for (int i = 0; i < instances.size(); i++) {
@@ -316,7 +318,7 @@ public class MLPTrainer {
         zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), hiddenNodesToUse));
         activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1), false));
         if (g.getLayers().size() >= 3) {
-            HashSet<Integer>[] secondHiddenNodesToUse = applyDropout(instances.size(), net.layer(lIndex).nOut());
+            HashSet<Integer>[] secondHiddenNodesToUse = dropout(instances.size(), net.layer(lIndex).nOut());
             zs.add(net.layer(lIndex).forward(activations.get(activations.size() - 1), secondHiddenNodesToUse, hiddenNodesToUse));
             activations.add(net.layer(lIndex++).activate(zs.get(zs.size() - 1), false));
             finalHiddenNodesToUse = secondHiddenNodesToUse;
@@ -362,14 +364,14 @@ public class MLPTrainer {
         return new Pair<>(cost, correct);
     }
 
-    private HashSet<Integer>[] applyDropout(int numOfInstances, int size) {
+    private HashSet<Integer>[] dropout(int numOfInstances, int size) {
         HashSet<Integer>[] hiddenNodesToUse = new HashSet[numOfInstances];
         for (int i = 0; i < hiddenNodesToUse.length; i++)
-            hiddenNodesToUse[i] = applyDropout(size);
+            hiddenNodesToUse[i] = dropout(size);
         return hiddenNodesToUse;
     }
 
-    private HashSet<Integer> applyDropout(int size) {
+    private HashSet<Integer> dropout(int size) {
         HashSet<Integer> hiddenNodesToUse = new HashSet<>();
         for (int h = 0; h < size; h++) {
             if (dropoutProb <= 0 || random.nextDouble() >= dropoutProb)
@@ -390,7 +392,7 @@ public class MLPTrainer {
      * @return
      * @throws Exception
      */
-    public Pair<Double, Double> calculateBeamCost(List instances, int batchSize, MLPNetwork g, double[][][] savedGradients) throws Exception {
+    public Pair<Double, Double> beamCost(List instances, int batchSize, MLPNetwork g, double[][][] savedGradients) throws Exception {
         double cost = 0;
         double correct = 0;
         HashSet<Integer>[] featuresSeen = Utils.createHashSetArray(g.getNumWordLayers());
@@ -503,9 +505,9 @@ public class MLPTrainer {
         public Pair<Pair<Double, Double>, MLPNetwork> call() throws Exception {
             Pair<Double, Double> costValue = null;
             if (instances.get(0) instanceof NeuralTrainingInstance)
-                costValue = calculateCost(instances, batchSize, g, savedGradients);
+                costValue = cost(instances, batchSize, g, savedGradients);
             else
-                costValue = calculateBeamCost(instances, batchSize, g, savedGradients);
+                costValue = beamCost(instances, batchSize, g, savedGradients);
 
             return new Pair<>(costValue, g);
         }
