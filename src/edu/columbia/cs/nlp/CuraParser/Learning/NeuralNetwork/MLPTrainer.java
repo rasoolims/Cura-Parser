@@ -111,7 +111,7 @@ public class MLPTrainer {
         if (regularizeAllLayers) {
             // regularizing wrt embedding layers.
             FirstHiddenLayer fLayer = (FirstHiddenLayer) layers.get(0);
-            FirstHiddenLayer fGradient = (FirstHiddenLayer) layers.get(0);
+            FirstHiddenLayer fGradient = (FirstHiddenLayer) gradients.get(0);
 
             Layer wLayer = fLayer.getWordEmbeddings();
             Layer pLayer = fLayer.getPosEmbeddings();
@@ -223,7 +223,7 @@ public class MLPTrainer {
         updater.setLearningRate(learningRate);
     }
 
-    public String getCurrentTimeStamp() {
+    private String getCurrentTimeStamp() {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
     }
 
