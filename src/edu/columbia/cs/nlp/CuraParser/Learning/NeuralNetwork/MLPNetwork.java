@@ -67,7 +67,7 @@ public class MLPNetwork implements Serializable {
         int nIn = numWordLayers * wDim + numPosLayers * pDim + numDepLayers * lDim;
 
         WeightInit hiddenInit = isRelu(options) ? WeightInit.RELU : WeightInit.UNIFORM;
-        WeightInit hiddenBiasInit = isRelu(options) ? WeightInit.FIX : WeightInit.UNIFORM;
+        WeightInit hiddenBiasInit = isSimpleRelu(options) ? WeightInit.FIX : WeightInit.UNIFORM;
         Activation activation = getActivation(options, random);
         Initializer hiddenInitializer = WeightInit.initializer(hiddenInit, random, nIn, options.networkProperties.hiddenLayer1Size, 0);
         Initializer hiddenBiasInitializer = WeightInit.initializer(hiddenBiasInit, random, nIn, options.networkProperties.hiddenLayer1Size, 0.2);
@@ -105,7 +105,11 @@ public class MLPNetwork implements Serializable {
 
     private boolean isRelu(Options options) {
         return options.networkProperties.activationType == ActivationType.RELU || options.networkProperties.activationType == ActivationType
-                .LeakyRELU;
+                .LeakyRELU || options.networkProperties.activationType == ActivationType.RandomRelu;
+    }
+
+    private boolean isSimpleRelu(Options options) {
+        return options.networkProperties.activationType == ActivationType.RELU;
     }
 
     public MLPNetwork(Options options, ArrayList<Layer> layers, int numWordLayers, int numPosLayers, int numDepLayers, int numOutputs,
