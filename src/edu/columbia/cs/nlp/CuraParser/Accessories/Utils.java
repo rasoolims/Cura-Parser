@@ -267,7 +267,7 @@ public class Utils {
         return o;
     }
 
-    public static String getCurrentTimeStamp() {
+    public static String timeStamp() {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
     }
 }
