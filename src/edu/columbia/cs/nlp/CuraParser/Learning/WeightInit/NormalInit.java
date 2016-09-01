@@ -16,6 +16,10 @@ public class NormalInit extends Initializer {
         this.stdDev = Math.sqrt(1.0 / nIn);
     }
 
+    public NormalInit(Random random, double stdDev) {
+        super(random, stdDev);
+    }
+
     @Override
     public double next() {
         return random.nextGaussian() * stdDev;

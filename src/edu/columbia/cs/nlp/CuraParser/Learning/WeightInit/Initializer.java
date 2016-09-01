@@ -22,6 +22,11 @@ public abstract class Initializer {
         this.nOut = nOut;
     }
 
+    public Initializer(Random random, double stdDev) {
+        this.random = random;
+        this.stdDev = stdDev;
+    }
+
     public abstract double next();
 
     public void init(double[][] m) {

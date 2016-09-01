@@ -16,6 +16,10 @@ public class UniformInit extends Initializer {
         this.stdDev = Math.sqrt(1.0 / nIn);
     }
 
+    public UniformInit(Random random, double stdDev) {
+        super(random, stdDev);
+    }
+
     @Override
     public double next() {
         return random.nextDouble() * 2 * stdDev - stdDev;
