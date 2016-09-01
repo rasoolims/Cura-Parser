@@ -110,7 +110,14 @@ public class IndexMaps implements Serializable {
         embeddingsDictionary = null;
     }
 
-    public int word2Int(String word) {
+    /**
+     * This function assumes that if the word is unknown, replace it with its pos
+     * This will learn word embeddings for the pos as well.
+     * @param word
+     * @param pos
+     * @return
+     */
+    public int word2Int(String word, String... pos) {
         if (wordMap.containsKey(word))
             return wordMap.get(word);
         if (wordMap.containsKey(word.toLowerCase()))
@@ -119,6 +126,10 @@ public class IndexMaps implements Serializable {
             return wordMap.get(str2clusterMap.get(word));
         if (str2clusterMap.containsKey(word.toLowerCase()))
             return wordMap.get(str2clusterMap.get(word.toLowerCase()));
+        if(pos.length>0) {
+            if (wordMap.containsKey("pos:" + pos[0]))
+                return wordMap.get("pos:" + pos[0]);
+        }
         return UnknownIndex;
     }
 

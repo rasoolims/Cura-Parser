@@ -82,6 +82,7 @@ public class Options implements Serializable {
         output.append("\t \t -ds [decay-step (default 4400)] \n");
         output.append("\t \t -parser [ae(arc-eager), as(arc-standard:default)] \n");
         output.append("\t \t -pretrained [pre-trained greedy model path (for beam learning)] \n");
+        output.append("\t \t -pos_c [true, false] (default: true; replacing pos for unknown words)\n");
         output.append("\t \t -a [activation (relu,cubic,lrelu,rrelu) -- default:relu] \n");
         output.append("\t \t -u [updater-type: sgd,adam(default),adamax,adagrad] \n");
         output.append("\t \t -sgd [sgd-type (if using sgd): nesterov(default),momentum, vanilla] \n");
@@ -181,6 +182,8 @@ public class Options implements Serializable {
                 options.trainingOptions.pretrainLayers = false;
             else if (args[i].equals("-reg_all") && args[i + 1].equals("true"))
                 options.networkProperties.regualarizeAllLayers = true;
+            else if (args[i].equals("-pos_c") && args[i + 1].equals("false"))
+                options.generalProperties.includePosAsUnknown = false;
             else if (args[i].equals("-a")) {
                 if (args[i + 1].equals("relu"))
                     options.networkProperties.activationType = ActivationType.RELU;

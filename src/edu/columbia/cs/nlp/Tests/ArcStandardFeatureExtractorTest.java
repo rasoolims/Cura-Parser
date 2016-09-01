@@ -55,7 +55,7 @@ public class ArcStandardFeatureExtractorTest {
         ShiftReduceParser parser = new ArcStandard();
         writeConllFile(conllText);
 
-        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
+        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1, false);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         options.generalProperties.rootFirst = false;
@@ -241,7 +241,7 @@ public class ArcStandardFeatureExtractorTest {
         ShiftReduceParser parser = new ArcStandard();
         writeConllFile(conllText);
 
-        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
+        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1, false);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         options.generalProperties.rootFirst = true;

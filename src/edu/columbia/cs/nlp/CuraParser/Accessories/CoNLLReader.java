@@ -35,7 +35,7 @@ public class CoNLLReader {
     }
 
     public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased, String clusterFile,
-                                          int rareMaxWordCount) throws Exception {
+                                          int rareMaxWordCount, boolean includePOSAsWordForUnknown) throws Exception {
         HashMap<String, String> str2clusterMap = new HashMap<>();
         String line;
         if (clusterFile.length() > 0) {
@@ -73,6 +73,13 @@ public class CoNLLReader {
                         word = "_unk_";
                 }
 
+                if(includePOSAsWordForUnknown) {
+                    if (!wordCount.containsKey("pos:" + pos))
+                        wordCount.put("pos:" + pos, 1);
+                    else
+                        wordCount.put("pos:" + pos, wordCount.get("pos:" + pos) + 1);
+
+                }
                 if (!word.equals("_unk_")) {
                     if (wordCount.containsKey(word))
                         wordCount.put(word, wordCount.get(word) + 1);
@@ -117,17 +124,31 @@ public class CoNLLReader {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
                 String word = spl[1];
+                String pos = spl[3];
                 if (lowercased)
                     word = word.toLowerCase();
+                if (Utils.isNumeric(word))
+                    word = "_NUM_";
                 if (str2clusterMap.size() > 0) {
                     if (str2clusterMap.containsKey(word))
                         word = str2clusterMap.get(word);
-                    else
+                    else if (includePOSAsWordForUnknown) {
+                        word = "pos:" + pos;
+                    } else
                         word = "_unk_";
                 }
+
                 if (wordCount.containsKey(word) && wordCount.get(word) > rareMaxWordCount && !wordMap.containsKey(word))
                     wordMap.put(word, wi++);
             }
+        }
+
+        if(includePOSAsWordForUnknown) {
+            // Making sure that all tags are included in the word map.
+            for (String pos : tags)
+                if (!wordMap.containsKey("pos:" + pos))
+                    wordMap.put("pos:" + pos, wi++);
+
         }
 
         Object[] wordsSet = str2clusterMap.keySet().toArray().clone();
@@ -202,13 +223,11 @@ public class CoNLLReader {
                     word = word.toLowerCase();
                 if (Utils.isNumeric(word))
                     word = "_NUM_";
-                int wi = maps.word2Int(word);
+                String pos = splitLine[3].trim();
+                int wi = maps.word2Int(word, pos);
                 if (wi == IndexMaps.UnknownIndex)
                     oovTypes.add(word);
-
-                String pos = splitLine[3].trim();
                 int pi = maps.pos2Int(pos);
-
                 tags.add(pi);
                 tokens.add(wi);
 

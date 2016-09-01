@@ -66,7 +66,7 @@ public class ArcEagerFeatureExtractorTest {
         ShiftReduceParser parser = new ArcEager();
         writeConllFile(conllText);
 
-        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
+        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1, false);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
@@ -111,7 +111,7 @@ public class ArcEagerFeatureExtractorTest {
         ShiftReduceParser parser = new ArcEager();
         writeConllFile(shortConllText);
 
-        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
+        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1, false);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
@@ -260,7 +260,7 @@ public class ArcEagerFeatureExtractorTest {
         ShiftReduceParser parser = new ArcEager();
         writeConllFile(shortConllOOVText);
 
-        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", 1);
+        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", 1, false);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);

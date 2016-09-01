@@ -122,7 +122,7 @@ public class MLPNetworkTest {
         options.networkProperties.hiddenLayer1Size = 10;
         options.generalProperties.inputFile = txtFilePath;
         IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
-                options.generalProperties.lowercase, "", 0);
+                options.generalProperties.lowercase, "", 0, false);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
@@ -174,7 +174,7 @@ public class MLPNetworkTest {
         options.networkProperties.hiddenLayer1Size = 10;
         options.generalProperties.inputFile = txtFilePath;
         IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
-                options.generalProperties.lowercase, "", 0);
+                options.generalProperties.lowercase, "", 0, false);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
@@ -219,7 +219,7 @@ public class MLPNetworkTest {
         options.generalProperties.inputFile = txtFilePath;
         options.generalProperties.parserType = ParserType.ArcEager;
         IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
-                options.generalProperties.lowercase, "", 0);
+                options.generalProperties.lowercase, "", 0, false);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
@@ -265,7 +265,7 @@ public class MLPNetworkTest {
             options.generalProperties.inputFile = txtFilePath;
             options.generalProperties.parserType = ParserType.ArcEager;
             IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
-                    options.generalProperties.lowercase, "", 0);
+                    options.generalProperties.lowercase, "", 0, false);
             ArrayList<Integer> dependencyLabels = new ArrayList<>();
             for (int lab = 0; lab < maps.relSize(); lab++)
                 dependencyLabels.add(lab);
@@ -310,7 +310,7 @@ public class MLPNetworkTest {
         options.networkProperties.outputBiasTerm = true;
         options.generalProperties.parserType = ParserType.ArcEager;
         IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
-                options.generalProperties.lowercase, "", 0);
+                options.generalProperties.lowercase, "", 0, false);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);
@@ -385,7 +385,7 @@ public class MLPNetworkTest {
         options.networkProperties.outputBiasTerm = true;
         options.generalProperties.parserType = ParserType.ArcEager;
         IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
-                options.generalProperties.lowercase, "", 0);
+                options.generalProperties.lowercase, "", 0, false);
         ArrayList<Integer> dependencyLabels = new ArrayList<>();
         for (int lab = 0; lab < maps.relSize(); lab++)
             dependencyLabels.add(lab);

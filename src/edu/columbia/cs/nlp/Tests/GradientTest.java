@@ -138,7 +138,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
+                        .generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -212,7 +212,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
+                        .generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -283,7 +283,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 1);
+                        .generalProperties.lowercase, "", 1, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -338,7 +338,7 @@ public class GradientTest {
                 options.networkProperties.hiddenLayer2Size = h2Size;
                 options.trainingOptions.trainFile = txtFilePath;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 1);
+                        .generalProperties.lowercase, "", 1, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -395,7 +395,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
+                        .generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -467,7 +467,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
+                        .generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -540,7 +540,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
+                        .generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -611,7 +611,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
+                        .generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -681,7 +681,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
+                        .generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -752,7 +752,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
+                        .generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -822,7 +822,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
+                        .generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -896,7 +896,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled, options
-                        .generalProperties.lowercase, "", 0);
+                        .generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);
@@ -966,7 +966,7 @@ public class GradientTest {
                 options.trainingOptions.trainFile = txtFilePath;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled,
-                        options.generalProperties.lowercase, "", 0);
+                        options.generalProperties.lowercase, "", 0, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);

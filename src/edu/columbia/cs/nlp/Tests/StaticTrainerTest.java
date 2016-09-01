@@ -70,7 +70,7 @@ public class StaticTrainerTest {
         ShiftReduceParser parser = new ArcEager();
         writeConllFile(shortConllText);
 
-        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
+        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1, false);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         options.generalProperties.parserType = ParserType.ArcEager;
@@ -174,7 +174,7 @@ public class StaticTrainerTest {
     public void testOracleForArcStandard() throws Exception {
         writeConllFile(conllText);
 
-        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
+        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1, false);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         options.generalProperties.parserType = ParserType.ArcStandard;

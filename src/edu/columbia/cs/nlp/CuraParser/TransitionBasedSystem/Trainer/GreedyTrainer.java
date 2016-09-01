@@ -183,7 +183,8 @@ public class GreedyTrainer {
 
     private static MLPNetwork constructMlpNetwork(Options options) throws Exception {
         IndexMaps maps = CoNLLReader.createIndices(options.trainingOptions.trainFile, options.generalProperties.labeled,
-                options.generalProperties.lowercase, options.trainingOptions.clusterFile, options.trainingOptions.minFreq);
+                options.generalProperties.lowercase, options.trainingOptions.clusterFile, options.trainingOptions.minFreq,
+                options.generalProperties.includePosAsUnknown);
         int wDim = options.networkProperties.wDim;
         if (options.trainingOptions.wordEmbeddingFile.length() > 0)
             wDim = maps.readEmbeddings(options.trainingOptions.wordEmbeddingFile);

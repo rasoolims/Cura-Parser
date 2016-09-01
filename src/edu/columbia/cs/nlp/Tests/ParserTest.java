@@ -140,7 +140,7 @@ public class ParserTest {
     public void testArcEagerActions() throws Exception {
         writeConllFile(shortConllText);
 
-        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
+        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1, false);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, true, false, false, maps);
@@ -165,7 +165,7 @@ public class ParserTest {
     public void testArcStandardActions() throws Exception {
         writeConllFile(shortConllText);
 
-        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1);
+        IndexMaps maps = CoNLLReader.createIndices(tmpPath, true, false, "", -1, false);
         CoNLLReader reader = new CoNLLReader(tmpPath);
         Options options = new Options();
         options.generalProperties.rootFirst = false;
@@ -225,7 +225,7 @@ public class ParserTest {
                 options.generalProperties.parserType = ParserType.ArcEager;
                 options.generalProperties.parserType = ParserType.ArcEager;
                 IndexMaps maps = CoNLLReader.createIndices(options.generalProperties.inputFile, options.generalProperties.labeled,
-                        options.generalProperties.lowercase, "", 1);
+                        options.generalProperties.lowercase, "", 1, false);
                 ArrayList<Integer> dependencyLabels = new ArrayList<>();
                 for (int lab = 0; lab < maps.relSize(); lab++)
                     dependencyLabels.add(lab);

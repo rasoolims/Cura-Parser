@@ -32,6 +32,7 @@ public class GeneralProperties implements Serializable {
     public int numOfThreads;
     public HashSet<String> punctuations;
     public ParserType parserType;
+    public boolean includePosAsUnknown;
 
 
     public GeneralProperties() {
@@ -51,11 +52,12 @@ public class GeneralProperties implements Serializable {
         parsePartialConll = false;
         parserType = ParserType.ArcStandard;
         initializePunctuations();
+        includePosAsUnknown = true;
     }
 
     private GeneralProperties(boolean showHelp, boolean evaluate, boolean train, boolean parseTaggedFile, boolean parseConllFile, boolean
             parsePartialConll, String modelFile, int beamWidth, boolean rootFirst, boolean labeled, boolean lowercase, String inputFile, String
-                                      outputFile, int numOfThreads, HashSet<String> punctuations, ParserType parserType) {
+            outputFile, int numOfThreads, HashSet<String> punctuations, ParserType parserType, boolean includePosAsUnknown) {
         this.showHelp = showHelp;
         this.evaluate = evaluate;
         this.train = train;
@@ -72,6 +74,7 @@ public class GeneralProperties implements Serializable {
         this.numOfThreads = numOfThreads;
         this.punctuations = punctuations;
         this.parserType = parserType;
+        this.includePosAsUnknown = includePosAsUnknown;
     }
 
     private void initializePunctuations() {
@@ -136,6 +139,8 @@ public class GeneralProperties implements Serializable {
             builder.append("input file: ").append(inputFile).append("\n");
             builder.append("parsed file: ").append(outputFile).append("\n");
         }
+        builder.append("include pos as unknown: ").append(includePosAsUnknown).append("\n");
+
         return builder.toString();
     }
 
@@ -159,6 +164,6 @@ public class GeneralProperties implements Serializable {
     @Override
     public GeneralProperties clone() {
         return new GeneralProperties(showHelp, evaluate, train, parseTaggedFile, parseConllFile, parsePartialConll, modelFile, beamWidth, rootFirst,
-                labeled, lowercase, inputFile, outputFile, numOfThreads, punctuations, parserType);
+                labeled, lowercase, inputFile, outputFile, numOfThreads, punctuations, parserType, includePosAsUnknown);
     }
 }
