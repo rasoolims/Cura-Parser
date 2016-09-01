@@ -29,7 +29,6 @@ public class IndexMaps implements Serializable {
     private HashMap<Integer, double[]> embeddingsDictionary;
     private HashMap<String, String> str2clusterMap;
 
-
     public IndexMaps(String rootString, HashMap<String, Integer> wordMap, HashMap<String, Integer> posMap, HashMap<String, Integer> depRelationMap,
                      HashSet<Integer> rareWords, HashMap<String, String> str2clusterMap) {
         this.wordMap = wordMap;
@@ -99,10 +98,6 @@ public class IndexMaps implements Serializable {
             }
         }
         return eDim;
-    }
-
-    public double[] embeddings(int wordIndex) {
-        return embeddingsDictionary.get(wordIndex);
     }
 
     public HashMap<Integer, double[]> getEmbeddingsDictionary() {
