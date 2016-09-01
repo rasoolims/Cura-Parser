@@ -137,6 +137,13 @@ public class IndexMaps implements Serializable {
         return labelUnkIndex;
     }
 
+    /**
+     * This function looks at every word embedding feature slot and pick the @maxNumber features that are
+     * more frequent.
+     * @param instances
+     * @param numWordLayer
+     * @param maxNumber maximum number of features for the pre-computation trick.
+     */
     public void constructPreComputeMap(List<NeuralTrainingInstance> instances, int numWordLayer, int maxNumber) {
         HashMap<Integer, Integer>[] counts = new HashMap[numWordLayer];
         preComputeMap = new HashMap[numWordLayer];
@@ -179,6 +186,5 @@ public class IndexMaps implements Serializable {
             if (c >= maxNumber)
                 break;
         }
-
     }
 }
