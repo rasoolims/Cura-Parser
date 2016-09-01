@@ -270,6 +270,7 @@ public class Utils {
     public static void normalize(double[] e) {
         double n = 0;
         for (double v : e) n += v * v;
+        n = Math.sqrt(n);
         if (n > 0)
             for (int i = 0; i < e.length; i++) e[i] /= n;
     }
