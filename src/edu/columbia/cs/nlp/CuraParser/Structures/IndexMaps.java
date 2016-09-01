@@ -116,8 +116,8 @@ public class IndexMaps implements Serializable {
     public int word2Int(String word) {
         if (wordMap.containsKey(word))
             return wordMap.get(word);
-        if (wordMap.containsKey(word))
-            return wordMap.get(word);
+        if (wordMap.containsKey(word.toLowerCase()))
+            return wordMap.get(word.toLowerCase());
         if (str2clusterMap.containsKey(word))
             return wordMap.get(str2clusterMap.get(word));
         if (str2clusterMap.containsKey(word.toLowerCase()))
