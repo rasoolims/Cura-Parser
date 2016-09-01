@@ -60,16 +60,17 @@ java -jar CuraParser.jar eval -input [test-conll-file] -out [output-conll-file]
 ## How to tune it
 You can tune the parser in different ways:
 
-		 -cluster [cluster-file]	 	
-		 -e [embedding-file] 
+	 	 -punc [punc-file]
+	 	 -cluster [cluster-file]
+	 	 -e [embedding-file] 
 	 	 -avg [both,no,only] (default: only)
 	 	 -h1 [hidden-layer-size-1 (default 256)] 
 	 	 -h2 [hidden-layer-size-2 (default 256)] 
 	 	 -lr [learning-rate: default 0.0005 (good for ADAM)] 
-	 	 -ds [decay-step (default 4400--just applies to SGD)] 
+	 	 -ds [decay-step (default 4400)] 
 	 	 -parser [ae(arc-eager), as(arc-standard:default)] 
 	 	 -pretrained [pre-trained greedy model path (for beam learning)] 
-	 	 -a [activation (relu,cubic) -- default:relu] 
+	 	 -a [activation (relu,cubic,lrelu,rrelu) -- default:relu] 
 	 	 -u [updater-type: sgd,adam(default),adamax,adagrad] 
 	 	 -sgd [sgd-type (if using sgd): nesterov(default),momentum, vanilla] 
 	 	 -batch [batch-size; default 1000] 

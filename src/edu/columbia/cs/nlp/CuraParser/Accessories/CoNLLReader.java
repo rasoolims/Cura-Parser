@@ -63,6 +63,8 @@ public class CoNLLReader {
                 String pos = spl[3];
                 if (lowercased)
                     word = word.toLowerCase();
+                if (Utils.isNumeric(word))
+                    word = "_NUM_";
 
                 if (str2clusterMap.size() > 0) {
                     if (str2clusterMap.containsKey(word))
@@ -198,6 +200,8 @@ public class CoNLLReader {
                 String word = splitLine[1].trim();
                 if (lowerCased)
                     word = word.toLowerCase();
+                if (Utils.isNumeric(word))
+                    word = "_NUM_";
                 int wi = maps.word2Int(word);
                 if (wi == IndexMaps.UnknownIndex)
                     oovTypes.add(word);
@@ -265,7 +269,6 @@ public class CoNLLReader {
                     throw new Exception("wrong file format");
                 int wordIndex = Integer.parseInt(splitLine[0]);
                 String pos = splitLine[3].trim();
-
                 tags.add(pos);
 
                 int headIndex = Integer.parseInt(splitLine[6]);
@@ -281,5 +284,4 @@ public class CoNLLReader {
 
         return treeSet;
     }
-
 }

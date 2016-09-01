@@ -73,7 +73,7 @@ public class ArcEagerFeatureExtractorTest {
         Sentence sentence = dataSet.get(0).getSentence();
         Configuration configuration = new Configuration(sentence, options.generalProperties.rootFirst);
 
-
+        assert configuration.sentence.getWords()[12] == maps.word2Int("_NUM_");
         /**
          * actions = shift, shift, left-arc, left-arc, shift, right-arc, reduce, left-arc
          */
