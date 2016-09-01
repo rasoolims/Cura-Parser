@@ -35,4 +35,15 @@ public enum WeightInit {
                 return null;
         }
     }
+
+    public static Initializer initializer(WeightInit weightInit, Random random, double stdDev) {
+        switch (weightInit) {
+            case NORMAL:
+                return new NormalInit(random, stdDev);
+            case UNIFORM:
+                return new UniformInit(random, stdDev);
+            default:
+                return null;
+        }
+    }
 }
