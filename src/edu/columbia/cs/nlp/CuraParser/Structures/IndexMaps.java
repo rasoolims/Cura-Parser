@@ -1,5 +1,7 @@
 package edu.columbia.cs.nlp.CuraParser.Structures;
 
+import edu.columbia.cs.nlp.CuraParser.Accessories.Utils;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Serializable;
@@ -87,13 +89,13 @@ public class IndexMaps implements Serializable {
                 wordIndex = wordMap.get(spl[0].toLowerCase());
             else if (spl[0].equals("_unk_"))
                 wordIndex = IndexMaps.UnknownIndex;
-
             if (wordIndex != -1) {
                 double[] e = new double[spl.length - 1];
                 eDim = e.length;
                 for (int i = 0; i < e.length; i++) {
                     e[i] = Double.parseDouble(spl[i + 1]);
                 }
+                Utils.normalize(e);
                 embeddingsDictionary.put(wordIndex, e);
             }
         }

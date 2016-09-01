@@ -11,9 +11,9 @@ import java.util.Random;
  */
 
 public class UniformInit extends Initializer {
-    public UniformInit(Random random, int nIn) {
-        super(random, nIn, 0);
-        this.stdDev = Math.sqrt(1.0 / nIn);
+    public UniformInit(Random random, int nOut) {
+        super(random, 0, nOut);
+        this.stdDev = Math.sqrt(1.0 / nOut);
     }
 
     @Override

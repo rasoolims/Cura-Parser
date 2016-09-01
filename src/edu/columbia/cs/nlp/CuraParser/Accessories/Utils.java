@@ -267,6 +267,13 @@ public class Utils {
         return o;
     }
 
+    public static void normalize(double[] e) {
+        double n = 0;
+        for (double v : e) n += v * v;
+        if (n > 0)
+            for (int i = 0; i < e.length; i++) e[i] /= n;
+    }
+
     public static String timeStamp() {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
     }

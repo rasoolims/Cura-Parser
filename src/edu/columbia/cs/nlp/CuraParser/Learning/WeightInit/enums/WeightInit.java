@@ -28,7 +28,7 @@ public enum WeightInit {
             case RELU:
                 return new ReluInit(random, nIn, nOut);
             case UNIFORM:
-                return new UniformInit(random, nIn);
+                return new UniformInit(random, nOut);
             case XAVIER:
                 return new XavierInit(random, nIn, nOut);
             default:
