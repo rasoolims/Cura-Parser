@@ -52,7 +52,7 @@ public class MLPTrainer {
     int samples = 0;
     Updater updater;
     Random random;
-
+    ShiftReduceParser parser;
     /**
      * Gradients
      */
@@ -60,7 +60,6 @@ public class MLPTrainer {
     private double regCoef;
     private double dropoutProb;
     private boolean regularizeAllLayers;
-    ShiftReduceParser parser;
 
     public MLPTrainer(MLPNetwork net, Options options) throws Exception {
         this.net = net;

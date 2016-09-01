@@ -253,7 +253,7 @@ public class ParserTest {
                                 options.generalProperties.rootFirst, options.generalProperties.beamWidth, options.generalProperties.lowercase,
                                 options.generalProperties.numOfThreads, false, "");
                         Pair<Double, Double> evaluator = Evaluator.evaluate(options.trainingOptions.devPath, options.generalProperties.modelFile +
-                                ".tmp",
+                                        ".tmp",
                                 options.generalProperties.punctuations);
 
                         FileOutputStream fos = new FileOutputStream(options.generalProperties.modelFile);

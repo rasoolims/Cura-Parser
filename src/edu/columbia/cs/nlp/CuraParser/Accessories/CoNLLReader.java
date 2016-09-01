@@ -73,7 +73,7 @@ public class CoNLLReader {
                         word = "_unk_";
                 }
 
-                if(includePOSAsWordForUnknown) {
+                if (includePOSAsWordForUnknown) {
                     if (!wordCount.containsKey("pos:" + pos))
                         wordCount.put("pos:" + pos, 1);
                     else
@@ -143,7 +143,7 @@ public class CoNLLReader {
             }
         }
 
-        if(includePOSAsWordForUnknown) {
+        if (includePOSAsWordForUnknown) {
             // Making sure that all tags are included in the word map.
             for (String pos : tags)
                 if (!wordMap.containsKey("pos:" + pos))

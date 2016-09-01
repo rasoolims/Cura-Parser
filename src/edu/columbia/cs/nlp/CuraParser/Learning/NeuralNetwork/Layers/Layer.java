@@ -212,7 +212,7 @@ public class Layer implements Serializable {
         Utils.sumi(b, anotherLayer.getB());
     }
 
-    public void setLayer(Layer layer){
+    public void setLayer(Layer layer) {
         w = layer.w;
         b = layer.b;
         activation = layer.activation;

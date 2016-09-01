@@ -93,6 +93,19 @@ public class MLPNetwork implements Serializable {
         this.options = options;
     }
 
+    public MLPNetwork(Options options, ArrayList<Layer> layers, int numWordLayers, int numPosLayers, int numDepLayers, int numOutputs,
+                      ArrayList<Integer> depLabels) {
+        this.options = options;
+        this.layers = layers;
+        this.numWordLayers = numWordLayers;
+        this.numPosLayers = numPosLayers;
+        this.numDepLayers = numDepLayers;
+        this.numOutputs = numOutputs;
+        this.numDepLabels = depLabels.size();
+        this.depLabels = depLabels;
+        this.maps = null;
+    }
+
     private Activation getActivation(Options options, Random random) {
         if (options.networkProperties.activationType == ActivationType.RELU) return new Relu();
         if (options.networkProperties.activationType == ActivationType.LeakyRELU) return new LeakyRelu(options.networkProperties.reluLeakAlpha);
@@ -110,19 +123,6 @@ public class MLPNetwork implements Serializable {
 
     private boolean isSimpleRelu(Options options) {
         return options.networkProperties.activationType == ActivationType.RELU;
-    }
-
-    public MLPNetwork(Options options, ArrayList<Layer> layers, int numWordLayers, int numPosLayers, int numDepLayers, int numOutputs,
-                      ArrayList<Integer> depLabels) {
-        this.options = options;
-        this.layers = layers;
-        this.numWordLayers = numWordLayers;
-        this.numPosLayers = numPosLayers;
-        this.numDepLayers = numDepLayers;
-        this.numOutputs = numOutputs;
-        this.numDepLabels = depLabels.size();
-        this.depLabels = depLabels;
-        this.maps = null;
     }
 
     public void resetPreComputeMap() {

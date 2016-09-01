@@ -6,10 +6,7 @@
 
 package edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Features;
 
-import edu.columbia.cs.nlp.CuraParser.Structures.IndexMaps;
-import edu.columbia.cs.nlp.CuraParser.Structures.Sentence;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.Configuration;
-import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Configuration.State;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ArcEager;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ArcStandard;
 import edu.columbia.cs.nlp.CuraParser.TransitionBasedSystem.Parser.Parsers.ShiftReduceParser;

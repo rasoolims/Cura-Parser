@@ -258,7 +258,7 @@ public class Utils {
 
         double[] o = new double[x[0].length];
         for (int j = 0; j < y.length; j++) {
-            if(y[j]!=0) {
+            if (y[j] != 0) {
                 for (int i = 0; i < o.length; i++) {
                     o[i] += x[j][i] * y[j];
                 }

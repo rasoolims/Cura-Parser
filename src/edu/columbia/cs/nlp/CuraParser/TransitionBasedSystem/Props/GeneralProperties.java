@@ -57,7 +57,8 @@ public class GeneralProperties implements Serializable {
 
     private GeneralProperties(boolean showHelp, boolean evaluate, boolean train, boolean parseTaggedFile, boolean parseConllFile, boolean
             parsePartialConll, String modelFile, int beamWidth, boolean rootFirst, boolean labeled, boolean lowercase, String inputFile, String
-            outputFile, int numOfThreads, HashSet<String> punctuations, ParserType parserType, boolean includePosAsUnknown) {
+                                      outputFile, int numOfThreads, HashSet<String> punctuations, ParserType parserType, boolean
+            includePosAsUnknown) {
         this.showHelp = showHelp;
         this.evaluate = evaluate;
         this.train = train;

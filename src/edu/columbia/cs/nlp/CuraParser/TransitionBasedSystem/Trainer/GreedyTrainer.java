@@ -38,11 +38,11 @@ import java.util.zip.GZIPOutputStream;
 
 public class GreedyTrainer {
     final HashSet<Integer> rareWords;
+    protected ArrayList<Integer> dependencyRelations;
+    protected int labelNullIndex;
     Options options;
     Random random;
     ShiftReduceParser parser;
-    protected ArrayList<Integer> dependencyRelations;
-    protected int labelNullIndex;
 
     public GreedyTrainer(Options options, ArrayList<Integer> dependencyRelations, int labelNullIndex, HashSet<Integer> rareWords) {
         this.options = options;
@@ -199,7 +199,7 @@ public class GreedyTrainer {
     }
 
     protected static double evaluate(Options options, MLPNetwork mlpNetwork, double bestModelUAS) throws Exception {
-        System.out.println("Evaluating with "+options.generalProperties.beamWidth+" beams!");
+        System.out.println("Evaluating with " + options.generalProperties.beamWidth + " beams!");
         BeamParser parser = new BeamParser(mlpNetwork, options.generalProperties.numOfThreads, options.generalProperties.parserType);
         parser.parseConll(options.trainingOptions.devPath, options.generalProperties.modelFile + ".tmp", options.generalProperties.rootFirst,
                 options.generalProperties.beamWidth, options.generalProperties.lowercase,

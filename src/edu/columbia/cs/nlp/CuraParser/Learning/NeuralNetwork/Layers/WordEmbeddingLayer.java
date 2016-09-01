@@ -64,6 +64,6 @@ public class WordEmbeddingLayer extends EmbeddingLayer {
     @Override
     public void setLayer(Layer layer) {
         super.setLayer(layer);
-        precomputationMap = ((WordEmbeddingLayer)layer).getPrecomputationMap();
+        precomputationMap = ((WordEmbeddingLayer) layer).getPrecomputationMap();
     }
 }

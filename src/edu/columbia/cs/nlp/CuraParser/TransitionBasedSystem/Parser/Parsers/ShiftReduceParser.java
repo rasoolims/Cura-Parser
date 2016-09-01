@@ -78,7 +78,7 @@ public abstract class ShiftReduceParser {
             shift(configuration.state);
         } else if (action == 1) {
             reduce(configuration.state);
-        }  else if (action == 2) {
+        } else if (action == 2) {
             unShift(configuration.state);
         } else if (action >= (3 + depSize)) {
             int dependency = action - (3 + depSize);

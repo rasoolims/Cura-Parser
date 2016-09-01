@@ -38,8 +38,8 @@ public class Configuration implements Comparable, Cloneable, Serializable {
      * @return
      */
     public double getScore(boolean normalized) {
-         if (normalized && actionHistory.size() > 0)
-             return score / actionHistory.size();
+        if (normalized && actionHistory.size() > 0)
+            return score / actionHistory.size();
         return score;
     }
 
