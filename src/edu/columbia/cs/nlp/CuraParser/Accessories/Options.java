@@ -91,7 +91,7 @@ public class Options implements Serializable {
         output.append("\t \t -bias [true/false (use output bias term in softmax layer: default true)] \n");
         output.append("\t \t -reg [regularization with L2] \n");
         output.append("\t \t -momentum [momentum for sgd; default 0.9] \n");
-        output.append("\t \t -min [min freq for not regarding as unknown(default 4)] \n");
+        output.append("\t \t -min [min freq for not regarding as unknown(default 5)] \n");
         output.append("\t \t -wdim [word dim (default 64)] \n");
         output.append("\t \t -posdim [pos dim (default 32)] \n");
         output.append("\t \t -depdim [dep dim (default 32)]  \n");

@@ -79,7 +79,7 @@ You can tune the parser in different ways:
 	 	 -bias [true/false (use output bias term in softmax layer: default true)] 
 	 	 -reg [regularization with L2] 
 	 	 -momentum [momentum for sgd; default 0.9] 
-	 	 -min [min freq for not regarding as unknown(default 4)] 
+	 	 -min [min freq for not regarding as unknown(default 5)] 
 	 	 -wdim [word dim (default 64)] 
 	 	 -posdim [pos dim (default 32)] 
 	 	 -depdim [dep dim (default 32)]  

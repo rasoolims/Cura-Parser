@@ -34,7 +34,7 @@ public class TrainingOptions implements Serializable {
 
     public TrainingOptions() {
         decayStep = 4400;
-        minFreq = 4;
+        minFreq = 5;
         pretrainLayers = true;
         averagingOption = AveragingOption.ONLY;
         clusterFile = "";
