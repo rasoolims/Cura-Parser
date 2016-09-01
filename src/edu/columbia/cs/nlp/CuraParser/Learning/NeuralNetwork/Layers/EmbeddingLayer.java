@@ -1,5 +1,6 @@
 package edu.columbia.cs.nlp.CuraParser.Learning.NeuralNetwork.Layers;
 
+import edu.columbia.cs.nlp.CuraParser.Accessories.Utils;
 import edu.columbia.cs.nlp.CuraParser.Learning.Activation.Identity;
 import edu.columbia.cs.nlp.CuraParser.Learning.WeightInit.UniformInit;
 
@@ -16,11 +17,11 @@ import java.util.Random;
 
 public class EmbeddingLayer extends Layer {
     /**
-     * @param nIn  Vocabulary size.
-     * @param nOut Embedding dimension.
+     * @param nIn Embedding dimension.
+     * @param nOut Vocabulary size.
      */
     public EmbeddingLayer(int nIn, int nOut, Random random) {
-        super(new Identity(), nIn, nOut, new UniformInit(random, nOut), null, false);
+        super(new Identity(), nIn, nOut, new UniformInit(random, nIn), null, false);
     }
 
     public int dim() {
