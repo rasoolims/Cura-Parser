@@ -221,13 +221,25 @@ public class GreedyTrainer {
         return bestModelUAS;
     }
 
-    public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropWordProb)
-            throws Exception {
-        ArrayList<NeuralTrainingInstance> instances = new ArrayList<>();
-        for (int i = start; i < end; i++) {
-            addInstance(trainData.get(i), instances, dropWordProb);
+    public static void outputTrainInstances(Options options) throws Exception {
+        Options greedyOptions = options.clone();
+        greedyOptions.generalProperties.beamWidth = 1;
+        MLPNetwork mlpNetwork = constructMlpNetwork(greedyOptions);
+        GreedyTrainer trainer = new GreedyTrainer(options, mlpNetwork.getDepLabels(), mlpNetwork.maps.labelNullIndex, mlpNetwork.maps.rareWords);
+        CoNLLReader reader = new CoNLLReader(options.trainingOptions.trainFile);
+        ArrayList<GoldConfiguration> dataSet =
+                reader.readData(Integer.MAX_VALUE, false, options.generalProperties.labeled, options.generalProperties.rootFirst,
+                        options.generalProperties.lowercase, mlpNetwork.maps);
+        System.out.println("CoNLL data reading done!");
+        System.out.println("size of training data (#sens): " + dataSet.size());
+
+        ArrayList<NeuralTrainingInstance> allInstances = trainer.getNextInstances(dataSet, 0, dataSet.size(), 0);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(options.generalProperties.outputFile));
+
+        for (NeuralTrainingInstance instance : allInstances) {
+            writer.write(instance.toString());
         }
-        return instances;
+        writer.close();
     }
 
     private void addInstance(GoldConfiguration goldConfiguration, ArrayList<NeuralTrainingInstance> instances, double dropWordProb) throws Exception {
@@ -274,5 +286,14 @@ public class GreedyTrainer {
             beam = new ArrayList<>(1);
             beam.add(oracle);
         }
+    }
+
+    public ArrayList<NeuralTrainingInstance> getNextInstances(ArrayList<GoldConfiguration> trainData, int start, int end, double dropWordProb)
+            throws Exception {
+        ArrayList<NeuralTrainingInstance> instances = new ArrayList<>();
+        for (int i = start; i < end; i++) {
+            addInstance(trainData.get(i), instances, dropWordProb);
+        }
+        return instances;
     }
 }

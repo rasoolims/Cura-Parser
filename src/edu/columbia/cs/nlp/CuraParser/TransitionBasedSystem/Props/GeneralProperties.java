@@ -18,6 +18,7 @@ import java.util.HashSet;
 public class GeneralProperties implements Serializable {
     public boolean showHelp;
     public boolean evaluate;
+    public boolean output;
     public boolean train;
     public boolean parseTaggedFile;
     public boolean parseConllFile;
@@ -36,6 +37,7 @@ public class GeneralProperties implements Serializable {
 
 
     public GeneralProperties() {
+        output = false;
         showHelp = false;
         train = false;
         parseConllFile = false;
@@ -56,8 +58,8 @@ public class GeneralProperties implements Serializable {
     }
 
     private GeneralProperties(boolean showHelp, boolean evaluate, boolean train, boolean parseTaggedFile, boolean parseConllFile, boolean
-            parsePartialConll, String modelFile, int beamWidth, boolean rootFirst, boolean labeled, boolean lowercase, String inputFile, String
-                                      outputFile, int numOfThreads, HashSet<String> punctuations, ParserType parserType, boolean
+            parsePartialConll, boolean output, String modelFile, int beamWidth, boolean rootFirst, boolean labeled, boolean lowercase, String
+                                      inputFile, String outputFile, int numOfThreads, HashSet<String> punctuations, ParserType parserType, boolean
             includePosAsUnknown) {
         this.showHelp = showHelp;
         this.evaluate = evaluate;
@@ -76,6 +78,7 @@ public class GeneralProperties implements Serializable {
         this.punctuations = punctuations;
         this.parserType = parserType;
         this.includePosAsUnknown = includePosAsUnknown;
+        this.output = output;
     }
 
     private void initializePunctuations() {
@@ -136,7 +139,7 @@ public class GeneralProperties implements Serializable {
             builder.append("model file: ").append(modelFile).append("\n");
             builder.append("labeled: ").append(labeled).append("\n");
             builder.append("number of threads: ").append(numOfThreads).append("\n");
-        } else if (evaluate) {
+        } else if (evaluate || output) {
             builder.append("input file: ").append(inputFile).append("\n");
             builder.append("parsed file: ").append(outputFile).append("\n");
         }
@@ -164,7 +167,7 @@ public class GeneralProperties implements Serializable {
      */
     @Override
     public GeneralProperties clone() {
-        return new GeneralProperties(showHelp, evaluate, train, parseTaggedFile, parseConllFile, parsePartialConll, modelFile, beamWidth, rootFirst,
-                labeled, lowercase, inputFile, outputFile, numOfThreads, punctuations, parserType, includePosAsUnknown);
+        return new GeneralProperties(showHelp, evaluate, train, parseTaggedFile, parseConllFile, parsePartialConll, output, modelFile, beamWidth,
+                rootFirst, labeled, lowercase, inputFile, outputFile, numOfThreads, punctuations, parserType, includePosAsUnknown);
     }
 }

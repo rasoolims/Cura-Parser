@@ -36,6 +36,8 @@ public class CuraParser {
                 parse(options);
             } else if (options.generalProperties.evaluate) {
                 evaluate(options);
+            } else if (options.generalProperties.output) {
+                GreedyTrainer.outputTrainInstances(options);
             } else {
                 Options.showHelp();
             }

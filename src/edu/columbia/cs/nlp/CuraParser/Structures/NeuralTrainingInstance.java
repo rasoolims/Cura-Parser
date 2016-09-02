@@ -31,4 +31,18 @@ public class NeuralTrainingInstance {
                 return i;
         return -1;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(gold());
+        for (int i = 0; i < features.length; i++) {
+            boolean isInt = (features[i] == Math.floor(features[i])) && !Double.isInfinite(features[i]);
+            if (!isInt)
+                builder.append(",").append(features[i]);
+            else builder.append(",").append((int) features[i]);
+        }
+        builder.append("\n");
+        return builder.toString();
+    }
 }

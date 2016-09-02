@@ -56,8 +56,7 @@ public class Options implements Serializable {
 
     public static void showHelp() {
         StringBuilder output = new StringBuilder();
-        output.append("© Yara CuraParser.Parser \n");
-        output.append("\u00a9 Copyright 2014, Yahoo! Inc.\n");
+        output.append("© Cura Parser \n");
         output.append("\u00a9 Licensed under the terms of the Apache License 2.0. See LICENSE file at the project " +
                 "root for terms.");
         output.append("http://www.apache.org/licenses/LICENSE-2.0\n");
@@ -141,10 +140,13 @@ public class Options implements Serializable {
         output.append("\t** Optional: -score [score file] averaged score of each output parse tree in a file\n\n");
 
         output.append("* Evaluate a Conll file:\n");
-        output.append("\tjava -jar CuraParser.jar eval -input [gold-file] -out [parsed-file]  -punc [punc-file]\n");
-        output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one" +
+        output.append("\tjava -jar CuraParser.jar eval -input [gold-file] -out [parsed-file] \n");
+        output.append("\t** optional -punc [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one" +
                 " line\n");
         output.append("\t** Both files should have conll 2006 format\n");
+
+        output.append("* Output csv for train instances:\n");
+        output.append("\tjava -jar CuraParser.jar output -input [gold-file] -out [output file]\n");
         System.out.println(output.toString());
     }
 
@@ -156,6 +158,8 @@ public class Options implements Serializable {
                 options.generalProperties.showHelp = true;
             else if (args[i].equals("train"))
                 options.generalProperties.train = true;
+            else if (args[i].equals("output"))
+                options.generalProperties.output = true;
             else if (args[i].equals("parse_conll"))
                 options.generalProperties.parseConllFile = true;
             else if (args[i].equals("parse_partial"))
