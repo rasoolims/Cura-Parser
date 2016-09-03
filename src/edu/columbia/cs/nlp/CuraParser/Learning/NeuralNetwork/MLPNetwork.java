@@ -127,6 +127,7 @@ public class MLPNetwork implements Serializable {
 
     public void resetPreComputeMap() {
         ((FirstHiddenLayer) layer(0)).getWordEmbeddings().setPrecomputationMap(maps.preComputeMap);
+        ((FirstHiddenLayer) layer(0)).preCompute();
     }
 
     public void averageNetworks(MLPNetwork averaged, final double r1, final double r2) {
